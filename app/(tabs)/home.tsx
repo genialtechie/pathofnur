@@ -1,10 +1,5 @@
-import { TabSkeletonScreen } from "@/src/components/navigation/TabSkeletonScreen";
+import { HomeScreen } from "@/src/features/home";
 
 export default function HomeRoute() {
-  return (
-    <TabSkeletonScreen
-      title="Home"
-      description="Hero cards, prayer timeline, and your next invitation."
-    />
-  );
+  return <HomeScreen />;
 }
