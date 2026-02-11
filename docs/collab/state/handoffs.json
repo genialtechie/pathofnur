@@ -252,6 +252,54 @@
         "Start T-20260211-008 Tools screen (uses UtilityCard)",
         "Start T-20260211-009 Journey screen (uses ShareCard)"
       ]
+    },
+    {
+      "handoff_id": "H-20260211-006",
+      "task_id": "T-20260211-006",
+      "branch_name": "feat/T-20260211-006-home-screen",
+      "worktree_path": ".worktrees/T-20260211-006",
+      "from_agent": "opencode",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-02-11T21:00:00Z",
+      "summary": {
+        "completed": [
+          "Implemented HomeScreen with greeting header and date display",
+          "Created HeroCarousel with swipeable cards and pagination dots",
+          "Integrated real hero images from public/images/_preview/",
+          "Created PrayerTimeline placeholder with all 6 prayers",
+          "Added analytics tracking for hero interactions (view, swipe, press)",
+          "Used design system tokens and existing HeroCard component"
+        ],
+        "remaining": [
+          "Connect hero press actions to actual navigation",
+          "Implement real prayer time calculation",
+          "Add Quick Tasbih FAB"
+        ]
+      },
+      "changed_files": [
+        "app/(tabs)/home.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HeroCarousel.tsx",
+        "src/features/home/PrayerTimeline.tsx",
+        "src/features/home/index.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck"
+        ],
+        "result": "pass",
+        "notes": "TypeScript 0 errors. All components type-safe."
+      },
+      "risks": [],
+      "follow_ups": [
+        "Wire AnalyticsProvider in app/_layout.tsx for full analytics",
+        "Test hero carousel swipe on physical device"
+      ],
+      "next_recommended_actions": [
+        "Implement Library screen (T-20260211-007) with CollectionCard",
+        "Implement Tools screen (T-20260211-008) with UtilityCard",
+        "Connect home hero actions to library/tools routes"
+      ]
     }
   ]
 }

@@ -1,16 +1,5 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T20:26:00Z",
-  "reservations": [
-    {
-      "reservation_id": "R-20260211-006",
-      "task_id": "T-20260211-006",
-      "paths": ["src/features/home/**", "app/(tabs)/home.tsx"],
-      "assignee": "opencode",
-      "lock_type": "exclusive",
-      "start_utc": "2026-02-11T20:26:00Z",
-      "expires_utc": "2026-02-12T00:26:00Z",
-      "worktree_path": ".worktrees/T-20260211-006"
-    }
-  ]
+  "last_updated_utc": "2026-02-11T21:00:00Z",
+  "reservations": []
 }

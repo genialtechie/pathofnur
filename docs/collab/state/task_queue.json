@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:48:32Z",
+  "last_updated_utc": "2026-02-11T21:00:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -80,7 +80,7 @@
       "title": "Home screen MVP with hero carousel",
       "scope_paths": ["src/features/home/**", "app/(tabs)/home.tsx"],
       "owner_role": "opencode",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": ["T-20260211-004", "T-20260211-005"],
       "branch_name": "feat/T-20260211-006-home-screen",
@@ -90,7 +90,7 @@
         "Analytics events fire for hero interactions",
         "npm run typecheck passes"
       ],
-      "updated_at_utc": "2026-02-11T20:26:00Z",
+      "updated_at_utc": "2026-02-11T21:00:00Z",
       "worktree_path": ".worktrees/T-20260211-006"
     },
     {
