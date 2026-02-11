@@ -1,21 +1,5 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T21:02:00Z",
-  "reservations": [
-    {
-      "reservation_id": "R-20260211-007",
-      "task_id": "T-20260211-007",
-      "paths": [
-        "src/features/library/**",
-        "app/(tabs)/library.tsx",
-        "src/lib/audio/**"
-      ],
-      "reserved_by": "lead",
-      "assignee": "codex",
-      "lock_type": "exclusive",
-      "start_utc": "2026-02-11T21:02:00Z",
-      "expires_utc": "2026-02-12T01:02:00Z",
-      "worktree_path": ".worktrees/T-20260211-007"
-    }
-  ]
+  "last_updated_utc": "2026-02-11T21:05:00Z",
+  "reservations": []
 }
