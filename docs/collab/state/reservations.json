@@ -1,17 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:32:00Z",
+  "last_updated_utc": "2026-02-11T20:00:00Z",
   "reservations": [
-    {
-      "reservation_id": "R-20260211-004",
-      "task_id": "T-20260211-004",
-      "paths": ["src/lib/analytics/client.ts", "src/lib/analytics/events.ts", ".env.example"],
-      "assignee": "opencode",
-      "lock_type": "exclusive",
-      "start_utc": "2026-02-11T19:32:00Z",
-      "expires_utc": "2026-02-11T23:32:00Z",
-      "worktree_path": ".worktrees/T-20260211-004"
-    },
     {
       "reservation_id": "R-20260211-005",
       "task_id": "T-20260211-005",
