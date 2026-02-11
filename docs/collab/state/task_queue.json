@@ -62,7 +62,7 @@
       "title": "Design system tokens and card component library",
       "scope_paths": ["src/components/cards/**", "src/components/hero/**", "src/components/ui/**", "src/theme/**"],
       "owner_role": "cursor",
-      "status": "queued",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-005-design-system-cards",
@@ -72,7 +72,7 @@
         "All components use theme tokens, no hardcoded colors",
         "npm run typecheck passes"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "updated_at_utc": "2026-02-11T20:05:58Z",
       "worktree_path": ".worktrees/T-20260211-005"
     },
     {
@@ -80,7 +80,7 @@
       "title": "Home screen MVP with hero carousel",
       "scope_paths": ["src/features/home/**", "app/(tabs)/home.tsx"],
       "owner_role": "opencode",
-      "status": "queued",
+      "status": "in_progress",
       "priority": "P0",
       "depends_on": ["T-20260211-004", "T-20260211-005"],
       "branch_name": "feat/T-20260211-006-home-screen",
@@ -90,7 +90,7 @@
         "Analytics events fire for hero interactions",
         "npm run typecheck passes"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "updated_at_utc": "2026-02-11T20:26:00Z",
       "worktree_path": ".worktrees/T-20260211-006"
     },
     {
