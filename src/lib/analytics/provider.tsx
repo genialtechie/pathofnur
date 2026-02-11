@@ -22,7 +22,7 @@ import {
 
 interface AnalyticsContextValue {
   isReady: boolean;
-  identify: (userId: string, traits?: Record<string, unknown>) => Promise<void>;
+  identify: (userId: string, traits?: Record<string, string | number | boolean | null>) => Promise<void>;
 }
 
 const AnalyticsContext = createContext<AnalyticsContextValue | null>(null);
@@ -36,7 +36,7 @@ interface AnalyticsProviderProps {
   /**
    * User traits to set on mount (optional)
    */
-  userTraits?: Record<string, unknown>;
+  userTraits?: Record<string, string | number | boolean | null>;
   /**
    * Marketing attribution params from deep link/launch URL
    */
@@ -108,7 +108,7 @@ export function AnalyticsProvider({
     }
   };
 
-  const identify = async (id: string, traits?: Record<string, unknown>) => {
+  const identify = async (id: string, traits?: Record<string, string | number | boolean | null>) => {
     await identifyUser(id, traits);
   };
 
