@@ -9,6 +9,7 @@ import {
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
 import { ChoiceOption, OnboardingFrame } from "@/src/features/donate/onboarding-frame";
+import { fontFamily } from "@/src/components/navigation/typography";
 
 export default function OnboardingWelcomeRoute() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function OnboardingWelcomeRoute() {
       <Text
         style={{
           color: "#8fa0b7",
-          fontFamily: "Lora_400Regular",
+          fontFamily: fontFamily.appRegular,
           fontSize: 14,
           lineHeight: 20
         }}

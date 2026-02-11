@@ -177,12 +177,12 @@ const styles = StyleSheet.create({
   },
   backButtonLabel: {
     color: "#d6deea",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 12
   },
   stepLabel: {
     color: "#93a1b5",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 12
   },
   progressRow: {
@@ -200,13 +200,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.uiBold,
+    fontFamily: fontFamily.appBold,
     fontSize: 34,
     lineHeight: 38
   },
   subtitle: {
     color: "#b4c0d1",
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 17,
     lineHeight: 25
   },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonLabel: {
     color: "#070b14",
-    fontFamily: fontFamily.uiBold,
+    fontFamily: fontFamily.appBold,
     fontSize: 17
   },
   secondaryButton: {
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonLabel: {
     color: "#d6deea",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 15
   },
   choiceOption: {
@@ -264,12 +264,12 @@ const styles = StyleSheet.create({
   },
   choiceLabel: {
     color: "#eff2f7",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 16
   },
   choiceDescription: {
     color: "#9babc1",
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 14,
     lineHeight: 20
   }

@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
   },
   summaryHeading: {
     color: "#eff2f7",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 16
   },
   summaryRow: {
     color: "#b4c0d1",
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 15,
     lineHeight: 22
   }

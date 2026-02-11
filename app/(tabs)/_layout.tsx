@@ -19,7 +19,7 @@ export default function TabsLayout() {
           borderTopColor: "#111a2a"
         },
         tabBarLabelStyle: {
-          fontFamily: fontFamily.uiSemiBold,
+          fontFamily: fontFamily.appSemiBold,
           fontSize: 12
         },
         sceneStyle: {

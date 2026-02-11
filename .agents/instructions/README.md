@@ -17,3 +17,11 @@ Runtime files are deltas over core protocol.
 ## Mandatory Execution Rule
 
 Implementers must execute coding tasks only from task worktrees under `.worktrees/`.
+
+## Typography Rule (Hard)
+
+- `Zalando Sans` is the default app font for UI.
+- `Lora` is only for Quran/Hadith/scripture and long devotional reading.
+- `Playfair Display` is only for rare decorative card/hero accents.
+- `Amiri` is only for Arabic script.
+- Run `npm run check:typography` before merge.

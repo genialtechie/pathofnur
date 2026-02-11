@@ -18,8 +18,14 @@ Role: implementation agent
 - Preserve card-first visual system and product tone from `AGENTS.md`.
 - Avoid opportunistic refactors outside the task.
 - Never implement from root checkout.
+- Typography is non-negotiable:
+  - Zalando Sans for app UI by default
+  - Lora only for Quran/Hadith/long-form scripture
+  - Playfair only for decorative card/hero accents
+  - Amiri only for Arabic text
 
 ## Delivery Rules
 
 - Complete handoff record and validation notes.
 - Flag any design-token/shared-component changes for lead review.
+- Run `npm run check:typography` for UI changes.

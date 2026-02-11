@@ -32,6 +32,12 @@
 | **Accents / Cards** | **Playfair Display** | "Verse of the Day" hero cards, special quotes. High-impact & "Royal." |
 | **Arabic Text** | **Amiri** | The sacred text. Classic Naskh style that pairs perfectly with Lora. |
 
+Implementation guardrail (non-negotiable):
+- Default app UI font is Zalando Sans.
+- Lora is only for Quran/Hadith/long devotional text.
+- Playfair Display is only for selective decorative accents.
+- Amiri is only for Arabic script content.
+
 ### Art Direction
 * **Style:** Abstract, Aniconic, Textured.
 * **Themes:** Nature (mountains, light, water), silhouettes, soft "Blue Hour" lighting.

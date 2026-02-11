@@ -37,19 +37,19 @@ const styles = StyleSheet.create({
   kicker: {
     color: "#93a1b5",
     fontSize: 12,
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     letterSpacing: 1,
     textTransform: "uppercase"
   },
   title: {
     color: "#f3f5f7",
     fontSize: 28,
-    fontFamily: fontFamily.uiBold
+    fontFamily: fontFamily.appBold
   },
   description: {
     color: "#c0cad8",
     fontSize: 16,
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.appRegular,
     lineHeight: 24
   }
 });

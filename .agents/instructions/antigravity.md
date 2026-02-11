@@ -35,3 +35,8 @@ Role: lead orchestrator
 - Do not allow out-of-scope edits without decision record.
 - Do not allow implementers to code in root checkout.
 - Merge continuously; avoid large integration piles.
+- Enforce typography policy in reviews:
+  - Zalando Sans default UI font
+  - Lora only for Quran/Hadith/long-form scripture
+  - Playfair only for rare card/hero accents
+  - Require `npm run check:typography` on UI tasks

@@ -16,6 +16,7 @@ Version: 1.1.0
 4. Acceptance criteria mapped line-by-line.
 5. No unresolved TODOs without follow-up task.
 6. `worktree_path` included in PR metadata.
+7. UI tasks must pass `npm run check:typography`.
 
 ## Conflict Prevention Rules
 

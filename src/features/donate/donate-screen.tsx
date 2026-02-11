@@ -142,20 +142,20 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: "#93a1b5",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
     letterSpacing: 1,
     textTransform: "uppercase"
   },
   title: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.uiBold,
+    fontFamily: fontFamily.appBold,
     fontSize: 34,
     lineHeight: 38
   },
   subtitle: {
     color: "#b4c0d1",
-    fontFamily: fontFamily.bodyRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 17,
     lineHeight: 25
   },
@@ -170,13 +170,13 @@ const styles = StyleSheet.create({
   },
   sourceLabel: {
     color: "#93a1b5",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
     textTransform: "uppercase"
   },
   sourceValue: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 18
   },
   amountGrid: {
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   amountText: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 16
   },
   footer: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonLabel: {
     color: "#070b14",
-    fontFamily: fontFamily.uiBold,
+    fontFamily: fontFamily.appBold,
     fontSize: 17
   },
   secondaryButton: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonLabel: {
     color: "#d6deea",
-    fontFamily: fontFamily.uiSemiBold,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 15
   }
 });

@@ -18,8 +18,14 @@ Role: implementation agent
 - Do not change queue/reservation files directly (lead-owned).
 - Escalate cross-boundary requirements before editing.
 - Never implement from root checkout.
+- Typography is non-negotiable:
+  - Zalando Sans for app UI by default
+  - Lora only for Quran/Hadith/long-form scripture
+  - Playfair only for decorative card/hero accents
+  - Amiri only for Arabic text
 
 ## Delivery Rules
 
 - Keep changes mergeable and self-contained.
 - Provide concise handoff with risks and next actions.
+- Run `npm run check:typography` for UI changes.

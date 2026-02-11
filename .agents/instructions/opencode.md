@@ -18,9 +18,15 @@ Role: implementation agent
 - Avoid shared hotspots unless lead-gated.
 - Keep branch tied to one task only.
 - Never code from root checkout.
+- Typography is non-negotiable:
+  - Zalando Sans for app UI by default
+  - Lora only for Quran/Hadith/long-form scripture
+  - Playfair only for decorative card/hero accents
+  - Amiri only for Arabic text
 
 ## Delivery Rules
 
 - Update handoff state on completion.
 - Report unresolved risks explicitly.
 - Recommend immediate follow-up task when applicable.
+- Run `npm run check:typography` for UI changes.

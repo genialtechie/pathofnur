@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:04:41Z",
+  "last_updated_utc": "2026-02-11T19:20:51Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -82,6 +82,19 @@
       "rationale": "Unblocked onboarding analytics imports by fixing a malformed doc comment and navigationRef addListener type in provider.tsx without changing analytics runtime behavior.",
       "owner": "lead",
       "timestamp_utc": "2026-02-11T19:04:41Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-007",
+      "topic": "Global typography enforcement policy",
+      "options_considered": [
+        "Document-only typography guidance",
+        "Hard policy plus automated validator"
+      ],
+      "selected_option": "Hard policy plus automated validator",
+      "rationale": "Prevents recurring font misuse by making Zalando default UI mandatory and enforcing restricted use of Lora/Playfair/Amiri via script.",
+      "owner": "human",
+      "timestamp_utc": "2026-02-11T19:20:51Z",
       "supersedes": null
     }
   ]

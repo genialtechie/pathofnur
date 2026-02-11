@@ -19,6 +19,11 @@ Role: implementation agent
 - If blocked by scope boundary, request lead update (no silent expansion).
 - Never implement from root checkout.
 - Add handoff record when done.
+- Typography is non-negotiable:
+  - Zalando Sans for app UI by default
+  - Lora only for Quran/Hadith/long-form scripture
+  - Playfair only for decorative card/hero accents
+  - Amiri only for Arabic text
 
 ## Delivery Rules
 
@@ -26,3 +31,4 @@ Role: implementation agent
 - Include validation commands and outcomes.
 - Include `worktree_path` in handoff summary.
 - Leave clear next actions if partially complete.
+- Run `npm run check:typography` for UI changes.

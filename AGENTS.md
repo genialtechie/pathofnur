@@ -114,6 +114,29 @@ Path of Nur remains distinct in identity and theme.
 - Clear state labeling
 - No ambiguous toggles
 
+## 4.1) Typography Policy (Non-Negotiable)
+
+App font system:
+
+- `Zalando Sans` is the default app font for all UI surfaces:
+  - onboarding
+  - navigation
+  - settings
+  - cards/buttons/labels/metadata
+- `Lora` is restricted to scripture and long devotional reading only:
+  - Quran
+  - Hadith
+  - intentionally long-form spiritual text
+- `Playfair Display` is restricted to rare decorative accents on hero/card art moments.
+- `Amiri` is restricted to Arabic script content.
+
+Implementation rules:
+
+- Do not hardcode font family literals in feature screens.
+- Use `src/components/navigation/typography.ts` tokens.
+- Any use of `scripture*` or `accentDisplay` outside allowed contexts is a policy violation.
+- Run `npm run check:typography` before merge.
+
 ---
 
 ## 5) Card-First Visual Usage (Critical)
