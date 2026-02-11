@@ -412,10 +412,32 @@ export async function trackDonationAmount(
   );
 }
 
+// Function overloads for type-safe status/props combinations
+export async function trackDonationCheckout(
+  amountUsd: number,
+  status: 'started'
+): Promise<void>;
+export async function trackDonationCheckout(
+  amountUsd: number,
+  status: 'completed',
+  extraProps: { donationId: string }
+): Promise<void>;
+export async function trackDonationCheckout(
+  amountUsd: number,
+  status: 'failed',
+  extraProps: { errorCode: string }
+): Promise<void>;
+export async function trackDonationCheckout(
+  amountUsd: number,
+  status: 'abandoned',
+  extraProps: { stepReached: string }
+): Promise<void>;
+
+// Implementation
 export async function trackDonationCheckout(
   amountUsd: number,
   status: 'started' | 'completed' | 'failed' | 'abandoned',
-  extraProps: { donationId: string } | { errorCode: string } | { stepReached: string } | Record<string, never> = {}
+  extraProps?: { donationId: string } | { errorCode: string } | { stepReached: string }
 ): Promise<void> {
   const eventMap = {
     started: EventName.DONATION_CHECKOUT_STARTED,
@@ -427,13 +449,13 @@ export async function trackDonationCheckout(
   const props: Record<string, unknown> = { amount_usd: amountUsd };
 
   // Map camelCase keys to snake_case for schema compatibility
-  if ('donationId' in extraProps) {
+  if (extraProps && 'donationId' in extraProps) {
     props.donation_id = extraProps.donationId;
   }
-  if ('errorCode' in extraProps) {
+  if (extraProps && 'errorCode' in extraProps) {
     props.error_code = extraProps.errorCode;
   }
-  if ('stepReached' in extraProps) {
+  if (extraProps && 'stepReached' in extraProps) {
     props.step_reached = extraProps.stepReached;
   }
 
