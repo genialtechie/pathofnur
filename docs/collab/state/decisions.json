@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T18:00:23Z",
+  "last_updated_utc": "2026-02-11T19:04:41Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -69,6 +69,19 @@
       "rationale": "A runnable Expo Router shell requires root config files outside app/(tabs).",
       "owner": "lead",
       "timestamp_utc": "2026-02-11T18:00:23Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-006",
+      "topic": "Cross-lane hotfix to analytics provider parse/type signature",
+      "options_considered": [
+        "Leave provider parse issue and ship onboarding analytics without type checks",
+        "Apply minimal provider hotfix while implementing T-20260211-003"
+      ],
+      "selected_option": "Apply minimal provider hotfix while implementing T-20260211-003",
+      "rationale": "Unblocked onboarding analytics imports by fixing a malformed doc comment and navigationRef addListener type in provider.tsx without changing analytics runtime behavior.",
+      "owner": "lead",
+      "timestamp_utc": "2026-02-11T19:04:41Z",
       "supersedes": null
     }
   ]

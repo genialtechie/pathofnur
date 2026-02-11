@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T18:30:00Z",
+  "last_updated_utc": "2026-02-11T19:04:41Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -107,6 +107,60 @@
         "Integrate analytics tracking into onboarding screens (T-20260211-003)",
         "Add analytics tracking to donation flow screens",
         "Test event delivery in staging environment"
+      ]
+    },
+    {
+      "handoff_id": "H-20260211-003",
+      "task_id": "T-20260211-003",
+      "branch_name": "feat/T-20260211-003-onboarding-donation-funnel",
+      "worktree_path": ".worktrees/T-20260211-003",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-02-11T19:04:41Z",
+      "summary": {
+        "completed": [
+          "Implemented full onboarding step flow (welcome, practice, rhythm, focus, complete) with persistent progress indicator",
+          "Added donate route and donation screen with amount presets and Stripe checkout handoff",
+          "Integrated analytics tracking via track()/helpers for onboarding step views/completions, onboarding started/completed, and donation interactions"
+        ],
+        "remaining": [
+          "Resolve TypeScript type issues in src/lib/analytics/client.ts and src/lib/analytics/events.ts to restore global tsc green status",
+          "Wrap app root with AnalyticsProvider for initialized runtime delivery"
+        ]
+      },
+      "changed_files": [
+        "app/(onboarding)/_layout.tsx",
+        "app/(onboarding)/index.tsx",
+        "app/(onboarding)/welcome.tsx",
+        "app/(onboarding)/practice.tsx",
+        "app/(onboarding)/rhythm.tsx",
+        "app/(onboarding)/focus.tsx",
+        "app/(onboarding)/complete.tsx",
+        "app/donate/index.tsx",
+        "src/features/donate/onboarding-frame.tsx",
+        "src/features/donate/onboarding-analytics.ts",
+        "src/features/donate/donate-screen.tsx",
+        "src/lib/analytics/provider.tsx"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npx expo export --platform web"
+        ],
+        "result": "partial",
+        "notes": "Web export passes. Typecheck fails due existing analytics typing issues in client/events introduced in T-20260211-002; onboarding/donate analytics wiring compiles in bundler."
+      },
+      "risks": [
+        "Analytics client typing remains unstable until T-002 follow-up fixes land"
+      ],
+      "follow_ups": [
+        "Fix posthog-react-native typing integration in src/lib/analytics/client.ts",
+        "Fix payload type compatibility in src/lib/analytics/events.ts"
+      ],
+      "next_recommended_actions": [
+        "Land analytics type hotfixes and rerun npm run typecheck",
+        "Add AnalyticsProvider in app/_layout.tsx once analytics lane approves",
+        "Validate onboarding/donate event stream in PostHog debug view"
       ]
     }
   ]
