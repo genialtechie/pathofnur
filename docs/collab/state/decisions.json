@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T00:00:00Z",
+  "last_updated_utc": "2026-02-11T18:00:23Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -56,6 +56,19 @@
       "rationale": "Per-task filesystem isolation reduces branch and dirty-tree collisions across concurrent agents.",
       "owner": "human",
       "timestamp_utc": "2026-02-11T00:00:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-005",
+      "topic": "Scope expansion for T-20260211-001 Expo bootstrap files",
+      "options_considered": [
+        "Keep narrow scope and create non-runnable shell fragments",
+        "Expand scope to include minimal Expo root config files"
+      ],
+      "selected_option": "Expand scope to include minimal Expo root config files",
+      "rationale": "A runnable Expo Router shell requires root config files outside app/(tabs).",
+      "owner": "lead",
+      "timestamp_utc": "2026-02-11T18:00:23Z",
       "supersedes": null
     }
   ]

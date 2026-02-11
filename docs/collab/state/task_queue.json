@@ -1,16 +1,22 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T00:00:00Z",
+  "last_updated_utc": "2026-02-11T18:22:55Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
       "title": "Scaffold Expo PWA tabs shell and navigation",
       "scope_paths": [
-        "app/(tabs)/**",
-        "src/components/navigation/**"
+        "app/**",
+        "src/components/navigation/**",
+        "src/features/onboarding/**",
+        "package.json",
+        "app.json",
+        "babel.config.js",
+        "tsconfig.json",
+        "expo-env.d.ts"
       ],
       "owner_role": "codex",
-      "status": "queued",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-001-pwa-shell-routing",
@@ -19,7 +25,7 @@
         "Top-level route groups exist for onboarding and tabs",
         "Bottom tab skeleton renders"
       ],
-      "updated_at_utc": "2026-02-11T00:00:00Z",
+      "updated_at_utc": "2026-02-11T18:22:55Z",
       "worktree_path": ".worktrees/T-20260211-001"
     },
     {

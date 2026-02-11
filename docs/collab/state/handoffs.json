@@ -1,5 +1,66 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T00:00:00Z",
-  "handoffs": []
+  "last_updated_utc": "2026-02-11T18:22:55Z",
+  "handoffs": [
+    {
+      "handoff_id": "H-20260211-001",
+      "task_id": "T-20260211-001",
+      "branch_name": "feat/T-20260211-001-pwa-shell-routing",
+      "worktree_path": ".worktrees/T-20260211-001",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-02-11T18:22:55Z",
+      "summary": {
+        "completed": [
+          "Scaffolded runnable Expo Router shell",
+          "Added onboarding route group and starter welcome screen",
+          "Added 4-tab bottom navigation skeleton (home/library/tools/journey)",
+          "Wired typography roles using Zalando Sans, Lora, Playfair Display, and Amiri"
+        ],
+        "remaining": [
+          "Task T-20260211-002 analytics foundation",
+          "Task T-20260211-003 onboarding funnel + donate route"
+        ]
+      },
+      "changed_files": [
+        "app/_layout.tsx",
+        "app/index.tsx",
+        "app/+not-found.tsx",
+        "app/(onboarding)/_layout.tsx",
+        "app/(onboarding)/index.tsx",
+        "app/(tabs)/_layout.tsx",
+        "app/(tabs)/index.tsx",
+        "app/(tabs)/home.tsx",
+        "app/(tabs)/library.tsx",
+        "app/(tabs)/tools.tsx",
+        "app/(tabs)/journey.tsx",
+        "src/components/navigation/TabBarIcon.tsx",
+        "src/components/navigation/TabSkeletonScreen.tsx",
+        "src/components/navigation/typography.ts",
+        "src/features/onboarding/WelcomeScreen.tsx",
+        "package.json",
+        "package-lock.json",
+        "app.json",
+        "babel.config.js",
+        "tsconfig.json",
+        "expo-env.d.ts",
+        "assets/images/icon.png",
+        "assets/images/adaptive-icon.png",
+        "assets/images/splash-icon.png",
+        "assets/images/favicon.png"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npx expo export --platform web"
+        ],
+        "result": "pass"
+      },
+      "next_recommended_actions": [
+        "Start T-20260211-002 analytics typed event schema and client",
+        "Start T-20260211-003 onboarding step flow and donation route scaffolding",
+        "Integrate analytics hooks into onboarding steps after both branches land"
+      ]
+    }
+  ]
 }
