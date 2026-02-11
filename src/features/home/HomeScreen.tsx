@@ -26,21 +26,21 @@ import { useFocusEffect } from "expo-router";
 const HERO_ITEMS = [
   {
     id: "daily-path",
-    imageSource: require("@/public/images/_preview/home-hero-daily-path-v02-card.png"),
+    imageSource: require("@/public/images/_source/home-hero-daily-path-v01.webp"),
     title: "Your Daily Path",
     subtitle: "Begin today's journey of reflection and peace",
     action: "start_daily",
   },
   {
     id: "night-reflection",
-    imageSource: require("@/public/images/_preview/home-hero-night-reflection-v02-card.png"),
+    imageSource: require("@/public/images/_source/home-hero-night-reflection-v01.webp"),
     title: "Night Reflection",
     subtitle: "Wind down with calming recitations",
     action: "open_night",
   },
   {
     id: "prayer-invitation",
-    imageSource: require("@/public/images/_preview/home-hero-prayer-invitation-v02-card.png"),
+    imageSource: require("@/public/images/_source/home-hero-prayer-invitation-v01.webp"),
     title: "Prayer Invitation",
     subtitle: "An invitation to pause and connect",
     action: "open_prayer",
