@@ -1,13 +1,12 @@
 import { type ComponentProps } from "react";
 import {
-  Image,
-  type ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Image, type ImageSource } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 import { fontFamily } from "@/src/theme";
@@ -19,7 +18,7 @@ import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
 
 interface UtilityCardProps {
   /** Background art source (optional — falls back to solid surface) */
-  imageSource?: ImageSourcePropType;
+  imageSource?: ImageSource;
   /** Ionicons icon name */
   icon: ComponentProps<typeof Ionicons>["name"];
   title: string;
@@ -58,7 +57,8 @@ export function UtilityCard({
         <Image
           source={imageSource}
           style={StyleSheet.absoluteFill}
-          resizeMode="cover"
+          contentFit="cover"
+          transition={200}
         />
       ) : null}
 

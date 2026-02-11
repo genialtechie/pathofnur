@@ -1,11 +1,10 @@
 import {
-  Image,
-  type ImageSourcePropType,
   StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Image, type ImageSource } from "expo-image";
 
 import { fontFamily } from "@/src/theme";
 import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
@@ -16,7 +15,7 @@ import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
 
 interface ShareCardProps {
   /** Background art source */
-  imageSource: ImageSourcePropType;
+  imageSource: ImageSource;
   /** Top-zone headline (e.g. "Day 7 Complete") */
   headline: string;
   /** Mid-zone body text */
@@ -42,7 +41,8 @@ export function ShareCard({
       <Image
         source={imageSource}
         style={StyleSheet.absoluteFill}
-        resizeMode="cover"
+        contentFit="cover"
+        transition={200}
       />
 
       {/* Top text-safe zone (~22%) */}

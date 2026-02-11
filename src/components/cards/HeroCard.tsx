@@ -1,12 +1,11 @@
 import {
-  Image,
-  type ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Image, type ImageSource } from "expo-image";
 
 import { fontFamily } from "@/src/theme";
 import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
@@ -19,7 +18,7 @@ type HeroRatio = "portrait" | "landscape";
 
 interface HeroCardProps {
   /** Local or remote image source */
-  imageSource: ImageSourcePropType;
+  imageSource: ImageSource;
   title: string;
   subtitle?: string;
   onPress?: () => void;
@@ -56,7 +55,8 @@ export function HeroCard({
       <Image
         source={imageSource}
         style={StyleSheet.absoluteFill}
-        resizeMode="cover"
+        contentFit="cover"
+        transition={200}
       />
 
       {/* Top text-safe zone (top ~28%) */}

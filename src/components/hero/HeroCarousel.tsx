@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  type ImageSourcePropType,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  ScrollView,
+  FlatList,
   StyleSheet,
   View,
+  type ViewToken,
   useWindowDimensions,
 } from "react-native";
+import { type ImageSource } from "expo-image";
 
 import { HeroCard } from "@/src/components/cards/HeroCard";
 import { colors, spacing } from "@/src/theme/tokens";
@@ -18,7 +17,7 @@ import { colors, spacing } from "@/src/theme/tokens";
 
 export interface HeroItem {
   id: string;
-  imageSource: ImageSourcePropType;
+  imageSource: ImageSource;
   title: string;
   subtitle?: string;
 }
@@ -29,6 +28,12 @@ interface HeroCarouselProps {
   /** Horizontal padding subtracted from screen width (default: 2 × 24) */
   horizontalPadding?: number;
 }
+
+// ---------------------------------------------------------------------------
+// Viewability config (stable ref outside component)
+// ---------------------------------------------------------------------------
+
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 
 // ---------------------------------------------------------------------------
 // Component
@@ -42,47 +47,51 @@ export function HeroCarousel({
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = screenWidth - horizontalPadding;
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList<HeroItem>>(null);
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = e.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / cardWidth);
-      setActiveIndex(index);
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken<HeroItem>[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        setActiveIndex(viewableItems[0].index);
+      }
     },
-    [cardWidth],
+    [],
   );
+
+  const renderItem = useCallback(
+    ({ item }: { item: HeroItem }) => (
+      <HeroCard
+        imageSource={item.imageSource}
+        title={item.title}
+        subtitle={item.subtitle}
+        onPress={onItemPress ? () => onItemPress(item) : undefined}
+        style={{ width: cardWidth }}
+      />
+    ),
+    [cardWidth, onItemPress],
+  );
+
+  const keyExtractor = useCallback((item: HeroItem) => item.id, []);
 
   if (items.length === 0) return null;
 
   return (
     <View style={styles.wrapper}>
-      <ScrollView
-        ref={scrollRef}
+      <FlatList
+        ref={flatListRef}
+        data={items}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         decelerationRate="fast"
         snapToInterval={cardWidth + spacing.md}
         snapToAlignment="start"
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingHorizontal: horizontalPadding / 2 },
-        ]}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-      >
-        {items.map((item) => (
-          <HeroCard
-            key={item.id}
-            imageSource={item.imageSource}
-            title={item.title}
-            subtitle={item.subtitle}
-            onPress={onItemPress ? () => onItemPress(item) : undefined}
-            style={{ width: cardWidth }}
-          />
-        ))}
-      </ScrollView>
+        contentContainerStyle={{ paddingHorizontal: horizontalPadding / 2, gap: spacing.md }}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={VIEWABILITY_CONFIG}
+      />
 
       {/* Dot indicator */}
       {items.length > 1 ? (
@@ -106,9 +115,6 @@ export function HeroCarousel({
 const styles = StyleSheet.create({
   wrapper: {
     gap: spacing.sm,
-  },
-  scrollContent: {
-    gap: spacing.md,
   },
   dots: {
     flexDirection: "row",

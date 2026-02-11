@@ -1,12 +1,11 @@
 import {
-  Image,
-  type ImageSourcePropType,
   Pressable,
   StyleSheet,
   Text,
   View,
   type ViewStyle,
 } from "react-native";
+import { Image, type ImageSource } from "expo-image";
 
 import { fontFamily } from "@/src/theme";
 import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
@@ -17,7 +16,7 @@ import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
 
 interface CollectionCardProps {
   /** Cover art source */
-  imageSource: ImageSourcePropType;
+  imageSource: ImageSource;
   /** Collection title rendered over bottom strip */
   title: string;
   onPress?: () => void;
@@ -47,7 +46,8 @@ export function CollectionCard({
       <Image
         source={imageSource}
         style={StyleSheet.absoluteFill}
-        resizeMode="cover"
+        contentFit="cover"
+        transition={200}
       />
 
       {/* Bottom title strip — text-safe zone (bottom ~18%) */}
