@@ -53,7 +53,7 @@ export const LIBRARY_COLLECTIONS: LibraryCollection[] = [
     id: "anxiety",
     title: "Ease Anxiety",
     subtitle: "Grounding passages to steady the heart and breath.",
-    imageSource: require("@/public/images/_source/library-cover-anxiety-contour-v02-card.png"),
+    imageSource: require("@/public/images/_source/library-cover-anxiety-contour-v01.webp"),
     tracks: [
       {
         id: "anxiety-013",
@@ -82,7 +82,7 @@ export const LIBRARY_COLLECTIONS: LibraryCollection[] = [
     id: "gratitude",
     title: "Gratitude Arc",
     subtitle: "Morning recitations to begin with shukr and clarity.",
-    imageSource: require("@/public/images/_source/library-cover-gratitude-arc-v02-card.png"),
+    imageSource: require("@/public/images/_source/library-cover-gratitude-arc-v01.webp"),
     tracks: [
       {
         id: "gratitude-001",
