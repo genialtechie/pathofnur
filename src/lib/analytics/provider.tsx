@@ -72,16 +72,18 @@ export function AnalyticsProvider({
       if (isAnalyticsReady()) {
         setIsReady(true);
 
-        // Flush any events that were queued before initialization
-        await flushEventQueue();
-
-        // Track app open
-        await trackAppOpen('cold');
-
-        // Identify user if provided
+        // Identify user FIRST if provided (before any events)
+        // This ensures user_id is set on all subsequent events including queued ones
         if (userId) {
           await identifyUser(userId, userTraits);
         }
+
+        // Flush any events that were queued before initialization
+        // Now they will have user_id if it was provided above
+        await flushEventQueue();
+
+        // Track app open (will have user_id if identified above)
+        await trackAppOpen('cold');
       }
     };
 

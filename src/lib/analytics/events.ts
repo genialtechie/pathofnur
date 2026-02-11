@@ -426,8 +426,16 @@ export async function trackDonationCheckout(
 
   const props: Record<string, unknown> = { amount_usd: amountUsd };
 
-  // Merge all extra properties
-  Object.assign(props, extraProps);
+  // Map camelCase keys to snake_case for schema compatibility
+  if ('donationId' in extraProps) {
+    props.donation_id = extraProps.donationId;
+  }
+  if ('errorCode' in extraProps) {
+    props.error_code = extraProps.errorCode;
+  }
+  if ('stepReached' in extraProps) {
+    props.step_reached = extraProps.stepReached;
+  }
 
   await track(eventMap[status], props, 'donation');
 }
