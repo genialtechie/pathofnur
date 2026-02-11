@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T20:00:00Z",
+  "last_updated_utc": "2026-02-11T19:48:32Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -152,7 +152,7 @@
       "title": "PWA config, app icon, and splash screen",
       "scope_paths": ["assets/images/**", "public/manifest.json"],
       "owner_role": "codex",
-      "status": "queued",
+      "status": "completed",
       "priority": "P1",
       "depends_on": [],
       "branch_name": "feat/T-20260211-010-pwa-polish",
@@ -162,7 +162,7 @@
         "PWA installs with correct icon on mobile",
         "npx expo export --platform web builds cleanly"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "updated_at_utc": "2026-02-11T19:48:32Z",
       "worktree_path": ".worktrees/T-20260211-010"
     }
   ]

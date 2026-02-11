@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:04:41Z",
+  "last_updated_utc": "2026-02-11T19:48:32Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -161,6 +161,44 @@
         "Land analytics type hotfixes and rerun npm run typecheck",
         "Add AnalyticsProvider in app/_layout.tsx once analytics lane approves",
         "Validate onboarding/donate event stream in PostHog debug view"
+      ]
+    },
+    {
+      "handoff_id": "H-20260211-010",
+      "task_id": "T-20260211-010",
+      "branch_name": "feat/T-20260211-010-pwa-polish",
+      "worktree_path": ".worktrees/T-20260211-010",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-02-11T19:48:32Z",
+      "summary": {
+        "completed": [
+          "Replaced Expo app icon and adaptive icon with branded source asset",
+          "Replaced splash image with branded launch splash asset",
+          "Added public PWA manifest with branded icon and standalone settings"
+        ],
+        "remaining": [
+          "Optional: generate dedicated 192x192 and 512x512 icon files for manifest variants"
+        ]
+      },
+      "changed_files": [
+        "assets/images/icon.png",
+        "assets/images/adaptive-icon.png",
+        "assets/images/splash-icon.png",
+        "assets/images/favicon.png",
+        "public/manifest.json"
+      ],
+      "validation": {
+        "commands": [
+          "npx expo export --platform web"
+        ],
+        "result": "pass",
+        "notes": "dist/manifest.json generated and routes built cleanly."
+      },
+      "risks": [],
+      "follow_ups": [],
+      "next_recommended_actions": [
+        "Proceed to T-20260211-007 after design system task dependencies are met"
       ]
     }
   ]

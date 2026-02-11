@@ -1,26 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T20:00:00Z",
+  "last_updated_utc": "2026-02-11T19:48:32Z",
   "reservations": [
     {
       "reservation_id": "R-20260211-005",
       "task_id": "T-20260211-005",
       "paths": ["src/components/cards/**", "src/components/hero/**", "src/components/ui/**", "src/theme/**"],
+      "reserved_by": "lead",
       "assignee": "cursor",
       "lock_type": "exclusive",
       "start_utc": "2026-02-11T19:32:00Z",
       "expires_utc": "2026-02-11T23:32:00Z",
       "worktree_path": ".worktrees/T-20260211-005"
-    },
-    {
-      "reservation_id": "R-20260211-010",
-      "task_id": "T-20260211-010",
-      "paths": ["assets/images/**", "public/manifest.json"],
-      "assignee": "codex",
-      "lock_type": "exclusive",
-      "start_utc": "2026-02-11T19:32:00Z",
-      "expires_utc": "2026-02-11T23:32:00Z",
-      "worktree_path": ".worktrees/T-20260211-010"
     }
   ]
 }
