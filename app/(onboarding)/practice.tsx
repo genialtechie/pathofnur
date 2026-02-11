@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 
+import {
+  TOTAL_ONBOARDING_STEPS,
+  trackOnboardingStepCompleted,
+  trackOnboardingStepViewed
+} from "@/src/features/donate/onboarding-analytics";
 import { ChoiceOption, OnboardingFrame } from "@/src/features/donate/onboarding-frame";
 
 const PRACTICE_OPTIONS = [
@@ -24,22 +29,31 @@ const PRACTICE_OPTIONS = [
 export default function OnboardingPracticeRoute() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
+  const startedAtRef = useRef(Date.now());
+
+  useEffect(() => {
+    void trackOnboardingStepViewed("practice", 2);
+  }, []);
+
+  const continueToRhythm = () => {
+    if (!selected) return;
+    void trackOnboardingStepCompleted("practice", 2, startedAtRef.current);
+    router.push({
+      pathname: "/(onboarding)/rhythm",
+      params: { practice: selected }
+    });
+  };
 
   return (
     <OnboardingFrame
       step={2}
-      totalSteps={5}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
       title="Tell us where you are today"
       subtitle="This helps us tune your reminders and first-day path."
       primaryLabel="Continue"
       primaryDisabled={!selected}
       backHref="/(onboarding)/welcome"
-      onPrimaryPress={() =>
-        router.push({
-          pathname: "/(onboarding)/rhythm",
-          params: { practice: selected ?? "beginner" }
-        })
-      }
+      onPrimaryPress={continueToRhythm}
     >
       {PRACTICE_OPTIONS.map((option) => (
         <ChoiceOption

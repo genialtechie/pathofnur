@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import {
+  TOTAL_ONBOARDING_STEPS,
+  trackOnboardingStepCompleted,
+  trackOnboardingStepViewed
+} from "@/src/features/donate/onboarding-analytics";
 import { ChoiceOption, OnboardingFrame } from "@/src/features/donate/onboarding-frame";
 
 const FOCUS_OPTIONS = [
@@ -28,26 +33,35 @@ export default function OnboardingFocusRoute() {
     rhythm?: string;
   }>();
   const [selected, setSelected] = useState<string | null>(null);
+  const startedAtRef = useRef(Date.now());
+
+  useEffect(() => {
+    void trackOnboardingStepViewed("focus", 4);
+  }, []);
+
+  const continueToComplete = () => {
+    if (!selected) return;
+    void trackOnboardingStepCompleted("focus", 4, startedAtRef.current);
+    router.push({
+      pathname: "/(onboarding)/complete",
+      params: {
+        practice: practice ?? "beginner",
+        rhythm: rhythm ?? "daily-5",
+        focus: selected
+      }
+    });
+  };
 
   return (
     <OnboardingFrame
       step={4}
-      totalSteps={5}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
       title="What should we prioritize first?"
       subtitle="Your home feed and reminders will adapt to this preference."
       primaryLabel="Continue"
       primaryDisabled={!selected}
       backHref="/(onboarding)/rhythm"
-      onPrimaryPress={() =>
-        router.push({
-          pathname: "/(onboarding)/complete",
-          params: {
-            practice: practice ?? "beginner",
-            rhythm: rhythm ?? "daily-5",
-            focus: selected ?? "consistency"
-          }
-        })
-      }
+      onPrimaryPress={continueToComplete}
     >
       {FOCUS_OPTIONS.map((option) => (
         <ChoiceOption

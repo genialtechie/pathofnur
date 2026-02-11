@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { fontFamily } from "@/src/components/navigation/typography";
+import {
+  trackDonationAmount,
+  trackDonationCheckout,
+  trackDonationPrompt
+} from "@/src/lib/analytics/track";
 
 const PRESET_AMOUNTS = [5, 15, 30, 75] as const;
 const STRIPE_DONATION_URL = "https://pathofnur.com/donate";
@@ -12,11 +17,49 @@ export function DonateScreen() {
   const { source } = useLocalSearchParams<{ source?: string }>();
   const [amount, setAmount] = useState<number>(15);
 
+  useEffect(() => {
+    const triggerContext = source === "onboarding_complete" ? "onboarding_end" : "settings";
+    void trackDonationPrompt(triggerContext);
+    void trackDonationAmount(15, false, 1);
+  }, [source]);
+
   const sourceLabel = useMemo(() => {
     if (source === "onboarding_complete") return "Onboarding";
     if (source) return source;
     return "General";
   }, [source]);
+
+  const handleSelectAmount = (nextAmount: number, presetIndex: number) => {
+    setAmount(nextAmount);
+    void trackDonationAmount(nextAmount, false, presetIndex);
+  };
+
+  const handleDonate = async () => {
+    await trackDonationCheckout(amount, "started");
+    try {
+      const checkoutUrl = `${STRIPE_DONATION_URL}?amount=${amount}`;
+      const canOpen = await Linking.canOpenURL(checkoutUrl);
+      if (!canOpen) {
+        await trackDonationCheckout(amount, "failed", {
+          errorCode: "cannot_open_stripe_url"
+        });
+        return;
+      }
+
+      await Linking.openURL(checkoutUrl);
+    } catch {
+      await trackDonationCheckout(amount, "failed", {
+        errorCode: "stripe_open_failed"
+      });
+    }
+  };
+
+  const handleContinueHome = async () => {
+    await trackDonationCheckout(amount, "abandoned", {
+      stepReached: "donate_screen_continue_home"
+    });
+    router.replace("/(tabs)/home");
+  };
 
   return (
     <View style={styles.container}>
@@ -53,7 +96,7 @@ export function DonateScreen() {
                 style={[styles.amountButton, selected ? styles.amountButtonSelected : null]}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => setAmount(preset)}
+                onPress={() => handleSelectAmount(preset, PRESET_AMOUNTS.indexOf(preset))}
               >
                 <Text style={styles.amountText}>{`$${preset}`}</Text>
               </Pressable>
@@ -66,14 +109,18 @@ export function DonateScreen() {
         <Pressable
           style={styles.primaryButton}
           accessibilityRole="button"
-          onPress={() => Linking.openURL(`${STRIPE_DONATION_URL}?amount=${amount}`)}
+          onPress={() => {
+            void handleDonate();
+          }}
         >
           <Text style={styles.primaryButtonLabel}>{`Donate $${amount} via Stripe`}</Text>
         </Pressable>
         <Pressable
           style={styles.secondaryButton}
           accessibilityRole="button"
-          onPress={() => router.replace("/(tabs)/home")}
+          onPress={() => {
+            void handleContinueHome();
+          }}
         >
           <Text style={styles.secondaryButtonLabel}>Continue to Home</Text>
         </Pressable>

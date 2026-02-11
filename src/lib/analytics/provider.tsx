@@ -139,14 +139,19 @@ export function useAnalytics() {
  *   useTrackScreenViews(navigationRef);
  *   return (
  *     <NavigationContainer ref={navigationRef}>
- *       {/* screens */}
+ *       // screens
  *     </NavigationContainer>
  *   );
  * }
  * ```
  */
 export function useTrackScreenViews(
-  navigationRef: { current?: { getCurrentRoute: () => { name: string } | undefined } }
+  navigationRef: {
+    current?: {
+      getCurrentRoute: () => { name: string } | undefined;
+      addListener?: (event: string, callback: () => void) => () => void;
+    };
+  }
 ) {
   useEffect(() => {
     if (!navigationRef.current) return;

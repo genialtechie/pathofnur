@@ -1,7 +1,14 @@
+import { useEffect, useRef } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { fontFamily } from "@/src/components/navigation/typography";
+import {
+  TOTAL_ONBOARDING_STEPS,
+  trackOnboardingCompleted,
+  trackOnboardingStepCompleted,
+  trackOnboardingStepViewed
+} from "@/src/features/donate/onboarding-analytics";
 import { OnboardingFrame } from "@/src/features/donate/onboarding-frame";
 
 const LABELS = {
@@ -27,23 +34,38 @@ export default function OnboardingCompleteRoute() {
     rhythm?: string;
     focus?: string;
   }>();
+  const startedAtRef = useRef(Date.now());
+
+  useEffect(() => {
+    void trackOnboardingStepViewed("complete", 5);
+  }, []);
+
+  const finalizeToDonate = () => {
+    void trackOnboardingStepCompleted("complete", 5, startedAtRef.current);
+    void trackOnboardingCompleted();
+    router.push({
+      pathname: "/donate",
+      params: { source: "onboarding_complete" }
+    });
+  };
+
+  const finalizeToHome = () => {
+    void trackOnboardingStepCompleted("complete", 5, startedAtRef.current);
+    void trackOnboardingCompleted();
+    router.replace("/(tabs)/home");
+  };
 
   return (
     <OnboardingFrame
       step={5}
-      totalSteps={5}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
       title="Your first path is ready"
       subtitle="Before we begin, you can help keep Path of Nur free for more people."
       primaryLabel="Support Path of Nur"
       secondaryLabel="Skip for now"
       backHref="/(onboarding)/focus"
-      onPrimaryPress={() =>
-        router.push({
-          pathname: "/donate",
-          params: { source: "onboarding_complete" }
-        })
-      }
-      onSecondaryPress={() => router.replace("/(tabs)/home")}
+      onPrimaryPress={finalizeToDonate}
+      onSecondaryPress={finalizeToHome}
     >
       <View style={styles.summaryCard}>
         <Text style={styles.summaryHeading}>Your setup</Text>
