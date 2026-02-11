@@ -1,0 +1,19 @@
+{
+  "name": "Path of Nur",
+  "short_name": "Path of Nur",
+  "description": "A gentle Muslim prayer and spiritual companion.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/_source/brand-app-icon-source-v01.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
