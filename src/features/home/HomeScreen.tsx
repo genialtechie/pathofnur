@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   greeting: {
-    fontFamily: fontFamily.appMedium,
+    fontFamily: fontFamily.appRegular,
     fontSize: 16,
     color: colors.text.tertiary,
   },

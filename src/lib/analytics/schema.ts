@@ -212,9 +212,12 @@ export const EventSchemas = {
   
   [EventName.HOME_HERO_OPENED]: BaseEventPropertiesSchema.extend({
     hero_type: z.string().min(1),
+    hero_index: z.number().int(),
+    action: z.string().optional(),
   }),
   [EventName.HOME_HERO_SWIPED]: BaseEventPropertiesSchema.extend({
     hero_index: z.number().int(),
+    previous_index: z.number().int(),
   }),
   [EventName.HOME_PRAYER_TIMELINE_VIEWED]: BaseEventPropertiesSchema,
   [EventName.HOME_QUICK_TASBIH_OPENED]: BaseEventPropertiesSchema,

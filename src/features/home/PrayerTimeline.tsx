@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   prayerName: {
-    fontFamily: fontFamily.appMedium,
+    fontFamily: fontFamily.appRegular,
     fontSize: 16,
     color: colors.text.secondary,
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
   },
   currentTime: {
-    fontFamily: fontFamily.appMedium,
+    fontFamily: fontFamily.appRegular,
     color: colors.interactive.active,
   },
   nextPrayerContainer: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   nextPrayerLabel: {
-    fontFamily: fontFamily.appMedium,
+    fontFamily: fontFamily.appRegular,
     fontSize: 14,
     color: colors.text.tertiary,
   },
