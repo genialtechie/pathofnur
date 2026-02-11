@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# env
+.env
+.env.*
+
+# local installed agent skills (runtime-specific)
+.agents/skills/
+
+# node / expo / build
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+web-build/
+
+# python
+__pycache__/
+*.pyc
+
+# logs
+*.log
+
+# temporary
+.tmp/
+
+# task worktrees
+.worktrees/

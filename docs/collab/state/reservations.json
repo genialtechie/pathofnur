@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated_utc": "2026-02-11T00:00:00Z",
+  "reservations": [
+    {
+      "reservation_id": "R-20260211-001",
+      "task_id": "T-20260211-001",
+      "paths": [
+        "app/(tabs)/**",
+        "src/components/navigation/**"
+      ],
+      "reserved_by": "lead",
+      "assignee": "codex",
+      "start_utc": "2026-02-11T00:00:00Z",
+      "expires_utc": "2026-02-11T04:00:00Z",
+      "lock_type": "exclusive",
+      "notes": "Initial shell lane",
+      "worktree_path": ".worktrees/T-20260211-001"
+    },
+    {
+      "reservation_id": "R-20260211-002",
+      "task_id": "T-20260211-002",
+      "paths": [
+        "src/lib/analytics/**",
+        "src/types/analytics/**"
+      ],
+      "reserved_by": "lead",
+      "assignee": "opencode",
+      "start_utc": "2026-02-11T00:00:00Z",
+      "expires_utc": "2026-02-11T04:00:00Z",
+      "lock_type": "exclusive",
+      "notes": "Analytics lane",
+      "worktree_path": ".worktrees/T-20260211-002"
+    },
+    {
+      "reservation_id": "R-20260211-003",
+      "task_id": "T-20260211-003",
+      "paths": [
+        "app/(onboarding)/**",
+        "app/donate/**",
+        "src/features/donate/**"
+      ],
+      "reserved_by": "lead",
+      "assignee": "claude",
+      "start_utc": "2026-02-11T00:00:00Z",
+      "expires_utc": "2026-02-11T04:00:00Z",
+      "lock_type": "exclusive",
+      "notes": "Onboarding and donation lane",
+      "worktree_path": ".worktrees/T-20260211-003"
+    }
+  ]
+}

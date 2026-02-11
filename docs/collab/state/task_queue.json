@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated_utc": "2026-02-11T00:00:00Z",
+  "tasks": [
+    {
+      "task_id": "T-20260211-001",
+      "title": "Scaffold Expo PWA tabs shell and navigation",
+      "scope_paths": [
+        "app/(tabs)/**",
+        "src/components/navigation/**"
+      ],
+      "owner_role": "codex",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-001-pwa-shell-routing",
+      "acceptance_criteria": [
+        "Expo Router app shell is created",
+        "Top-level route groups exist for onboarding and tabs",
+        "Bottom tab skeleton renders"
+      ],
+      "updated_at_utc": "2026-02-11T00:00:00Z",
+      "worktree_path": ".worktrees/T-20260211-001"
+    },
+    {
+      "task_id": "T-20260211-002",
+      "title": "Implement typed analytics foundation",
+      "scope_paths": [
+        "src/lib/analytics/**",
+        "src/types/analytics/**"
+      ],
+      "owner_role": "opencode",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-002-analytics-foundation",
+      "acceptance_criteria": [
+        "Typed track API exists",
+        "Canonical event map exists",
+        "Runtime payload validation exists"
+      ],
+      "updated_at_utc": "2026-02-11T00:00:00Z",
+      "worktree_path": ".worktrees/T-20260211-002"
+    },
+    {
+      "task_id": "T-20260211-003",
+      "title": "Build onboarding funnel skeleton with donation CTA route",
+      "scope_paths": [
+        "app/(onboarding)/**",
+        "app/donate/**",
+        "src/features/donate/**"
+      ],
+      "owner_role": "claude",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-003-onboarding-donation-funnel",
+      "acceptance_criteria": [
+        "Onboarding route flow is navigable",
+        "Progress indicator exists",
+        "Donation route reachable from funnel end"
+      ],
+      "updated_at_utc": "2026-02-11T00:00:00Z",
+      "worktree_path": ".worktrees/T-20260211-003"
+    }
+  ]
+}

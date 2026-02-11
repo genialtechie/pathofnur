@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated_utc": "2026-02-11T00:00:00Z",
+  "decisions": [
+    {
+      "decision_id": "D-20260211-001",
+      "topic": "Primary orchestration model",
+      "options_considered": [
+        "Human-only orchestration",
+        "Antigravity lead orchestration",
+        "Peer-to-peer self-coordination"
+      ],
+      "selected_option": "Antigravity lead orchestration",
+      "rationale": "Single lead minimizes ambiguity and merge-order confusion across concurrent agents.",
+      "owner": "human",
+      "timestamp_utc": "2026-02-11T00:00:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-002",
+      "topic": "Default collaboration topology",
+      "options_considered": [
+        "Feature branches per epic",
+        "Trunk with short branches",
+        "Patch queue without branches"
+      ],
+      "selected_option": "Trunk with short branches",
+      "rationale": "Continuous small merges are the strongest conflict reducer for this pace.",
+      "owner": "human",
+      "timestamp_utc": "2026-02-11T00:00:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-003",
+      "topic": "Ownership strictness",
+      "options_considered": [
+        "No ownership",
+        "Soft ownership",
+        "Strict folder ownership"
+      ],
+      "selected_option": "Strict folder ownership",
+      "rationale": "Explicit lane boundaries reduce overlap and integration risk.",
+      "owner": "human",
+      "timestamp_utc": "2026-02-11T00:00:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260211-004",
+      "topic": "Worktree execution model",
+      "options_considered": [
+        "Single checkout with branches only",
+        "Worktree optional",
+        "Mandatory worktree per task"
+      ],
+      "selected_option": "Mandatory worktree per task",
+      "rationale": "Per-task filesystem isolation reduces branch and dirty-tree collisions across concurrent agents.",
+      "owner": "human",
+      "timestamp_utc": "2026-02-11T00:00:00Z",
+      "supersedes": null
+    }
+  ]
+}
