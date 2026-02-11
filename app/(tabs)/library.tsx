@@ -1,10 +1,5 @@
-import { TabSkeletonScreen } from "@/src/components/navigation/TabSkeletonScreen";
+import { LibraryScreen } from "@/src/features/library";
 
 export default function LibraryRoute() {
-  return (
-    <TabSkeletonScreen
-      title="Library"
-      description="Quran recitations, ambient sessions, and themed collections."
-    />
-  );
+  return <LibraryScreen />;
 }
