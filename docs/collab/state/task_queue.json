@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T21:00:00Z",
+  "last_updated_utc": "2026-02-11T21:05:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -98,7 +98,7 @@
       "title": "Library screen with audio playback",
       "scope_paths": ["src/features/library/**", "app/(tabs)/library.tsx", "src/lib/audio/**"],
       "owner_role": "codex",
-      "status": "queued",
+      "status": "completed",
       "priority": "P0",
       "depends_on": ["T-20260211-005"],
       "branch_name": "feat/T-20260211-007-library-audio",
@@ -108,7 +108,7 @@
         "Audio plays and pauses via expo-av",
         "npm run typecheck passes"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "updated_at_utc": "2026-02-11T21:05:00Z",
       "worktree_path": ".worktrees/T-20260211-007"
     },
     {
