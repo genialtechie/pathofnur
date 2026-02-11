@@ -1,73 +1,169 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:04:41Z",
+  "last_updated_utc": "2026-02-11T19:32:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
       "title": "Scaffold Expo PWA tabs shell and navigation",
-      "scope_paths": [
-        "app/**",
-        "src/components/navigation/**",
-        "src/features/onboarding/**",
-        "package.json",
-        "app.json",
-        "babel.config.js",
-        "tsconfig.json",
-        "expo-env.d.ts"
-      ],
+      "scope_paths": ["app/**", "src/components/navigation/**", "src/features/onboarding/**", "package.json", "app.json", "babel.config.js", "tsconfig.json", "expo-env.d.ts"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-001-pwa-shell-routing",
-      "acceptance_criteria": [
-        "Expo Router app shell is created",
-        "Top-level route groups exist for onboarding and tabs",
-        "Bottom tab skeleton renders"
-      ],
+      "acceptance_criteria": ["Expo Router app shell is created", "Top-level route groups exist for onboarding and tabs", "Bottom tab skeleton renders"],
       "updated_at_utc": "2026-02-11T18:22:55Z",
       "worktree_path": ".worktrees/T-20260211-001"
     },
     {
       "task_id": "T-20260211-002",
       "title": "Implement typed analytics foundation",
-      "scope_paths": [
-        "src/lib/analytics/**",
-        "src/types/analytics/**"
-      ],
+      "scope_paths": ["src/lib/analytics/**", "src/types/analytics/**"],
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-002-analytics-foundation",
-      "acceptance_criteria": [
-        "Typed track API exists",
-        "Canonical event map exists",
-        "Runtime payload validation exists"
-      ],
+      "acceptance_criteria": ["Typed track API exists", "Canonical event map exists", "Runtime payload validation exists"],
       "updated_at_utc": "2026-02-11T18:30:00Z",
       "worktree_path": ".worktrees/T-20260211-002"
     },
     {
       "task_id": "T-20260211-003",
       "title": "Build onboarding funnel skeleton with donation CTA route",
-      "scope_paths": [
-        "app/(onboarding)/**",
-        "app/donate/**",
-        "src/features/donate/**"
-      ],
+      "scope_paths": ["app/(onboarding)/**", "app/donate/**", "src/features/donate/**"],
       "owner_role": "claude",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-003-onboarding-donation-funnel",
-      "acceptance_criteria": [
-        "Onboarding route flow is navigable",
-        "Progress indicator exists",
-        "Donation route reachable from funnel end"
-      ],
+      "acceptance_criteria": ["Onboarding route flow is navigable", "Progress indicator exists", "Donation route reachable from funnel end"],
       "updated_at_utc": "2026-02-11T19:04:41Z",
       "worktree_path": ".worktrees/T-20260211-003"
+    },
+    {
+      "task_id": "T-20260211-004",
+      "title": "Fix analytics TypeScript errors and wire provider",
+      "scope_paths": ["src/lib/analytics/client.ts", "src/lib/analytics/events.ts", ".env.example"],
+      "owner_role": "opencode",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "fix/T-20260211-004-analytics-type-fixes",
+      "acceptance_criteria": [
+        "npm run typecheck passes with 0 errors",
+        ".env.example created with EXPO_PUBLIC_POSTHOG_API_KEY placeholder"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-004"
+    },
+    {
+      "task_id": "T-20260211-005",
+      "title": "Design system tokens and card component library",
+      "scope_paths": ["src/components/cards/**", "src/components/hero/**", "src/components/ui/**", "src/theme/**"],
+      "owner_role": "cursor",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-005-design-system-cards",
+      "acceptance_criteria": [
+        "Theme tokens file exists with colors, spacing, radii from blueprint",
+        "HeroCard, CollectionCard, UtilityCard, ShareCard, ActionButton components exist",
+        "All components use theme tokens, no hardcoded colors",
+        "npm run typecheck passes"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-005"
+    },
+    {
+      "task_id": "T-20260211-006",
+      "title": "Home screen MVP with hero carousel",
+      "scope_paths": ["src/features/home/**", "app/(tabs)/home.tsx"],
+      "owner_role": "opencode",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": ["T-20260211-004", "T-20260211-005"],
+      "branch_name": "feat/T-20260211-006-home-screen",
+      "acceptance_criteria": [
+        "Home tab shows swipeable hero carousel with real images",
+        "Prayer timeline placeholder renders",
+        "Analytics events fire for hero interactions",
+        "npm run typecheck passes"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-006"
+    },
+    {
+      "task_id": "T-20260211-007",
+      "title": "Library screen with audio playback",
+      "scope_paths": ["src/features/library/**", "app/(tabs)/library.tsx", "src/lib/audio/**"],
+      "owner_role": "codex",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": ["T-20260211-005"],
+      "branch_name": "feat/T-20260211-007-library-audio",
+      "acceptance_criteria": [
+        "Library tab shows 3 collection cards with real images",
+        "Tapping a collection shows track list",
+        "Audio plays and pauses via expo-av",
+        "npm run typecheck passes"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-007"
+    },
+    {
+      "task_id": "T-20260211-008",
+      "title": "Tools screen: Tasbih counter and Qiblah compass",
+      "scope_paths": ["src/features/tools/**", "app/(tabs)/tools.tsx"],
+      "owner_role": "claude",
+      "status": "queued",
+      "priority": "P0",
+      "depends_on": ["T-20260211-005"],
+      "branch_name": "feat/T-20260211-008-tools-tasbih-qiblah",
+      "acceptance_criteria": [
+        "Tools tab shows Tasbih and Qiblah entry cards",
+        "Tasbih counts taps with haptic feedback",
+        "Qiblah shows direction indicator",
+        "npm run typecheck passes"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-008"
+    },
+    {
+      "task_id": "T-20260211-009",
+      "title": "Journey screen: Ramadan 30-day tracker",
+      "scope_paths": ["src/features/journey/**", "app/(tabs)/journey.tsx"],
+      "owner_role": "claude",
+      "status": "queued",
+      "priority": "P1",
+      "depends_on": ["T-20260211-005", "T-20260211-008"],
+      "branch_name": "feat/T-20260211-009-journey-ramadan-tracker",
+      "acceptance_criteria": [
+        "Journey tab shows 30-day grid",
+        "Days toggle on tap, streak counter displays",
+        "Progress persists via AsyncStorage",
+        "npm run typecheck passes"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-009"
+    },
+    {
+      "task_id": "T-20260211-010",
+      "title": "PWA config, app icon, and splash screen",
+      "scope_paths": ["assets/images/**", "public/manifest.json"],
+      "owner_role": "codex",
+      "status": "queued",
+      "priority": "P1",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-010-pwa-polish",
+      "acceptance_criteria": [
+        "App icon replaced with branded asset",
+        "Splash screen uses brand splash asset",
+        "PWA installs with correct icon on mobile",
+        "npx expo export --platform web builds cleanly"
+      ],
+      "updated_at_utc": "2026-02-11T19:32:00Z",
+      "worktree_path": ".worktrees/T-20260211-010"
     }
   ]
 }

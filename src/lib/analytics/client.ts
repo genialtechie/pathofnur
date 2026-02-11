@@ -1,21 +1,21 @@
 /**
  * PostHog Analytics Client Configuration
- * 
+ *
  * Initializes and exports the PostHog client for Path of Nur.
  * Supports offline queuing and retries.
  */
 
-import PostHog from 'posthog-react-native';
+import { PostHog } from 'posthog-react-native';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
-import * as Localization from 'expo-localization';
+import { getLocales, getCalendars } from 'expo-localization';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAnalyticsUserId } from './events';
 
 // PostHog configuration constants
 const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
-const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com';
+const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
 const IS_DEV = __DEV__;
 
 // PostHog client instance
@@ -38,19 +38,8 @@ export async function initAnalytics(): Promise<PostHog | null> {
   }
 
   try {
-    posthogClient = await PostHog.initAsync(POSTHOG_API_KEY, {
+    posthogClient = new PostHog(POSTHOG_API_KEY, {
       host: POSTHOG_HOST,
-      // Enable automatic screen tracking
-      captureScreens: true,
-      // Enable automatic session tracking
-      captureLifecycleEvents: true,
-      // Enable automatic deep link tracking
-      captureDeepLinks: true,
-      // Flush configuration for offline support
-      flushAt: 20, // Flush after 20 events
-      flushInterval: 30, // Flush every 30 seconds
-      // Enable debug mode in development
-      enableDebug: IS_DEV,
     });
 
     // Set global properties that apply to all events
@@ -73,16 +62,21 @@ export async function initAnalytics(): Promise<PostHog | null> {
 async function setGlobalProperties(): Promise<void> {
   if (!posthogClient) return;
 
-  const globalProps = {
+  const locales = getLocales();
+  const calendars = getCalendars();
+  const locale = locales[0];
+  const calendar = calendars[0];
+
+  const globalProps: Record<string, string | null> = {
     $app_name: 'Path of Nur',
-    $app_version: Application.nativeApplicationVersion || 'unknown',
-    $app_build: Application.nativeBuildVersion || 'unknown',
+    $app_version: Application.nativeApplicationVersion ?? 'unknown',
+    $app_build: Application.nativeBuildVersion ?? 'unknown',
     $app_platform: Platform.OS,
-    $device_model: Device.modelName || 'unknown',
-    $device_manufacturer: Device.manufacturer || 'unknown',
-    $os_version: Device.osVersion || 'unknown',
-    $locale: Localization.locale,
-    $timezone: Localization.timeZone,
+    $device_model: Device.modelName ?? 'unknown',
+    $device_manufacturer: Device.manufacturer ?? 'unknown',
+    $os_version: Device.osVersion ?? 'unknown',
+    $locale: locale?.languageTag ?? 'unknown',
+    $timezone: calendar?.timeZone ?? 'unknown',
   };
 
   posthogClient.register(globalProps);
@@ -125,7 +119,7 @@ export async function resetAnalytics(): Promise<void> {
 /**
  * Identify a user with a distinct ID
  */
-export async function identifyUser(userId: string, traits?: Record<string, unknown>): Promise<void> {
+export async function identifyUser(userId: string, traits?: Record<string, string | number | boolean | null>): Promise<void> {
   // Set the user ID for event tracking
   setAnalyticsUserId(userId);
 
@@ -141,7 +135,7 @@ export async function identifyUser(userId: string, traits?: Record<string, unkno
 /**
  * Update user properties without changing the distinct ID
  */
-export async function updateUserProperties(traits: Record<string, unknown>): Promise<void> {
+export async function updateUserProperties(traits: Record<string, string | number | boolean | null>): Promise<void> {
   if (!posthogClient) return;
 
   try {

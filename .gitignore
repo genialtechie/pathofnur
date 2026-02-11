@@ -4,6 +4,7 @@
 # env
 .env
 .env.*
+!.env.example
 
 # local installed agent skills (runtime-specific)
 .agents/skills/

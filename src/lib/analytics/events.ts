@@ -183,7 +183,7 @@ export async function getAttribution(): Promise<{ source?: string; medium?: stri
  * Build the base properties that all events require
  */
 async function buildBaseProperties(screenName: string, entrySource?: string): Promise<{
-  user_id: string | undefined;
+  user_id?: string;
   session_id: string;
   timestamp_utc: string;
   screen_name: string;
@@ -196,8 +196,18 @@ async function buildBaseProperties(screenName: string, entrySource?: string): Pr
 }> {
   const attribution = await getAttribution();
 
-  return {
-    user_id: userId || undefined,
+  const props: {
+    user_id?: string;
+    session_id: string;
+    timestamp_utc: string;
+    screen_name: string;
+    platform: 'web' | 'ios' | 'android';
+    app_version: string;
+    entry_source: string;
+    campaign_source?: string;
+    campaign_medium?: string;
+    campaign_content?: string;
+  } = {
     session_id: getSessionId(),
     timestamp_utc: new Date().toISOString(),
     screen_name: screenName,
@@ -208,6 +218,13 @@ async function buildBaseProperties(screenName: string, entrySource?: string): Pr
     campaign_medium: attribution.medium,
     campaign_content: attribution.content,
   };
+
+  // Only include user_id if it exists (avoid undefined for PostHog JsonType compatibility)
+  if (userId) {
+    props.user_id = userId;
+  }
+
+  return props;
 }
 
 // ============================================================================
@@ -446,18 +463,28 @@ export async function trackDonationCheckout(
     abandoned: EventName.DONATION_CHECKOUT_ABANDONED,
   };
 
-  const props: Record<string, unknown> = { amount_usd: amountUsd };
-
-  // Map camelCase keys to snake_case for schema compatibility
-  if (extraProps && 'donationId' in extraProps) {
-    props.donation_id = extraProps.donationId;
+  // Build props based on status with proper typing
+  const baseProps = { amount_usd: amountUsd };
+  
+  if (status === 'completed' && extraProps && 'donationId' in extraProps) {
+    await track(
+      eventMap[status],
+      { ...baseProps, donation_id: extraProps.donationId },
+      'donation'
+    );
+  } else if (status === 'failed' && extraProps && 'errorCode' in extraProps) {
+    await track(
+      eventMap[status],
+      { ...baseProps, error_code: extraProps.errorCode },
+      'donation'
+    );
+  } else if (status === 'abandoned' && extraProps && 'stepReached' in extraProps) {
+    await track(
+      eventMap[status],
+      { ...baseProps, step_reached: extraProps.stepReached },
+      'donation'
+    );
+  } else {
+    await track(eventMap[status], baseProps, 'donation');
   }
-  if (extraProps && 'errorCode' in extraProps) {
-    props.error_code = extraProps.errorCode;
-  }
-  if (extraProps && 'stepReached' in extraProps) {
-    props.step_reached = extraProps.stepReached;
-  }
-
-  await track(eventMap[status], props, 'donation');
 }
