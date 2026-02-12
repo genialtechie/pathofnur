@@ -81,19 +81,21 @@
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-011-location-prayer-service",
+      "worktree_path": ".worktrees/T-20260211-011",
       "acceptance_criteria": [
         "src/lib/location/use-location.ts hook returns { coords, city, country, timezone, status, refresh }",
         "src/lib/location/location-provider.tsx wraps expo-location with permission request + caching to AsyncStorage",
-        "Manual city fallback picker with top 30 cities if permission denied",
+        "Manual city fallback picker with API search via OpenStreetMap",
         "src/lib/prayer/aladhan-client.ts fetches from https://api.aladhan.com/v1/timings/{timestamp}?latitude=X&longitude=Y&method=2, caches response 24h in AsyncStorage keyed by lat/lng rounded to 2 decimals",
         "src/lib/prayer/use-prayer-times.ts hook returns { times, currentPrayer, nextPrayer, countdown, isLoading }",
         "countdown updates every 60s via setInterval, compares wall clock vs prayer time strings",
         "src/lib/prayer/use-islamic-date.ts hook returns { hijriDay, hijriMonth, hijriYear, formatted }",
         "src/lib/prayer/types.ts exports PrayerName, PrayerTimes, IslamicDate types",
+        "useQiblah hook calculates bearing to Kaaba using atan2 formula",
         "npm install expo-location",
         "npm run typecheck passes with 0 errors"
       ],
-      "implementation_notes": "Aladhan API is free, no key needed. Use lat/lng endpoint not city endpoint. method=2 is ISNA (standard for North American Muslims). Response includes timings.Fajr through timings.Isha, date.hijri with month names in Arabic+English, date.gregorian with weekday. Timezone auto-detected from coordinates. Cache entire response in AsyncStorage with key `prayer_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateString}`. expo-localization is already installed for timezone fallback.",
+      "implementation_notes": "Aladhan API is free, no key needed. OpenStreetMap Nominatim for geocoding. method=2 is ISNA. Response includes timings.Fajr through timings.Isha, date.hijri. Cache with key `prayer_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateString}`. Qiblah bearing formula: atan2(sin(kaaba_lng - user_lng) * cos(kaaba_lat), cos(user_lat) * sin(kaaba_lat) - sin(user_lat) * cos(kaaba_lat) * cos(kaaba_lng - user_lng))",
       "updated_at_utc": "2026-02-12T03:38:00Z"
     },
     {
@@ -101,23 +103,12 @@
       "title": "Ambient audio layer for library (bundled loops + mixer)",
       "scope_paths": ["src/lib/audio/**", "public/audio/ambient/**"],
       "owner_role": "codex",
-      "status": "ready",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-013-ambient-audio",
-      "acceptance_criteria": [
-        "public/audio/ambient/rain-loop.mp3 exists (30s loop, <200KB, CC0/royalty-free)",
-        "public/audio/ambient/medina-wind-loop.mp3 exists (30s loop, <200KB, CC0/royalty-free)",
-        "src/lib/audio/useAmbientPlayer.ts hook manages ambient loop (load, play, pause, setVolume, isLooping:true)",
-        "src/lib/audio/useLayeredAudio.ts hook wraps existing useExpoAudioPlayer + useAmbientPlayer, exposes toggleQuran(trackId, url), setAmbient('rain'|'medina_wind'|'silence'), setAmbientVolume(0-1)",
-        "Both sounds play simultaneously via separate expo-av Audio.Sound instances",
-        "Default ambient volume is 0.3",
-        "Wire ambient toggle into LibraryScreen.tsx: add ambient type selector below track list",
-        "Fire LIBRARY_AMBIENT_TOGGLED analytics event when ambient is toggled",
-        "npm run typecheck passes with 0 errors"
-      ],
-      "implementation_notes": "expo-av is already installed. Two Audio.Sound instances can play simultaneously. For ambient loops, use { isLooping: true, volume: 0.3 }. Source ambient mp3s from mixkit.co or similar CC0 source. If you cannot download audio files, create placeholder silent files and document the download URLs for lead to fetch manually. The analytics schema already has LIBRARY_AMBIENT_TOGGLED with ambient_type and is_enabled fields.",
-      "updated_at_utc": "2026-02-12T03:38:00Z"
+      "worktree_path": ".worktrees/T-20260211-013",
+      "updated_at_utc": "2026-02-12T05:55:00Z"
     },
     {
       "task_id": "T-20260211-008",
