@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  Image,
   Pressable,
   SafeAreaView,
   StatusBar,
@@ -9,9 +8,8 @@ import {
   View,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { Magnetometer } from "expo-sensors";
-import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { Ionicons } from "@expo/vector-icons";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
 import { useLocation } from "@/src/lib/location";
@@ -26,8 +24,7 @@ export default function QiblahScreen() {
   const { location, status: locationStatus } = useLocation();
   const coords = location?.coords;
   
-  const [subscription, setSubscription] = useState<any>(null);
-  const [magnetometer, setMagnetometer] = useState(0);
+  const [heading, setHeading] = useState<number | null>(null);
   const [qiblahBearing, setQiblahBearing] = useState(0);
 
   useEffect(() => {
@@ -35,27 +32,33 @@ export default function QiblahScreen() {
     track(EventName.TOOLS_QIBLAH_STARTED, {}, "tools_qiblah");
   }, []);
 
-  // Subscribe to Magnetometer
+  // Subscribe to Location Heading (True North)
   useEffect(() => {
-    const _subscription = Magnetometer.addListener((data) => {
-      // Calculate heading from magnetometer data
-      // atan2(y, x) gives angle in radians. Convert to degrees.
-      // Adjust for device orientation if needed, but simple atan2(y, x) is baseline.
-      let angle = Math.atan2(data.y, data.x);
-      angle = angle * (180 / Math.PI);
-      // Adjust: 0 degrees is North?
-      // Typically: angle = angle + 90
-      // Ensure positive
-      if (angle < 0) angle += 360;
+    let subscription: Location.LocationSubscription | null = null;
 
-      // Smooth it? For now raw.
-      setMagnetometer(angle);
-    });
-    Magnetometer.setUpdateInterval(100);
-    setSubscription(_subscription);
+    const startWatching = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+
+        subscription = await Location.watchHeadingAsync((obj) => {
+          const { trueHeading, magHeading } = obj;
+          // Use trueHeading if available (> -1), otherwise fallback to magnetic
+          const north = trueHeading >= 0 ? trueHeading : magHeading;
+          setHeading(north);
+        });
+      } catch (error) {
+        console.warn("Failed to watch heading:", error);
+      }
+    };
+
+    startWatching();
 
     return () => {
-      _subscription && _subscription.remove();
+      // Clean up subscription
+      if (subscription) {
+        subscription.remove();
+      }
     };
   }, []);
 
@@ -77,11 +80,8 @@ export default function QiblahScreen() {
     }
   }, [coords]);
 
-  // The arrow should point to Qiblah.
-  // Device heading = magnetometer.
-  // Qiblah bearing = qiblahBearing.
-  // Arrow rotation = qiblahBearing - magnetometer.
-  const rotation = qiblahBearing - magnetometer;
+  const currentHeading = heading ?? 0;
+  const rotation = qiblahBearing - currentHeading;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -119,6 +119,10 @@ export default function QiblahScreen() {
                 {Math.round(qiblahBearing)}°
               </Text>
               <Text style={styles.cityText}>from your location</Text>
+              
+              {heading === null && (
+                 <Text style={styles.calibratingText}>Calibrating...</Text>
+              )}
             </View>
 
             <View style={styles.infoPanel}>
@@ -174,7 +178,6 @@ const styles = StyleSheet.create({
   },
   arrowContainer: {
     marginBottom: spacing.xl,
-    // Add shadow/glow?
   },
   bearingText: {
     color: colors.text.primary,
@@ -185,6 +188,12 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 16,
+  },
+  calibratingText: {
+    color: colors.text.tertiary,
+    fontFamily: fontFamily.appRegular,
+    fontSize: 14,
+    marginTop: spacing.md,
   },
   infoPanel: {
     position: "absolute",
