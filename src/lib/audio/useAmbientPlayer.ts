@@ -17,12 +17,11 @@ const DEFAULT_VOLUME = 0.3;
 
 /**
  * Asset map for bundled ambient loops.
- * Files live in public/audio/ambient/ and are loaded via require().
- * Replace placeholder references with actual bundled assets when available.
+ * Uses require() for native compatibility (bundler resolves asset).
  */
-const AMBIENT_ASSETS: Record<Exclude<AmbientType, "silence">, string> = {
-  rain: "rain-loop",
-  medina_wind: "medina-wind-loop",
+const AMBIENT_ASSETS: Record<Exclude<AmbientType, "silence">, any> = {
+  rain: require("@/assets/audio/ambient/rain-loop.mp3"),
+  medina_wind: require("@/assets/audio/ambient/medina-wind-loop.mp3"),
 };
 
 // ---------------------------------------------------------------------------
@@ -63,14 +62,12 @@ export function useAmbientPlayer() {
         return;
       }
 
-      const assetKey = AMBIENT_ASSETS[type];
-      if (!assetKey) return;
+      const source = AMBIENT_ASSETS[type];
+      if (!source) return;
 
       try {
-        // Load ambient loop from public directory via URI
-        const uri = `/audio/ambient/${assetKey}.mp3`;
         const { sound } = await Audio.Sound.createAsync(
-          { uri },
+          source,
           {
             shouldPlay: true,
             isLooping: true,
