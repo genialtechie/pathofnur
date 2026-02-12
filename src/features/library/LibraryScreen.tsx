@@ -12,16 +12,30 @@ import { useFocusEffect } from "expo-router";
 
 import { CollectionCard } from "@/src/components/cards";
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
-import { useExpoAudioPlayer } from "@/src/lib/audio";
+import { useLayeredAudio, type AmbientType } from "@/src/lib/audio";
 import { colors, fontFamily, radii, spacing } from "@/src/theme";
 
 import { LIBRARY_COLLECTIONS, type LibraryCollection, type LibraryTrack } from "./library-data";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const AMBIENT_OPTIONS: { type: AmbientType; label: string }[] = [
+  { type: "silence", label: "Off" },
+  { type: "rain", label: "Rain" },
+  { type: "medina_wind", label: "Wind" },
+];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function LibraryScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>(
     LIBRARY_COLLECTIONS[0]?.id ?? ""
   );
-  const { playbackState, togglePlayback } = useExpoAudioPlayer();
+  const { state, toggleQuran, setAmbient } = useLayeredAudio();
 
   const selectedCollection = useMemo(
     () =>
@@ -33,9 +47,9 @@ export function LibraryScreen() {
   const activeTrack = useMemo(
     () =>
       LIBRARY_COLLECTIONS.flatMap((collection) => collection.tracks).find(
-        (trackItem) => trackItem.id === playbackState.activeTrackId
+        (trackItem) => trackItem.id === state.quran.activeTrackId
       ) ?? null,
-    [playbackState.activeTrackId]
+    [state.quran.activeTrackId]
   );
 
   useFocusEffect(
@@ -55,7 +69,7 @@ export function LibraryScreen() {
 
   const handleTrackPress = useCallback(
     async (collection: LibraryCollection, trackItem: LibraryTrack) => {
-      const result = await togglePlayback(trackItem.id, trackItem.audioUrl);
+      const result = await toggleQuran(trackItem.id, trackItem.audioUrl);
       if (result !== "playing") return;
 
       await track(
@@ -64,12 +78,26 @@ export function LibraryScreen() {
           track_id: trackItem.id,
           track_name: trackItem.title,
           collection_name: collection.title,
-          has_ambient: false,
+          has_ambient: state.ambient.activeType !== "silence",
+          ambient_type: state.ambient.activeType !== "silence" ? state.ambient.activeType : undefined,
         },
         "library"
       );
     },
-    [togglePlayback]
+    [toggleQuran, state.ambient.activeType]
+  );
+
+  const handleAmbientToggle = useCallback(
+    async (type: AmbientType) => {
+      const isEnabled = type !== "silence";
+      await setAmbient(type);
+      await track(
+        EventName.LIBRARY_AMBIENT_TOGGLED,
+        { ambient_type: type, is_enabled: isEnabled },
+        "library"
+      );
+    },
+    [setAmbient]
   );
 
   if (!selectedCollection) {
@@ -117,9 +145,9 @@ export function LibraryScreen() {
           <Text style={styles.collectionSubtitle}>{selectedCollection.subtitle}</Text>
 
           {selectedCollection.tracks.map((trackItem) => {
-            const isCurrentTrack = playbackState.activeTrackId === trackItem.id;
+            const isCurrentTrack = state.quran.activeTrackId === trackItem.id;
             const actionLabel =
-              isCurrentTrack && playbackState.isPlaying ? "Pause" : "Play";
+              isCurrentTrack && state.quran.isPlaying ? "Pause" : "Play";
 
             return (
               <Pressable
@@ -147,16 +175,45 @@ export function LibraryScreen() {
             );
           })}
 
+          {/* Ambient selector */}
+          <View style={styles.ambientSection}>
+            <Text style={styles.ambientLabel}>Ambient Sound</Text>
+            <View style={styles.ambientRow}>
+              {AMBIENT_OPTIONS.map((option) => {
+                const isActive = state.ambient.activeType === option.type;
+                return (
+                  <Pressable
+                    key={option.type}
+                    style={[styles.ambientChip, isActive && styles.ambientChipActive]}
+                    accessibilityRole="button"
+                    onPress={() => {
+                      void handleAmbientToggle(option.type);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.ambientChipLabel,
+                        isActive && styles.ambientChipLabelActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           {activeTrack ? (
             <Text style={styles.nowPlaying}>
-              {playbackState.isPlaying ? "Now playing:" : "Paused:"} {activeTrack.title}
+              {state.quran.isPlaying ? "Now playing:" : "Paused:"} {activeTrack.title}
             </Text>
           ) : (
             <Text style={styles.nowPlaying}>Select a track to start listening.</Text>
           )}
 
-          {playbackState.error ? (
-            <Text style={styles.errorText}>{playbackState.error}</Text>
+          {state.quran.error ? (
+            <Text style={styles.errorText}>{state.quran.error}</Text>
           ) : null}
         </View>
       </ScrollView>
@@ -277,6 +334,39 @@ const styles = StyleSheet.create({
     color: colors.interactive.selectedBorder,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 13,
+  },
+  // Ambient selector
+  ambientSection: {
+    marginTop: spacing.sm,
+    gap: spacing.xs,
+  },
+  ambientLabel: {
+    color: colors.text.secondary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
+  },
+  ambientRow: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  ambientChip: {
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.surface.borderInteractive,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  ambientChipActive: {
+    borderColor: colors.brand.metallicGold,
+    backgroundColor: colors.interactive.selectedBackground,
+  },
+  ambientChipLabel: {
+    color: colors.text.tertiary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 13,
+  },
+  ambientChipLabelActive: {
+    color: colors.brand.metallicGold,
   },
   nowPlaying: {
     color: colors.text.secondary,
