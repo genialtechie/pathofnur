@@ -1,5 +1,16 @@
 {
   "schema_version": "1.0.0",
   "last_updated_utc": "2026-02-11T21:05:00Z",
-  "reservations": []
+  "reservations": [
+    {
+      "task_id": "T-20260211-009",
+      "worktree_path": ".worktrees/T-20260211-009",
+      "reserved_paths": [
+        "src/features/journey/**",
+        "app/(tabs)/journey.tsx"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-02-12T10:00:00Z"
+    }
+  ]
 }

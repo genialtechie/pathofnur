@@ -119,6 +119,7 @@
       "priority": "P0",
       "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-008-tools-tasbih-qiblah",
+      "worktree_path": ".worktrees/T-20260211-008",
       "acceptance_criteria": [
         "Tools tab shows 2 entry cards (Tasbih, Qiblah) using UtilityCard from @/src/components/cards",
         "Tasbih: full-screen dark tap surface, large count display, haptic on each tap via expo-haptics, reset button with confirmation",
@@ -141,6 +142,7 @@
       "priority": "P1",
       "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-009-journey-ramadan-tracker",
+      "worktree_path": ".worktrees/T-20260211-009",
       "acceptance_criteria": [
         "Journey tab shows 30-day grid (6x5 or similar) with numbered day cells",
         "Tapping a day toggles completion state (checkmark or glow effect)",
@@ -182,6 +184,24 @@
       ],
       "implementation_notes": "Blocked on lead creating Stripe Payment Link with 'customer chooses amount' enabled. URL format: https://buy.stripe.com/xxx?prefilled_amount=1500 (cents). No backend needed.",
       "updated_at_utc": "2026-02-12T03:38:00Z"
+    },
+    {
+      "task_id": "T-20260212-015",
+      "title": "Fix T-013 ambient audio: native asset loading + file size",
+      "scope_paths": ["src/lib/audio/useAmbientPlayer.ts", "public/audio/ambient/**"],
+      "owner_role": "claude",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": ["T-20260211-013"],
+      "branch_name": "fix/T-20260212-015-ambient-audio-native",
+      "worktree_path": ".worktrees/T-20260212-015",
+      "acceptance_criteria": [
+        "useAmbientPlayer.ts uses require() or expo-asset Asset.fromModule() instead of relative URI string for audio sources",
+        "Audio files are <200KB each (re-encoded to 15s, 64kbps mono)",
+        "npm run typecheck passes with 0 errors"
+      ],
+      "implementation_notes": "Implemented native requirements and optimized assets.",
+      "updated_at_utc": "2026-02-12T06:25:00Z"
     }
   ]
 }
