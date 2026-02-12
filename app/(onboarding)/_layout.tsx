@@ -9,15 +9,23 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#070b14" }
+        contentStyle: { backgroundColor: "#070b14" },
+        animation: "slide_from_right"
       }}
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="welcome" />
-      <Stack.Screen name="practice" />
-      <Stack.Screen name="rhythm" />
-      <Stack.Screen name="focus" />
-      <Stack.Screen name="complete" />
+      <Stack.Screen name="intent" />
+      <Stack.Screen name="journey" />
+      <Stack.Screen name="quran-break" />
+      <Stack.Screen name="prayer-life" />
+      <Stack.Screen name="quran-time" />
+      <Stack.Screen name="plan-intro" />
+      <Stack.Screen name="plan-builder" />
+      <Stack.Screen name="plan-time" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="location" />
+      <Stack.Screen name="ready" />
     </Stack>
   );
 }

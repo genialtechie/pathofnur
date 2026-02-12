@@ -10,31 +10,29 @@ import {
 
 import {
   TOTAL_ONBOARDING_STEPS,
-  trackOnboardingStarted,
   trackOnboardingStepCompleted,
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
 import { fontFamily } from "@/src/components/navigation/typography";
 
-const STEP = 1;
+const STEP = 7;
 
-export default function WelcomeScreen() {
+export default function PlanIntroScreen() {
   const router = useRouter();
   const startedAtRef = useRef(Date.now());
 
   useEffect(() => {
-    void trackOnboardingStarted();
-    void trackOnboardingStepViewed("welcome", STEP);
+    void trackOnboardingStepViewed("plan_intro", STEP);
   }, []);
 
   const onContinue = () => {
-    void trackOnboardingStepCompleted("welcome", STEP, startedAtRef.current);
-    router.push("/(onboarding)/intent");
+    void trackOnboardingStepCompleted("plan_intro", STEP, startedAtRef.current);
+    router.push("/(onboarding)/plan-builder");
   };
 
   return (
     <ImageBackground
-      source={require("@/assets/images/onboarding/bismillah.png")}
+      source={require("@/assets/images/onboarding/plan-break.png")}
       style={styles.bg}
       resizeMode="cover"
     >
@@ -43,24 +41,19 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.spacer} />
 
-        <Text style={styles.arabic} selectable>
-          بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+        <Text style={styles.headline} selectable>
+          Let's build your personal{"\n"}prayer plan.
         </Text>
-        <Text style={styles.translation} selectable>
-          In the name of God, the Most Gracious, the Most Merciful.
+        <Text style={styles.hadith} selectable>
+          "The most beloved of deeds to Allah are those that are most consistent,
+          even if small."
         </Text>
-        <Text style={styles.body} selectable>
-          Path of Nur is your gentle companion for prayer, Quran, and spiritual
-          growth. We'll set up your personal path in under 2 minutes.
-        </Text>
+        <Text style={styles.source}>Sahih al-Bukhari</Text>
 
         <View style={styles.footer}>
           <Pressable style={styles.primaryButton} onPress={onContinue}>
-            <Text style={styles.primaryLabel}>Begin</Text>
+            <Text style={styles.primaryLabel}>Let's go</Text>
           </Pressable>
-          <Text style={styles.privacy}>
-            Your preferences stay on your device.
-          </Text>
         </View>
       </View>
     </ImageBackground>
@@ -74,7 +67,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7,11,20,0.55)"
+    backgroundColor: "rgba(7,11,20,0.50)"
   },
   content: {
     flex: 1,
@@ -83,34 +76,33 @@ const styles = StyleSheet.create({
     paddingBottom: 40
   },
   spacer: { flex: 1 },
-  arabic: {
+  headline: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.arabicBold,
-    fontSize: 32,
+    fontFamily: fontFamily.appBold,
+    fontSize: 28,
     textAlign: "center",
-    lineHeight: 48,
-    marginBottom: 8
-  },
-  translation: {
-    color: "#c5a021",
-    fontFamily: fontFamily.scriptureRegular,
-    fontSize: 16,
-    textAlign: "center",
-    fontStyle: "italic",
-    lineHeight: 24,
+    lineHeight: 36,
     marginBottom: 16
   },
-  body: {
+  hadith: {
     color: "#dce3ed",
-    fontFamily: fontFamily.appRegular,
-    fontSize: 16,
-    lineHeight: 24,
+    fontFamily: fontFamily.scriptureRegular,
+    fontSize: 17,
     textAlign: "center",
-    marginBottom: 32
+    fontStyle: "italic",
+    lineHeight: 26,
+    paddingHorizontal: 8,
+    marginBottom: 8
+  },
+  source: {
+    color: "#c5a021",
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 40
   },
   footer: {
-    gap: 12,
-    alignItems: "center"
+    gap: 12
   },
   primaryButton: {
     alignItems: "center",
@@ -118,18 +110,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "#c5a021",
     minHeight: 54,
-    paddingHorizontal: 24,
-    alignSelf: "stretch"
+    paddingHorizontal: 24
   },
   primaryLabel: {
     color: "#070b14",
     fontFamily: fontFamily.appBold,
     fontSize: 17
-  },
-  privacy: {
-    color: "#5d6d84",
-    fontFamily: fontFamily.appRegular,
-    fontSize: 13,
-    textAlign: "center"
   }
 });

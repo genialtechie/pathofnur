@@ -10,31 +10,29 @@ import {
 
 import {
   TOTAL_ONBOARDING_STEPS,
-  trackOnboardingStarted,
   trackOnboardingStepCompleted,
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
 import { fontFamily } from "@/src/components/navigation/typography";
 
-const STEP = 1;
+const STEP = 4;
 
-export default function WelcomeScreen() {
+export default function QuranBreakScreen() {
   const router = useRouter();
   const startedAtRef = useRef(Date.now());
 
   useEffect(() => {
-    void trackOnboardingStarted();
-    void trackOnboardingStepViewed("welcome", STEP);
+    void trackOnboardingStepViewed("quran_break", STEP);
   }, []);
 
   const onContinue = () => {
-    void trackOnboardingStepCompleted("welcome", STEP, startedAtRef.current);
-    router.push("/(onboarding)/intent");
+    void trackOnboardingStepCompleted("quran_break", STEP, startedAtRef.current);
+    router.push("/(onboarding)/prayer-life");
   };
 
   return (
     <ImageBackground
-      source={require("@/assets/images/onboarding/bismillah.png")}
+      source={require("@/assets/images/onboarding/quran-break.png")}
       style={styles.bg}
       resizeMode="cover"
     >
@@ -43,24 +41,17 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.spacer} />
 
-        <Text style={styles.arabic} selectable>
-          بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+        <Text style={styles.quote} selectable>
+          "Verily, with hardship{"\n"}comes ease."
         </Text>
-        <Text style={styles.translation} selectable>
-          In the name of God, the Most Gracious, the Most Merciful.
-        </Text>
-        <Text style={styles.body} selectable>
-          Path of Nur is your gentle companion for prayer, Quran, and spiritual
-          growth. We'll set up your personal path in under 2 minutes.
+        <Text style={styles.source} selectable>
+          Quran 94:6 — Surah Ash-Sharh
         </Text>
 
         <View style={styles.footer}>
           <Pressable style={styles.primaryButton} onPress={onContinue}>
-            <Text style={styles.primaryLabel}>Begin</Text>
+            <Text style={styles.primaryLabel}>Continue</Text>
           </Pressable>
-          <Text style={styles.privacy}>
-            Your preferences stay on your device.
-          </Text>
         </View>
       </View>
     </ImageBackground>
@@ -74,7 +65,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7,11,20,0.55)"
+    backgroundColor: "rgba(7,11,20,0.45)"
   },
   content: {
     flex: 1,
@@ -83,34 +74,24 @@ const styles = StyleSheet.create({
     paddingBottom: 40
   },
   spacer: { flex: 1 },
-  arabic: {
+  quote: {
     color: "#f3f5f7",
-    fontFamily: fontFamily.arabicBold,
-    fontSize: 32,
-    textAlign: "center",
-    lineHeight: 48,
-    marginBottom: 8
-  },
-  translation: {
-    color: "#c5a021",
     fontFamily: fontFamily.scriptureRegular,
-    fontSize: 16,
+    fontSize: 30,
     textAlign: "center",
     fontStyle: "italic",
-    lineHeight: 24,
-    marginBottom: 16
+    lineHeight: 44,
+    marginBottom: 12
   },
-  body: {
-    color: "#dce3ed",
-    fontFamily: fontFamily.appRegular,
-    fontSize: 16,
-    lineHeight: 24,
+  source: {
+    color: "#c5a021",
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
     textAlign: "center",
-    marginBottom: 32
+    marginBottom: 40
   },
   footer: {
-    gap: 12,
-    alignItems: "center"
+    gap: 12
   },
   primaryButton: {
     alignItems: "center",
@@ -118,18 +99,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "#c5a021",
     minHeight: 54,
-    paddingHorizontal: 24,
-    alignSelf: "stretch"
+    paddingHorizontal: 24
   },
   primaryLabel: {
     color: "#070b14",
     fontFamily: fontFamily.appBold,
     fontSize: 17
-  },
-  privacy: {
-    color: "#5d6d84",
-    fontFamily: fontFamily.appRegular,
-    fontSize: 13,
-    textAlign: "center"
   }
 });

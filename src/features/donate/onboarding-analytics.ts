@@ -4,7 +4,7 @@ import {
   trackOnboardingStep
 } from "@/src/lib/analytics/track";
 
-export const TOTAL_ONBOARDING_STEPS = 5;
+export const TOTAL_ONBOARDING_STEPS = 12;
 
 export async function trackOnboardingStarted(): Promise<void> {
   await track(EventName.ONBOARDING_STARTED, {}, "onboarding");
