@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-12T03:38:00Z",
+  "last_updated_utc": "2026-02-12T06:00:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -77,7 +77,7 @@
       "title": "Location service + Prayer times + Islamic date (Aladhan API)",
       "scope_paths": ["src/lib/location/**", "src/lib/prayer/**"],
       "owner_role": "opencode",
-      "status": "ready",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-011-location-prayer-service",
@@ -96,7 +96,7 @@
         "npm run typecheck passes with 0 errors"
       ],
       "implementation_notes": "Aladhan API is free, no key needed. OpenStreetMap Nominatim for geocoding. method=2 is ISNA. Response includes timings.Fajr through timings.Isha, date.hijri. Cache with key `prayer_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateString}`. Qiblah bearing formula: atan2(sin(kaaba_lng - user_lng) * cos(kaaba_lat), cos(user_lat) * sin(kaaba_lat) - sin(user_lat) * cos(kaaba_lat) * cos(kaaba_lng - user_lng))",
-      "updated_at_utc": "2026-02-12T03:38:00Z"
+      "updated_at_utc": "2026-02-12T06:00:00Z"
     },
     {
       "task_id": "T-20260211-013",
