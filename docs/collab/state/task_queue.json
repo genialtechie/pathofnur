@@ -1,169 +1,196 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T21:05:00Z",
+  "last_updated_utc": "2026-02-12T03:38:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
       "title": "Scaffold Expo PWA tabs shell and navigation",
-      "scope_paths": ["app/**", "src/components/navigation/**", "src/features/onboarding/**", "package.json", "app.json", "babel.config.js", "tsconfig.json", "expo-env.d.ts"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-001-pwa-shell-routing",
-      "acceptance_criteria": ["Expo Router app shell is created", "Top-level route groups exist for onboarding and tabs", "Bottom tab skeleton renders"],
-      "updated_at_utc": "2026-02-11T18:22:55Z",
-      "worktree_path": ".worktrees/T-20260211-001"
+      "updated_at_utc": "2026-02-11T18:22:55Z"
     },
     {
       "task_id": "T-20260211-002",
       "title": "Implement typed analytics foundation",
-      "scope_paths": ["src/lib/analytics/**", "src/types/analytics/**"],
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-002-analytics-foundation",
-      "acceptance_criteria": ["Typed track API exists", "Canonical event map exists", "Runtime payload validation exists"],
-      "updated_at_utc": "2026-02-11T18:30:00Z",
-      "worktree_path": ".worktrees/T-20260211-002"
+      "updated_at_utc": "2026-02-11T18:30:00Z"
     },
     {
       "task_id": "T-20260211-003",
       "title": "Build onboarding funnel skeleton with donation CTA route",
-      "scope_paths": ["app/(onboarding)/**", "app/donate/**", "src/features/donate/**"],
       "owner_role": "claude",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-003-onboarding-donation-funnel",
-      "acceptance_criteria": ["Onboarding route flow is navigable", "Progress indicator exists", "Donation route reachable from funnel end"],
-      "updated_at_utc": "2026-02-11T19:04:41Z",
-      "worktree_path": ".worktrees/T-20260211-003"
+      "updated_at_utc": "2026-02-11T19:04:41Z"
     },
     {
       "task_id": "T-20260211-004",
       "title": "Fix analytics TypeScript errors and wire provider",
-      "scope_paths": ["src/lib/analytics/client.ts", "src/lib/analytics/events.ts", ".env.example"],
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "fix/T-20260211-004-analytics-type-fixes",
-      "acceptance_criteria": [
-        "npm run typecheck passes with 0 errors",
-        ".env.example created with EXPO_PUBLIC_POSTHOG_API_KEY placeholder"
-      ],
-      "updated_at_utc": "2026-02-11T20:00:00Z",
-      "worktree_path": ".worktrees/T-20260211-004"
+      "updated_at_utc": "2026-02-11T20:00:00Z"
     },
     {
       "task_id": "T-20260211-005",
       "title": "Design system tokens and card component library",
-      "scope_paths": ["src/components/cards/**", "src/components/hero/**", "src/components/ui/**", "src/theme/**"],
       "owner_role": "cursor",
       "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260211-005-design-system-cards",
-      "acceptance_criteria": [
-        "Theme tokens file exists with colors, spacing, radii from blueprint",
-        "HeroCard, CollectionCard, UtilityCard, ShareCard, ActionButton components exist",
-        "All components use theme tokens, no hardcoded colors",
-        "npm run typecheck passes"
-      ],
-      "updated_at_utc": "2026-02-11T20:05:58Z",
-      "worktree_path": ".worktrees/T-20260211-005"
+      "updated_at_utc": "2026-02-11T20:05:58Z"
     },
     {
       "task_id": "T-20260211-006",
       "title": "Home screen MVP with hero carousel",
-      "scope_paths": ["src/features/home/**", "app/(tabs)/home.tsx"],
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
       "depends_on": ["T-20260211-004", "T-20260211-005"],
       "branch_name": "feat/T-20260211-006-home-screen",
-      "acceptance_criteria": [
-        "Home tab shows swipeable hero carousel with real images",
-        "Prayer timeline placeholder renders",
-        "Analytics events fire for hero interactions",
-        "npm run typecheck passes"
-      ],
-      "updated_at_utc": "2026-02-11T21:00:00Z",
-      "worktree_path": ".worktrees/T-20260211-006"
+      "updated_at_utc": "2026-02-11T21:00:00Z"
     },
     {
       "task_id": "T-20260211-007",
       "title": "Library screen with audio playback",
-      "scope_paths": ["src/features/library/**", "app/(tabs)/library.tsx", "src/lib/audio/**"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
       "depends_on": ["T-20260211-005"],
       "branch_name": "feat/T-20260211-007-library-audio",
+      "updated_at_utc": "2026-02-11T21:05:00Z"
+    },
+    {
+      "task_id": "T-20260211-011",
+      "title": "Location service + Prayer times + Islamic date (Aladhan API)",
+      "scope_paths": ["src/lib/location/**", "src/lib/prayer/**"],
+      "owner_role": "opencode",
+      "status": "ready",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-011-location-prayer-service",
       "acceptance_criteria": [
-        "Library tab shows 3 collection cards with real images",
-        "Tapping a collection shows track list",
-        "Audio plays and pauses via expo-av",
-        "npm run typecheck passes"
+        "src/lib/location/use-location.ts hook returns { coords, city, country, timezone, status, refresh }",
+        "src/lib/location/location-provider.tsx wraps expo-location with permission request + caching to AsyncStorage",
+        "Manual city fallback picker with top 30 cities if permission denied",
+        "src/lib/prayer/aladhan-client.ts fetches from https://api.aladhan.com/v1/timings/{timestamp}?latitude=X&longitude=Y&method=2, caches response 24h in AsyncStorage keyed by lat/lng rounded to 2 decimals",
+        "src/lib/prayer/use-prayer-times.ts hook returns { times, currentPrayer, nextPrayer, countdown, isLoading }",
+        "countdown updates every 60s via setInterval, compares wall clock vs prayer time strings",
+        "src/lib/prayer/use-islamic-date.ts hook returns { hijriDay, hijriMonth, hijriYear, formatted }",
+        "src/lib/prayer/types.ts exports PrayerName, PrayerTimes, IslamicDate types",
+        "npm install expo-location",
+        "npm run typecheck passes with 0 errors"
       ],
-      "updated_at_utc": "2026-02-11T21:05:00Z",
-      "worktree_path": ".worktrees/T-20260211-007"
+      "implementation_notes": "Aladhan API is free, no key needed. Use lat/lng endpoint not city endpoint. method=2 is ISNA (standard for North American Muslims). Response includes timings.Fajr through timings.Isha, date.hijri with month names in Arabic+English, date.gregorian with weekday. Timezone auto-detected from coordinates. Cache entire response in AsyncStorage with key `prayer_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateString}`. expo-localization is already installed for timezone fallback.",
+      "updated_at_utc": "2026-02-12T03:38:00Z"
+    },
+    {
+      "task_id": "T-20260211-013",
+      "title": "Ambient audio layer for library (bundled loops + mixer)",
+      "scope_paths": ["src/lib/audio/**", "public/audio/ambient/**"],
+      "owner_role": "codex",
+      "status": "ready",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260211-013-ambient-audio",
+      "acceptance_criteria": [
+        "public/audio/ambient/rain-loop.mp3 exists (30s loop, <200KB, CC0/royalty-free)",
+        "public/audio/ambient/medina-wind-loop.mp3 exists (30s loop, <200KB, CC0/royalty-free)",
+        "src/lib/audio/useAmbientPlayer.ts hook manages ambient loop (load, play, pause, setVolume, isLooping:true)",
+        "src/lib/audio/useLayeredAudio.ts hook wraps existing useExpoAudioPlayer + useAmbientPlayer, exposes toggleQuran(trackId, url), setAmbient('rain'|'medina_wind'|'silence'), setAmbientVolume(0-1)",
+        "Both sounds play simultaneously via separate expo-av Audio.Sound instances",
+        "Default ambient volume is 0.3",
+        "Wire ambient toggle into LibraryScreen.tsx: add ambient type selector below track list",
+        "Fire LIBRARY_AMBIENT_TOGGLED analytics event when ambient is toggled",
+        "npm run typecheck passes with 0 errors"
+      ],
+      "implementation_notes": "expo-av is already installed. Two Audio.Sound instances can play simultaneously. For ambient loops, use { isLooping: true, volume: 0.3 }. Source ambient mp3s from mixkit.co or similar CC0 source. If you cannot download audio files, create placeholder silent files and document the download URLs for lead to fetch manually. The analytics schema already has LIBRARY_AMBIENT_TOGGLED with ambient_type and is_enabled fields.",
+      "updated_at_utc": "2026-02-12T03:38:00Z"
     },
     {
       "task_id": "T-20260211-008",
       "title": "Tools screen: Tasbih counter and Qiblah compass",
       "scope_paths": ["src/features/tools/**", "app/(tabs)/tools.tsx"],
       "owner_role": "claude",
-      "status": "queued",
+      "status": "ready",
       "priority": "P0",
-      "depends_on": ["T-20260211-005"],
+      "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-008-tools-tasbih-qiblah",
       "acceptance_criteria": [
-        "Tools tab shows Tasbih and Qiblah entry cards",
-        "Tasbih counts taps with haptic feedback",
-        "Qiblah shows direction indicator",
-        "npm run typecheck passes"
+        "Tools tab shows 2 entry cards (Tasbih, Qiblah) using UtilityCard from @/src/components/cards",
+        "Tasbih: full-screen dark tap surface, large count display, haptic on each tap via expo-haptics, reset button with confirmation",
+        "Tasbih count persists across app restarts via AsyncStorage key 'tasbih_count'",
+        "Qiblah: imports useLocation hook from @/src/lib/location/use-location (from T-011), calculates bearing to Kaaba (21.4225, 39.8262) using atan2 formula",
+        "Qiblah: shows rotating arrow using expo-sensors magnetometer for device heading, subtracts device heading from Qiblah bearing",
+        "Analytics: TOOLS_TASBIH_STARTED, TOOLS_TASBIH_COMPLETED (with count), TOOLS_TASBIH_RESET, TOOLS_QIBLAH_STARTED",
+        "npm install expo-haptics expo-sensors",
+        "npm run typecheck passes with 0 errors"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
-      "worktree_path": ".worktrees/T-20260211-008"
+      "implementation_notes": "Qiblah bearing formula: bearing = atan2(sin(kaaba_lng - user_lng) * cos(kaaba_lat), cos(user_lat) * sin(kaaba_lat) - sin(user_lat) * cos(kaaba_lat) * cos(kaaba_lng - user_lng)). Convert to degrees. The useLocation hook from T-011 provides { coords: { latitude, longitude } }. If T-011 is not yet merged, create a temporary mock that returns hardcoded NYC coords and import from the same path so it works once T-011 lands. Use theme tokens from @/src/theme for all colors. Use fontFamily from @/src/theme for all text.",
+      "updated_at_utc": "2026-02-12T03:38:00Z"
     },
     {
       "task_id": "T-20260211-009",
       "title": "Journey screen: Ramadan 30-day tracker",
       "scope_paths": ["src/features/journey/**", "app/(tabs)/journey.tsx"],
-      "owner_role": "claude",
-      "status": "queued",
+      "owner_role": "cursor",
+      "status": "ready",
       "priority": "P1",
-      "depends_on": ["T-20260211-005", "T-20260211-008"],
+      "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-009-journey-ramadan-tracker",
       "acceptance_criteria": [
-        "Journey tab shows 30-day grid",
-        "Days toggle on tap, streak counter displays",
-        "Progress persists via AsyncStorage",
-        "npm run typecheck passes"
+        "Journey tab shows 30-day grid (6x5 or similar) with numbered day cells",
+        "Tapping a day toggles completion state (checkmark or glow effect)",
+        "Streak counter at top: 'X Days of Nur' showing consecutive completed days",
+        "Import useIslamicDate from @/src/lib/prayer/use-islamic-date (from T-011) to display current Ramadan day number",
+        "All completion data persists in AsyncStorage under key 'ramadan_2026_progress' as JSON array of booleans",
+        "ShareCard component from @/src/components/cards used for Day 30 share prompt",
+        "Analytics: JOURNEY_DAY_COMPLETED, JOURNEY_STREAK_MILESTONE (at 3, 7, 14, 30 days)",
+        "Use theme tokens from @/src/theme for all colors, no hardcoded values",
+        "npm run typecheck passes with 0 errors"
       ],
-      "updated_at_utc": "2026-02-11T19:32:00Z",
-      "worktree_path": ".worktrees/T-20260211-009"
+      "implementation_notes": "If T-011 is not merged yet, create a temporary mock for useIslamicDate that returns { hijriMonth: 'Ramadan', hijriDay: 1 }. The ShareCard component exists at @/src/components/cards/ShareCard.tsx. Ramadan 2026 starts approximately Feb 18. Use AsyncStorage for persistence, no backend needed.",
+      "updated_at_utc": "2026-02-12T03:38:00Z"
     },
     {
       "task_id": "T-20260211-010",
       "title": "PWA config, app icon, and splash screen",
-      "scope_paths": ["assets/images/**", "public/manifest.json"],
+      "scope_paths": ["assets/images/**", "public/manifest.json", "app.json"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P1",
       "depends_on": [],
       "branch_name": "feat/T-20260211-010-pwa-polish",
+      "updated_at_utc": "2026-02-11T19:48:32Z"
+    },
+    {
+      "task_id": "T-20260211-012",
+      "title": "Stripe Payment Link integration for donations",
+      "scope_paths": ["src/features/donate/**"],
+      "owner_role": "lead",
+      "status": "blocked",
+      "priority": "P1",
+      "depends_on": [],
+      "branch_name": null,
       "acceptance_criteria": [
-        "App icon replaced with branded asset",
-        "Splash screen uses brand splash asset",
-        "PWA installs with correct icon on mobile",
-        "npx expo export --platform web builds cleanly"
+        "Replace STRIPE_DONATION_URL placeholder with real Stripe Payment Link",
+        "Use ?prefilled_amount={cents} query param to pass selected amount",
+        "Migrate hardcoded colors in donate-screen.tsx to theme tokens"
       ],
-      "updated_at_utc": "2026-02-11T19:48:32Z",
-      "worktree_path": ".worktrees/T-20260211-010"
+      "implementation_notes": "Blocked on lead creating Stripe Payment Link with 'customer chooses amount' enabled. URL format: https://buy.stripe.com/xxx?prefilled_amount=1500 (cents). No backend needed.",
+      "updated_at_utc": "2026-02-12T03:38:00Z"
     }
   ]
 }
