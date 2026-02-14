@@ -115,7 +115,7 @@
       "title": "Tools screen: Tasbih counter and Qiblah compass",
       "scope_paths": ["src/features/tools/**", "app/(tabs)/tools.tsx"],
       "owner_role": "claude",
-      "status": "ready",
+      "status": "completed",
       "priority": "P0",
       "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-008-tools-tasbih-qiblah",
@@ -138,7 +138,7 @@
       "title": "Journey screen: Ramadan 30-day tracker",
       "scope_paths": ["src/features/journey/**", "app/(tabs)/journey.tsx"],
       "owner_role": "cursor",
-      "status": "ready",
+      "status": "completed",
       "priority": "P1",
       "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-009-journey-ramadan-tracker",
@@ -201,7 +201,26 @@
         "npm run typecheck passes with 0 errors"
       ],
       "implementation_notes": "Implemented native requirements and optimized assets.",
-      "updated_at_utc": "2026-02-12T06:25:00Z"
+      "updated_at_utc": "2026-02-12T06:02:00Z"
+    },
+    {
+      "task_id": "T-20260212-016",
+      "title": "Fix T-008 Qiblah: use Location.watchHeadingAsync for True North",
+      "scope_paths": ["app/tools/qiblah.tsx"],
+      "owner_role": "claude",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": ["T-20260211-008"],
+      "branch_name": "fix/T-20260212-016-qiblah-true-north",
+      "worktree_path": ".worktrees/T-20260212-016",
+      "acceptance_criteria": [
+        "Replace raw Magnetometer implementation with Location.watchHeadingAsync()",
+        "Use `trueHeading` from the event for accurate Kaaba alignment (Magnetometer gives magnetic north)",
+        "Handle permissions for location services appropriately (fallback to magnetic heading if location denied? or just error state)",
+        "Ensure smooth rotation animation (useReanimated or LayoutAnimation)"
+      ],
+      "implementation_notes": "Raw Magnetometer data is noisy and points to Magnetic North. Location.watchHeadingAsync provides True North which is required for accurate Qiblah direction. The current implementation is functionally correct for magnetic north but geographically inaccurate.",
+      "updated_at_utc": "2026-02-12T17:40:00Z"
     }
   ]
 }
