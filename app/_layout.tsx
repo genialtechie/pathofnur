@@ -13,6 +13,8 @@ import {
   ZalandoSans_700Bold
 } from "@expo-google-fonts/zalando-sans";
 
+import { LocationProvider } from "@/src/lib/location";
+
 export const unstable_settings = {
   initialRouteName: "(onboarding)"
 };
@@ -44,15 +46,17 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: "#070b14" }
-        }}
-      >
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <LocationProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#070b14" }
+          }}
+        >
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </LocationProvider>
     </SafeAreaProvider>
   );
 }

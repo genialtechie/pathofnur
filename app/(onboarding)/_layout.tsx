@@ -10,7 +10,9 @@ export default function OnboardingLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: "#070b14" },
-        animation: "slide_from_right"
+        animation: "slide_from_right",
+        gestureEnabled: false,
+        fullScreenGestureEnabled: false
       }}
     >
       <Stack.Screen name="index" />
