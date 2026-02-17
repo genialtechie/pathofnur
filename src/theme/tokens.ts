@@ -21,56 +21,72 @@ export const brand = {
 } as const;
 
 /** Semantic surface colors derived from existing layouts */
-export const surface = {
-  /** Primary app background */
-  background: "#070b14",
-  /** Elevated card / panel background */
-  card: "#0b1220",
-  /** Tab bar background */
-  tabBar: "#0b1220",
-  /** Subtle border between panes */
-  border: "#111a2a",
-  /** Elevated border for interactive cards */
-  borderElevated: "#1a2639",
-  /** Subtle interactive border */
-  borderInteractive: "#223146",
-} as const;
+// ---------------------------------------------------------------------------
+// Color Palettes
+// ---------------------------------------------------------------------------
 
-/** Text colors */
-export const text = {
-  /** Primary heading / body text on dark */
+const baseText = {
   primary: "#f3f5f7",
-  /** Secondary labels and descriptions */
   secondary: "#b4c0d1",
-  /** Tertiary kickers, captions */
   tertiary: "#93a1b5",
-  /** Muted / disabled text */
   muted: "#607089",
-  /** Text on gold CTA buttons */
   onAccent: "#070b14",
-  /** Light dismiss / secondary buttons */
   light: "#d6deea",
-} as const;
+  error: "#ef9a9a",
+};
 
-/** Interactive state colors */
-export const interactive = {
-  /** Active tab / highlight accent */
+const baseSurface = {
+  background: "#070b14",
+  card: "#0b1220",
+  tabBar: "#0b1220",
+  border: "#111a2a",
+  borderElevated: "#1a2639",
+  borderInteractive: "#223146",
+};
+
+const baseInteractive = {
   active: brand.metallicGold,
-  /** Inactive tab / icon tint */
   inactive: "#607089",
-  /** Selected state border */
   selectedBorder: brand.metallicGold,
-  /** Selected state background */
   selectedBackground: "#101a2b",
+};
+
+export const darkColors = {
+  brand,
+  surface: baseSurface,
+  text: baseText,
+  interactive: baseInteractive,
 } as const;
 
-/** Bundled color export */
-export const colors = {
+export const lightColors = {
   brand,
-  surface,
-  text,
-  interactive,
+  surface: {
+    background: "#FFFFFF",
+    card: "#F4F5F7",
+    tabBar: "#F4F5F7",
+    border: "#E2E8F0",
+    borderElevated: "#D1D5DB",
+    borderInteractive: "#CBD5E1",
+  },
+  text: {
+    primary: "#111827",
+    secondary: "#4B5563",
+    tertiary: "#6B7280",
+    muted: "#9CA3AF",
+    onAccent: "#FFFFFF",
+    light: "#4B5563",
+    error: "#EF4444",
+  },
+  interactive: {
+    ...baseInteractive,
+    inactive: "#9CA3AF",
+    selectedBackground: "#FDFCF5", // Very light gold tint
+  },
 } as const;
+
+// Backwards compatibility (default to dark)
+export const colors = darkColors;
+
 
 // ---------------------------------------------------------------------------
 // Spacing (4-px grid)

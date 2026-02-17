@@ -9,7 +9,7 @@ import {
 import { useRouter } from "expo-router";
 
 import { UtilityCard } from "@/src/components/cards";
-import { colors, fontFamily, spacing } from "@/src/theme";
+import { fontFamily, spacing, useTheme } from "@/src/theme";
 
 // Import images
 const TASBIH_COVER = require("@/public/images/_source/tools-tasbih-focus-v01.webp");
@@ -17,18 +17,19 @@ const QIBLAH_COVER = require("@/public/images/_source/tools-qiblah-backdrop-v01.
 
 export default function ToolsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
       <StatusBar barStyle="light-content" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.kicker}>Utility</Text>
-          <Text style={styles.title}>Tools</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.kicker, { color: colors.text.tertiary }]}>Utility</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Tools</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
             Practical resources to support your daily worship.
           </Text>
         </View>
@@ -62,7 +63,6 @@ export default function ToolsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface.background,
   },
   scrollContent: {
     paddingTop: spacing.xl,
@@ -74,20 +74,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   kicker: {
-    color: colors.text.tertiary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
   title: {
-    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 30,
     lineHeight: 36,
   },
   subtitle: {
-    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 16,
     lineHeight: 22,

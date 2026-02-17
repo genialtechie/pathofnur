@@ -5,6 +5,39 @@ import {
   InterruptionModeIOS,
   type AVPlaybackStatus,
 } from "expo-av";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// File-based logging for remote debugging
+const LOG_KEY = "audio_debug_logs";
+let debugLogs: string[] = [];
+
+export async function addDebugLog(message: string): Promise<void> {
+  const timestamp = new Date().toLocaleTimeString();
+  const entry = `[${timestamp}] ${message}`;
+  debugLogs.push(entry);
+  if (debugLogs.length > 100) debugLogs.shift();
+  try {
+    await AsyncStorage.setItem(LOG_KEY, JSON.stringify(debugLogs));
+  } catch (e) {}
+  console.log(entry);
+}
+
+export async function getDebugLogs(): Promise<string> {
+  try {
+    const stored = await AsyncStorage.getItem(LOG_KEY);
+    if (stored) {
+      debugLogs = JSON.parse(stored);
+    }
+  } catch (e) {}
+  return debugLogs.join("\n");
+}
+
+export async function clearDebugLogs(): Promise<void> {
+  debugLogs = [];
+  try {
+    await AsyncStorage.removeItem(LOG_KEY);
+  } catch (e) {}
+}
 
 export interface AudioPlaybackState {
   activeTrackId: string | null;
@@ -42,34 +75,17 @@ export function useExpoAudioPlayer() {
     error: null,
   });
 
-  const handleStatusUpdate = useCallback((status: AVPlaybackStatus) => {
-    if (!status.isLoaded) {
-      return;
-    }
-
-    setPlaybackState((previous) => ({
-      ...previous,
-      isPlaying: status.isPlaying,
-      isBuffering: status.isBuffering,
-      activeTrackId: status.didJustFinish ? null : previous.activeTrackId,
-    }));
-  }, []);
-
-  const unload = useCallback(async () => {
-    if (!soundRef.current) return;
-
-    await soundRef.current.unloadAsync();
-    soundRef.current = null;
-  }, []);
-
   const togglePlayback = useCallback(
     async (trackId: string, audioUrl: string): Promise<TogglePlaybackResult> => {
+      // Debug logging disabled - uncomment below for troubleshooting
+      // void addDebugLog(`togglePlayback called: ${trackId}`);
       try {
         await ensureAudioMode();
 
         const activeSound = soundRef.current;
         const isCurrentTrack = playbackState.activeTrackId === trackId;
 
+        // If same track is loaded, toggle play/pause
         if (activeSound && isCurrentTrack) {
           const status = await activeSound.getStatusAsync();
           if (!status.isLoaded) {
@@ -97,7 +113,10 @@ export function useExpoAudioPlayer() {
           return "playing";
         }
 
-        await unload();
+        // Load new track
+        if (soundRef.current) {
+          await soundRef.current.unloadAsync();
+        }
 
         setPlaybackState({
           activeTrackId: trackId,
@@ -108,8 +127,16 @@ export function useExpoAudioPlayer() {
 
         const { sound } = await Audio.Sound.createAsync(
           { uri: audioUrl },
-          { shouldPlay: true, progressUpdateIntervalMillis: 250 },
-          handleStatusUpdate
+          { shouldPlay: true },
+          (status: AVPlaybackStatus) => {
+            if (!status.isLoaded) return;
+            setPlaybackState((previous) => ({
+              ...previous,
+              isPlaying: status.isPlaying,
+              isBuffering: status.isBuffering,
+              activeTrackId: status.didJustFinish ? null : previous.activeTrackId,
+            }));
+          }
         );
 
         soundRef.current = sound;
@@ -123,7 +150,7 @@ export function useExpoAudioPlayer() {
 
         return "playing";
       } catch (error) {
-        console.error("Audio playback error", error);
+        console.error("Audio playback error:", error);
         setPlaybackState((previous) => ({
           ...previous,
           isPlaying: false,
@@ -133,8 +160,21 @@ export function useExpoAudioPlayer() {
         return "error";
       }
     },
-    [handleStatusUpdate, playbackState.activeTrackId, unload]
+    [playbackState.activeTrackId]
   );
+
+  const unload = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+    }
+    setPlaybackState({
+      activeTrackId: null,
+      isPlaying: false,
+      isBuffering: false,
+      error: null,
+    });
+  }, []);
 
   useEffect(() => {
     return () => {

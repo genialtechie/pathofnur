@@ -27,7 +27,8 @@ interface HeroItem {
   imageSource: any;
   title: string;
   subtitle: string;
-  action: string;
+  collectionId?: string;
+  action?: string;
 }
 
 interface HeroCarouselProps {

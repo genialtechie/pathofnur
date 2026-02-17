@@ -1,56 +1,55 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Pressable,
-  SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
+import {
+  Gesture,
+  GestureDetector,
+  ScrollView,
+} from "react-native-gesture-handler";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { CollectionCard } from "@/src/components/cards";
-import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
+import { useDailyRecommendation } from "@/src/lib/quran";
 import { useLayeredAudio, type AmbientType } from "@/src/lib/audio";
-import { colors, fontFamily, radii, spacing } from "@/src/theme";
+import { DayTimeline } from "./DayTimeline";
+import { useTheme, fontFamily, radii, spacing } from "@/src/theme";
+import { trackScreenView, track, EventName } from "@/src/lib/analytics/track";
 
-import { LIBRARY_COLLECTIONS, type LibraryCollection, type LibraryTrack } from "./library-data";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const AMBIENT_OPTIONS: { type: AmbientType; label: string }[] = [
-  { type: "silence", label: "Off" },
-  { type: "rain", label: "Rain" },
-  { type: "medina_wind", label: "Wind" },
+const AMBIENT_OPTIONS: { type: AmbientType; label: string; icon: string }[] = [
+  { type: "silence", label: "Off", icon: "volume-mute-outline" },
+  { type: "rain", label: "Rain", icon: "rain-outline" },
+  { type: "medina_wind", label: "Wind", icon: "leaf-outline" },
 ];
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export function LibraryScreen() {
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string>(
-    LIBRARY_COLLECTIONS[0]?.id ?? ""
-  );
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isTimelineVisible, setIsTimelineVisible] = useState(false);
+  
+  const { surah, translation, audioUrl, isLoading, error, surahNumber } = 
+    useDailyRecommendation(selectedDate);
   const { state, toggleQuran, setAmbient } = useLayeredAudio();
+  const { colors } = useTheme();
 
-  const selectedCollection = useMemo(
-    () =>
-      LIBRARY_COLLECTIONS.find((collection) => collection.id === selectedCollectionId) ??
-      LIBRARY_COLLECTIONS[0],
-    [selectedCollectionId]
-  );
+  const scrollViewRef = useRef(null);
 
-  const activeTrack = useMemo(
-    () =>
-      LIBRARY_COLLECTIONS.flatMap((collection) => collection.tracks).find(
-        (trackItem) => trackItem.id === state.quran.activeTrackId
-      ) ?? null,
-    [state.quran.activeTrackId]
-  );
+
+
+  const openGesture = Gesture.Pan()
+    // Activate only on left swipe (translationX < -20)
+    // Positive max value (1000) prevents activation on right swipe
+    .activeOffsetX([-20, 1000])
+    .failOffsetY([-20, 20])
+    .simultaneousWithExternalGesture(scrollViewRef)
+    .onStart(() => {
+      setIsTimelineVisible(true);
+    });
 
   useFocusEffect(
     useCallback(() => {
@@ -58,165 +57,182 @@ export function LibraryScreen() {
     }, [])
   );
 
-  const handleSelectCollection = useCallback((collection: LibraryCollection) => {
-    setSelectedCollectionId(collection.id);
-    void track(
-      EventName.LIBRARY_COLLECTION_OPENED,
-      { collection_name: collection.title },
-      "library"
-    );
+  const handlePlay = useCallback(async () => {
+    if (!audioUrl) return;
+    
+    try {
+      await toggleQuran(`quran-${surahNumber}`, audioUrl);
+    } catch (err) {
+      console.error("Playback error:", err);
+    }
+    
+    void track(EventName.LIBRARY_TRACK_PLAYED, {
+      track_id: `quran-${surahNumber}`,
+      track_name: surah?.englishName || "Quran",
+      collection_name: "daily_recommendation",
+      has_ambient: state.ambient.activeType !== "silence",
+      ambient_type: state.ambient.activeType !== "silence" ? state.ambient.activeType : undefined,
+    }, "library");
+  }, [audioUrl, surahNumber, surah, toggleQuran, state.ambient.activeType]);
+
+  const handleAmbientToggle = useCallback(async (type: AmbientType) => {
+    await setAmbient(type);
+    void track(EventName.LIBRARY_AMBIENT_TOGGLED, {
+      ambient_type: type,
+      is_enabled: type !== "silence",
+    }, "library");
+  }, [setAmbient]);
+
+  const handleDateSelect = useCallback((date: Date) => {
+    setSelectedDate(date);
   }, []);
 
-  const handleTrackPress = useCallback(
-    async (collection: LibraryCollection, trackItem: LibraryTrack) => {
-      const result = await toggleQuran(trackItem.id, trackItem.audioUrl);
-      if (result !== "playing") return;
+  const isPlaying = state.quran.isPlaying && state.quran.activeTrackId === `quran-${surahNumber}`;
 
-      await track(
-        EventName.LIBRARY_TRACK_PLAYED,
-        {
-          track_id: trackItem.id,
-          track_name: trackItem.title,
-          collection_name: collection.title,
-          has_ambient: state.ambient.activeType !== "silence",
-          ambient_type: state.ambient.activeType !== "silence" ? state.ambient.activeType : undefined,
-        },
-        "library"
-      );
-    },
-    [toggleQuran, state.ambient.activeType]
-  );
+  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 
-  const handleAmbientToggle = useCallback(
-    async (type: AmbientType) => {
-      const isEnabled = type !== "silence";
-      await setAmbient(type);
-      await track(
-        EventName.LIBRARY_AMBIENT_TOGGLED,
-        { ambient_type: type, is_enabled: isEnabled },
-        "library"
-      );
-    },
-    [setAmbient]
-  );
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const title = isToday ? "Today's Recommendation" : formattedDate;
 
-  if (!selectedCollection) {
-    return null;
-  }
+
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
+      <StatusBar barStyle={colors.surface.background === "#ffffff" ? "dark-content" : "light-content"} />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.header}>
-          <Text style={styles.kicker}>Library</Text>
-          <Text style={styles.title}>Recitation Collections</Text>
-          <Text style={styles.subtitle}>
-            Choose a collection and press play to begin a focused session.
-          </Text>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.collectionsRow}
-        >
-          {LIBRARY_COLLECTIONS.map((collection) => (
-            <CollectionCard
-              key={collection.id}
-              imageSource={collection.imageSource}
-              title={collection.title}
-              onPress={() => handleSelectCollection(collection)}
-              style={
-                collection.id === selectedCollection.id
-                  ? styles.collectionCardSelected
-                  : styles.collectionCard
-              }
-            />
-          ))}
-        </ScrollView>
-
-        <View style={styles.trackPanel}>
-          <Text style={styles.collectionTitle}>{selectedCollection.title}</Text>
-          <Text style={styles.collectionSubtitle}>{selectedCollection.subtitle}</Text>
-
-          {selectedCollection.tracks.map((trackItem) => {
-            const isCurrentTrack = state.quran.activeTrackId === trackItem.id;
-            const actionLabel =
-              isCurrentTrack && state.quran.isPlaying ? "Pause" : "Play";
-
-            return (
-              <Pressable
-                key={trackItem.id}
-                style={[
-                  styles.trackRow,
-                  isCurrentTrack && styles.trackRowActive,
-                ]}
-                accessibilityRole="button"
-                onPress={() => {
-                  void handleTrackPress(selectedCollection, trackItem);
-                }}
-              >
-                <View style={styles.trackMeta}>
-                  <Text style={styles.trackTitle}>{trackItem.title}</Text>
-                  <Text style={styles.trackCaption}>
-                    {trackItem.reciter} · {trackItem.durationLabel}
+      {/* Main Content with swipe-to-open */}
+      {/* Main Content with swipe-to-open */}
+      <View style={styles.content}>
+        {/* @ts-ignore - touchAction is web-only prop */}
+        <GestureDetector gesture={openGesture} touchAction="pan-y">
+          <ScrollView
+            ref={scrollViewRef}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerTop}>
+                <View style={styles.titleRow}>
+                  <View>
+                    <Text style={[styles.kicker, { color: colors.text.tertiary }]}>Library</Text>
+                    <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
+                  </View>
+                </View>
+              </View>
+              
+              {surah && (
+                <View style={styles.surahInfo}>
+                  <View style={styles.surahTitleRow}>
+                    <Text style={[styles.surahName, { color: colors.brand.metallicGold }]}>{surah.englishName}</Text>
+                    <Pressable
+                      style={[styles.playButtonMini, isPlaying && styles.playButtonMiniActive]}
+                      onPress={handlePlay}
+                      disabled={!audioUrl}
+                    >
+                      <Ionicons
+                        name={isPlaying ? "pause" : "play"}
+                        size={16}
+                        color={colors.text.primary}
+                      />
+                    </Pressable>
+                  </View>
+                  <Text style={[styles.surahMeta, { color: colors.text.tertiary }]}>
+                    Surah {surah.number} · {surah.revelationType}
                   </Text>
                 </View>
+              )}
 
-                <View style={styles.trackActionPill}>
-                  <Text style={styles.trackActionLabel}>{actionLabel}</Text>
+              {/* Controls */}
+              <View style={styles.controlsRow}>
+                <Pressable
+                  style={[styles.togglePill, { borderColor: colors.surface.borderInteractive, backgroundColor: colors.surface.card }, showTranslation && { borderColor: colors.brand.metallicGold, backgroundColor: colors.interactive.selectedBackground }]}
+                  onPress={() => setShowTranslation(!showTranslation)}
+                >
+                  <Ionicons
+                    name="language"
+                    size={14}
+                    color={showTranslation ? colors.brand.metallicGold : colors.text.secondary}
+                  />
+                  <Text style={[styles.toggleLabel, { color: showTranslation ? colors.brand.metallicGold : colors.text.secondary }]}>
+                    Translate
+                  </Text>
+                </Pressable>
+
+                <View style={styles.ambientChips}>
+                  {AMBIENT_OPTIONS.map((option) => {
+                    const isActive = state.ambient.activeType === option.type;
+                    return (
+                      <Pressable
+                        key={option.type}
+                        style={[styles.ambientChip, { borderColor: colors.surface.borderInteractive }, isActive && { borderColor: colors.brand.metallicGold, backgroundColor: colors.interactive.selectedBackground }]}
+                        onPress={() => handleAmbientToggle(option.type)}
+                      >
+                        <Ionicons
+                          name={option.icon as any}
+                          size={12}
+                          color={isActive ? colors.brand.metallicGold : colors.text.tertiary}
+                        />
+                        <Text style={[styles.ambientChipText, { color: isActive ? colors.brand.metallicGold : colors.text.tertiary }]}>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              </Pressable>
-            );
-          })}
-
-          {/* Ambient selector */}
-          <View style={styles.ambientSection}>
-            <Text style={styles.ambientLabel}>Ambient Sound</Text>
-            <View style={styles.ambientRow}>
-              {AMBIENT_OPTIONS.map((option) => {
-                const isActive = state.ambient.activeType === option.type;
-                return (
-                  <Pressable
-                    key={option.type}
-                    style={[styles.ambientChip, isActive && styles.ambientChipActive]}
-                    accessibilityRole="button"
-                    onPress={() => {
-                      void handleAmbientToggle(option.type);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.ambientChipLabel,
-                        isActive && styles.ambientChipLabelActive,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              </View>
             </View>
-          </View>
 
-          {activeTrack ? (
-            <Text style={styles.nowPlaying}>
-              {state.quran.isPlaying ? "Now playing:" : "Paused:"} {activeTrack.title}
-            </Text>
-          ) : (
-            <Text style={styles.nowPlaying}>Select a track to start listening.</Text>
-          )}
+            {/* Content */}
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Unable to load surah</Text>
+                <Text style={styles.errorDetail}>{error}</Text>
+              </View>
+            ) : isLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading surah...</Text>
+              </View>
+            ) : (
+              <View style={styles.versesContainer}>
+                {surah?.verses.map((verse) => {
+                  const englishVerse = translation?.verses.find((v) => v.number === verse.number);
+                  return (
+                    <View key={verse.number} style={styles.verseBlock}>
+                      <View style={styles.verseRow}>
+                        <View style={styles.verseNumber}>
+                          <Text style={[styles.verseNumberText, { color: colors.text.tertiary }]}>{verse.number}</Text>
+                        </View>
+                        <View style={styles.arabicContainer}>
+                          <Text style={[styles.arabicText, { color: colors.text.primary }]}>{verse.text}</Text>
+                        </View>
+                      </View>
+                      {showTranslation && englishVerse && (
+                        <View style={styles.translationContainer}>
+                          <Text style={[styles.translationText, { color: colors.text.secondary }]}>{englishVerse.text}</Text>
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
-          {state.quran.error ? (
-            <Text style={styles.errorText}>{state.quran.error}</Text>
-          ) : null}
-        </View>
-      </ScrollView>
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
+        </GestureDetector>
+      </View>
+
+      {/* Day Timeline */}
+      <DayTimeline
+        selectedDate={selectedDate}
+        onSelectDate={handleDateSelect}
+        isVisible={isTimelineVisible}
+        onClose={() => setIsTimelineVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -224,160 +240,180 @@ export function LibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface.background,
+  },
+  content: {
+    flex: 1,
   },
   scrollContent: {
-    paddingTop: spacing.xl,
-    paddingBottom: spacing["5xl"],
-  },
-  header: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  kicker: {
-    color: colors.text.tertiary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  title: {
-    color: colors.text.primary,
-    fontFamily: fontFamily.appBold,
-    fontSize: 30,
-    lineHeight: 36,
-  },
-  subtitle: {
-    color: colors.text.secondary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  collectionsRow: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.md,
+    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
   },
-  collectionCard: {
-    width: 172,
+  header: {
+    marginBottom: spacing.lg,
   },
-  collectionCardSelected: {
-    width: 172,
-    borderWidth: 1,
-    borderColor: colors.interactive.selectedBorder,
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
-  trackPanel: {
-    marginHorizontal: spacing.xl,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.surface.borderElevated,
-    backgroundColor: colors.surface.card,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
+  titleRow: {
+    flex: 1,
   },
-  collectionTitle: {
-    color: colors.text.primary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  collectionSubtitle: {
-    color: colors.text.secondary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 15,
-    lineHeight: 21,
-    marginBottom: spacing.sm,
-  },
-  trackRow: {
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.surface.borderInteractive,
-    backgroundColor: colors.surface.background,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  surahTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: spacing.sm,
   },
-  trackRowActive: {
-    borderColor: colors.interactive.selectedBorder,
-    backgroundColor: colors.interactive.selectedBackground,
-  },
-  trackMeta: {
-    flex: 1,
-    gap: spacing.xxs,
-  },
-  trackTitle: {
-    color: colors.text.primary,
+  kicker: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: spacing.xxs,
   },
-  trackCaption: {
-    color: colors.text.tertiary,
+  title: {
+    fontFamily: fontFamily.appBold,
+    fontSize: 24,
+    lineHeight: 28,
+  },
+  playButtonMini: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  playButtonMiniActive: {
+    // handled inline
+  },
+  playButtonMiniText: {
+    fontSize: 18,
+  },
+  surahInfo: {
+    marginTop: spacing.sm,
+  },
+  surahName: {
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 18,
+  },
+  surahMeta: {
     fontFamily: fontFamily.appRegular,
     fontSize: 13,
+    marginTop: 2,
   },
-  trackActionPill: {
-    minWidth: 70,
+  controlsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    flexWrap: "wrap",
+  },
+  togglePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.interactive.selectedBorder,
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
   },
-  trackActionLabel: {
-    color: colors.interactive.selectedBorder,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
+  togglePillActive: {
+    // handled inline
   },
-  // Ambient selector
-  ambientSection: {
-    marginTop: spacing.sm,
-    gap: spacing.xs,
+  toggleLabel: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
   },
-  ambientLabel: {
-    color: colors.text.secondary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 14,
+  toggleLabelActive: {
+    // handled inline
   },
-  ambientRow: {
+  ambientChips: {
     flexDirection: "row",
     gap: spacing.xs,
   },
   ambientChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.surface.borderInteractive,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
   },
   ambientChipActive: {
-    borderColor: colors.brand.metallicGold,
-    backgroundColor: colors.interactive.selectedBackground,
+    // handled inline
   },
-  ambientChipLabel: {
-    color: colors.text.tertiary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
+  ambientChipText: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 11,
   },
-  ambientChipLabelActive: {
-    color: colors.brand.metallicGold,
+  ambientChipTextActive: {
+    // inline
   },
-  nowPlaying: {
-    color: colors.text.secondary,
+  versesContainer: {
+    gap: spacing.md,
+  },
+  verseBlock: {
+    gap: spacing.xs,
+  },
+  verseRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+  },
+  verseNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  verseNumberText: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 10,
+  },
+  arabicContainer: {
+    flex: 1,
+  },
+  arabicText: {
+    fontFamily: fontFamily.arabicRegular,
+    fontSize: 22,
+    lineHeight: 34,
+    textAlign: "right",
+  },
+  translationContainer: {
+    marginLeft: 24 + spacing.sm,
+    paddingTop: spacing.xs,
+  },
+  translationText: {
+    fontFamily: fontFamily.scriptureRegular,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  loadingContainer: {
+    paddingVertical: spacing["5xl"],
+    alignItems: "center",
+  },
+  loadingText: {
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
-    marginTop: spacing.sm,
+  },
+  errorContainer: {
+    paddingVertical: spacing["5xl"],
+    alignItems: "center",
   },
   errorText: {
     color: "#ef9a9a",
-    fontFamily: fontFamily.appRegular,
+    fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
-    marginTop: spacing.xxs,
+  },
+  errorDetail: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
+    marginTop: spacing.xs,
+  },
+  bottomSpacer: {
+    height: spacing.xl,
   },
 });

@@ -20,6 +20,8 @@ export interface HeroItem {
   imageSource: ImageSource;
   title: string;
   subtitle?: string;
+  collectionId?: string;
+  action?: string;
 }
 
 interface HeroCarouselProps {

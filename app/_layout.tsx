@@ -1,9 +1,12 @@
+import "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
+import { StyleSheet, useColorScheme, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Amiri_400Regular, Amiri_700Bold } from "@expo-google-fonts/amiri";
 import { Lora_400Regular, Lora_600SemiBold } from "@expo-google-fonts/lora";
 import { PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
@@ -12,6 +15,8 @@ import {
   ZalandoSans_600SemiBold,
   ZalandoSans_700Bold
 } from "@expo-google-fonts/zalando-sans";
+import { ThemeProvider, DarkTheme, DefaultTheme } from "@react-navigation/native";
+
 
 import { LocationProvider } from "@/src/lib/location";
 
@@ -33,6 +38,28 @@ export default function RootLayout() {
     Amiri_700Bold
   });
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const theme = isDark ? DarkTheme : DefaultTheme;
+
+  // Use the theme's background color for consistency
+  const backgroundColor = theme.colors.background;
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const NavigationBar = require("expo-navigation-bar");
+      NavigationBar.setPositionAsync("absolute");
+      NavigationBar.setBackgroundColorAsync("transparent");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const NavigationBar = require("expo-navigation-bar");
+      NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
+    }
+  }, [isDark]);
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -45,18 +72,29 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? "light" : "dark"} translucent />
       <LocationProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "#070b14" }
-          }}
-        >
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
+        <ThemeProvider value={theme}>
+          <GestureHandlerRootView style={[styles.container, { backgroundColor }]}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor }
+              }}
+            >
+              <Stack.Screen name="(onboarding)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </GestureHandlerRootView>
+        </ThemeProvider>
       </LocationProvider>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#070b14",
+  },
+});

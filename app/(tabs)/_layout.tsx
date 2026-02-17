@@ -1,29 +1,31 @@
 import { Tabs } from "expo-router";
-
 import { TabBarIcon } from "@/src/components/navigation/TabBarIcon";
 import { fontFamily } from "@/src/components/navigation/typography";
 
-const INACTIVE_COLOR = "#607089";
-const ACTIVE_COLOR = "#c5a021";
-const TAB_BACKGROUND = "#0b1220";
+import { useTheme } from "@/src/theme";
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: ACTIVE_COLOR,
-        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarActiveTintColor: colors.brand.metallicGold,
+        tabBarInactiveTintColor: colors.text.tertiary,
         tabBarStyle: {
-          backgroundColor: TAB_BACKGROUND,
-          borderTopColor: "#111a2a"
+          backgroundColor: colors.surface.tabBar,
+          borderTopColor: colors.surface.border,
+          height: 60,
+          paddingTop: 8,
+          marginBottom: 0,
         },
         tabBarLabelStyle: {
-          fontFamily: fontFamily.appSemiBold,
-          fontSize: 12
+          fontFamily: fontFamily.appRegular,
+          fontSize: 11
         },
         sceneStyle: {
-          backgroundColor: "#070b14"
+          backgroundColor: colors.surface.background
         }
       }}
     >

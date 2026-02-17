@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCalendars } from "expo-localization";
 
 import type { LocationData, LocationStatus, Coordinates } from "./types";
+import { getPreferences } from "@/src/lib/preferences/preferences-store";
 
 const LOCATION_CACHE_KEY = "pon_location_cache";
 const LOCATION_CACHE_TTL_HOURS = 24; // Refresh location after 24 hours
@@ -40,6 +41,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
 
   const loadCachedLocation = async () => {
     try {
+      // First, check LocationProvider's own cache
       const cached = await AsyncStorage.getItem(LOCATION_CACHE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
@@ -61,9 +63,34 @@ export function LocationProvider({ children }: LocationProviderProps) {
           // No timestamp, refresh to get one
           refresh();
         }
+        return;
       }
+
+      // Fallback: Check preferences store (from onboarding)
+      const prefs = await getPreferences();
+      if (prefs.coords && prefs.city) {
+        const locationData: LocationData = {
+          coords: {
+            latitude: prefs.coords.lat,
+            longitude: prefs.coords.lng,
+          },
+          city: prefs.city,
+          country: "", // Not stored in prefs, but that's okay
+          timezone: prefs.timezone || "UTC",
+        };
+        setLocation(locationData);
+        setStatus("manual");
+        console.log("Loaded location from preferences:", locationData);
+        return;
+      }
+
+      // No cached location found, trigger refresh to get current location
+      console.log("No cached location found, refreshing...");
+      refresh();
     } catch (err) {
       console.error("Failed to load cached location:", err);
+      // On error, try to refresh anyway
+      refresh();
     }
   };
 

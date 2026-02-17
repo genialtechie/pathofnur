@@ -6,5 +6,5 @@ type TabBarIconProps = {
 };
 
 export function TabBarIcon({ name, color }: TabBarIconProps) {
-  return <Ionicons size={22} name={name} color={color} style={{ marginBottom: -2 }} />;
+  return <Ionicons size={22} name={name} color={color} />;
 }

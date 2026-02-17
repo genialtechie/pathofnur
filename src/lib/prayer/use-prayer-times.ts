@@ -4,7 +4,7 @@
  * Returns prayer times with current/next prayer and countdown
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { fetchPrayerTimes } from "./aladhan-client";
 import type { PrayerTimes, PrayerName, PrayerTimeInfo } from "./types";
 
@@ -49,8 +49,18 @@ function formatCountdown(targetTime: Date): string {
 
 export function usePrayerTimes(
   latitude: number | undefined,
-  longitude: number | undefined
+  longitude: number | undefined,
+  date: Date = new Date()
 ): UsePrayerTimesReturn {
+  /* 
+   * Fix for infinite render loop: 
+   * The default argument `date = new Date()` creates a new object on every render.
+   * We must stabilize the date object to prevent useEffect from firing infinitely.
+   */
+  const stableDate = useMemo(() => {
+    return date;
+  }, [date.getFullYear(), date.getMonth(), date.getDate()]);
+
   const [times, setTimes] = useState<PrayerTimes | null>(null);
   const [currentPrayer, setCurrentPrayer] = useState<PrayerName | null>(null);
   const [nextPrayer, setNextPrayer] = useState<PrayerName | null>(null);
@@ -108,6 +118,7 @@ export function usePrayerTimes(
       const { times: prayerTimes } = await fetchPrayerTimes({
         latitude,
         longitude,
+        date: stableDate,
       });
 
       setTimes(prayerTimes);
@@ -118,14 +129,14 @@ export function usePrayerTimes(
     } finally {
       setIsLoading(false);
     }
-  }, [latitude, longitude, calculateCurrentAndNext]);
+  }, [latitude, longitude, stableDate, calculateCurrentAndNext]);
 
   // Initial fetch
   useEffect(() => {
     if (latitude !== undefined && longitude !== undefined) {
       refresh();
     }
-  }, [latitude, longitude, refresh]);
+  }, [latitude, longitude, stableDate, refresh]);
 
   // Update countdown every 60 seconds
   useEffect(() => {

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, spacing, radii, shadows, brand } from '@/src/theme/tokens';
+import { spacing, radii, shadows, useTheme, brand } from '@/src/theme';
 import { fontFamily } from '@/src/components/navigation/typography';
 import { useJourneyProgress } from './useJourneyProgress';
 import { useIslamicDate } from '@/src/lib/prayer/use-islamic-date';
@@ -21,6 +21,7 @@ const DAYS_IN_RAMADAN = 30;
 export default function JourneyScreen() {
   const insets = useSafeAreaInsets();
   const { completedDays, toggleDay, streak } = useJourneyProgress();
+  const { colors } = useTheme();
   
   const { location } = useLocation();
   const coords = location?.coords;
@@ -79,20 +80,28 @@ export default function JourneyScreen() {
                 key={i} 
                 style={[
                     styles.dayCell, 
-                    isCompleted && styles.dayCellCompleted,
-                    isCurrent && styles.dayCellCurrent
+                    { backgroundColor: colors.surface.card },
+                    isCompleted && { 
+                        backgroundColor: colors.brand.metallicGold,
+                        borderColor: colors.brand.metallicGold 
+                    },
+                    isCurrent && { 
+                        borderColor: colors.brand.metallicGold, 
+                        borderWidth: 2 
+                    }
                 ]}
                 onPress={() => handleDayPress(i-1)}
             >
                 <Text style={[
                     styles.dayNumber, 
-                    isCompleted && styles.dayNumberCompleted,
-                    isCurrent && styles.dayNumberCurrent
+                    { color: colors.text.primary },
+                    isCompleted && { color: colors.text.onAccent },
+                    isCurrent && { color: colors.brand.metallicGold }
                 ]}>
                     {i}
                 </Text>
                 {isCompleted && (
-                    <View style={styles.checkMark} />
+                    <View style={[styles.checkMark, { backgroundColor: colors.text.onAccent }]} />
                 )}
             </Pressable>
         );
@@ -113,9 +122,10 @@ export default function JourneyScreen() {
     >
       <Stack.Screen options={{ headerShown: false }} />
       
+      
       <View style={styles.header}>
-        <Text style={styles.title}>Ramadan Journey</Text>
-        <Text style={styles.subtitle}>{isDateLoading ? 'Loading...' : `${streak} Days of Nur`}</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>Ramadan Journey</Text>
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>{isDateLoading ? 'Loading...' : `${streak} Days of Nur`}</Text>
       </View>
 
       <View style={styles.gridContainer}>
@@ -124,7 +134,7 @@ export default function JourneyScreen() {
 
       {isRamadanComplete && (
           <View style={styles.shareSection}>
-            <Text style={styles.shareTitle}>Ramadan Completed!</Text>
+            <Text style={[styles.shareTitle, { color: colors.text.primary }]}>Ramadan Completed!</Text>
             <View style={styles.shareCardContainer}>
                  <ShareCard 
                     imageSource={{ uri: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809' }}
@@ -151,12 +161,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fontFamily.accentDisplay,
     fontSize: 32,
-    color: colors.text.primary,
   },
   subtitle: {
     fontFamily: fontFamily.appRegular,
     fontSize: 18,
-    color: colors.text.secondary,
     marginTop: spacing.xs,
   },
   gridContainer: {
@@ -169,7 +177,6 @@ const styles = StyleSheet.create({
     width: '14%',
     aspectRatio: 1,
     borderRadius: radii.md,
-    backgroundColor: colors.surface.card,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.card,
@@ -177,23 +184,20 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   dayCellCompleted: {
-    backgroundColor: brand.metallicGold, 
-    borderColor: brand.metallicGold,
+    // inline
   },
   dayCellCurrent: {
-    borderColor: brand.metallicGold,
-    borderWidth: 2,
+    // inline
   },
   dayNumber: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 16,
-    color: colors.text.primary,
   },
   dayNumberCompleted: {
-    color: colors.text.onAccent,
+    // inline
   },
   dayNumberCurrent: {
-    color: brand.metallicGold,
+    // inline
   },
   checkMark: {
     position: 'absolute',
@@ -201,7 +205,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.text.onAccent,
   },
   shareSection: {
     marginTop: spacing['2xl'],
@@ -210,7 +213,6 @@ const styles = StyleSheet.create({
   shareTitle: {
       fontFamily: fontFamily.appSemiBold,
       fontSize: 20,
-      color: colors.text.primary,
       textAlign: 'center',
   },
   shareCardContainer: {
