@@ -8,6 +8,7 @@ import {
 import { Image, type ImageSource } from "expo-image";
 
 import { fontFamily, radii, shadows, spacing, useTheme } from "@/src/theme";
+import { darkColors } from "@/src/theme/tokens";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,11 +62,11 @@ export function HeroCard({
 
       {/* Top text-safe zone (top ~28%) */}
       <View style={styles.topOverlay}>
-        <Text style={[styles.title, { color: colors.text.primary }]} numberOfLines={2}>
+        <Text style={[styles.title, { color: darkColors.text.primary }]} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]} numberOfLines={2}>
+          <Text style={[styles.subtitle, { color: darkColors.text.secondary }]} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}

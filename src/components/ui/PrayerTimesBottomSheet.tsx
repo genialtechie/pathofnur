@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -44,7 +45,9 @@ export function PrayerTimesBottomSheet({
 }: PrayerTimesBottomSheetProps) {
   const { location } = useLocation();
   const { colors } = useTheme();
+  const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const themeKey = colorScheme === "dark" ? "dark" : "light";
   
   // Use default date (today) which is now stable inside the hook
   const { times, currentPrayer, nextPrayer, countdown, isLoading, error } =
@@ -70,16 +73,30 @@ export function PrayerTimesBottomSheet({
       animationType="slide"
       transparent
       onRequestClose={onClose}
-      key={colors.surface.background} // Force re-render on theme change
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      key={themeKey}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
+        <View
+          key={themeKey}
+          style={[
+            styles.overlay,
+            {
+              backgroundColor:
+                themeKey === "dark" ? "rgba(0, 0, 0, 0.5)" : "rgba(15, 23, 42, 0.22)",
+            },
+          ]}
+        >
           <TouchableWithoutFeedback>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : undefined}
               style={styles.sheetContainer}
             >
-                <View style={[styles.sheet, { backgroundColor: colors.surface.background, paddingBottom: insets.bottom }]}>
+                <View
+                  key={`sheet-${themeKey}`}
+                  style={[styles.sheet, { backgroundColor: colors.surface.background, paddingBottom: insets.bottom }]}
+                >
                 {/* Handle bar */}
                 <View style={[styles.handleBar, { backgroundColor: colors.surface.borderInteractive }]} />
 
@@ -179,7 +196,6 @@ export function PrayerTimesBottomSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
   },
   sheetContainer: {
