@@ -21,6 +21,7 @@ import { colors, spacing } from "@/src/theme/tokens";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - spacing["4xl"] * 2;
 const CARD_MARGIN = spacing.md;
+const CARD_INSET = spacing.sm;
 
 interface HeroItem {
   id: string;
@@ -129,6 +130,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
               subtitle={item.subtitle}
               onPress={() => handlePress(item, index)}
               ratio="portrait"
+              style={styles.heroCard}
             />
           </View>
         ))}
@@ -153,7 +155,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing["4xl"],
   },
-  cardContainer: {},
+  cardContainer: {
+    alignItems: "center",
+  },
+  heroCard: {
+    width: CARD_WIDTH - CARD_INSET * 2,
+  },
   pagination: {
     flexDirection: "row",
     justifyContent: "center",
