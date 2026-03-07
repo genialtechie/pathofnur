@@ -2,130 +2,123 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 
-import { getPreferences } from "@/src/lib/preferences/preferences-store";
-
 import {
-  JOURNEY_PRACTICES,
+  getCompletedHabitCount,
+  getCompletionCounts,
+  getCurrentStreaks,
+  getDateKey,
+  getDaysReturned,
+  getJourneySalahCompletedCount,
+  getLongestStreaks,
+  getRecentPracticeHistory,
+  getStrongestPractice,
+  isJourneyPracticeComplete,
+  toggleJourneyHabit,
+} from "./journey-progress-utils";
+import {
+  JOURNEY_HABITS,
+  JOURNEY_PRAYERS,
   createDefaultJourneyState,
-  createDefaultJourneyRoutine,
-  createJourneyPracticeRecord,
   createEmptyJourneyDay,
-  createEmptyPracticePlan,
-  isRoutineConfigured,
+  createEmptyJourneyHabits,
+  createEmptyJourneyPrayers,
   type JourneyDayStatus,
+  type JourneyHabit,
   type JourneyPrayerKey,
   type JourneyPractice,
-  type JourneyPracticePlan,
-  type JourneyReminderPermissionStatus,
-  type JourneyRoutine,
   type JourneyState,
 } from "./journey-types";
 
-const JOURNEY_STORAGE_KEY = "@pathofnur/journey/state-v3";
+const JOURNEY_STORAGE_KEY = "@pathofnur/journey/state-v4";
+const LEGACY_V3_STORAGE_KEY = "@pathofnur/journey/state-v3";
 const LEGACY_V2_STORAGE_KEY = "@pathofnur/journey/state-v2";
 const LEGACY_RAMADAN_STORAGE_KEY = "ramadan_2026_progress";
-const RECENT_HISTORY_DAYS = 7;
 
-type LegacyJourneyRoutine = {
-  selectedPrayers?: JourneyPrayerKey[];
-  readingEnabled?: boolean;
-  fastingEnabled?: boolean;
-  reminderLeadMinutes?: number;
-  followUpDelayMinutes?: number;
-  reminderPermissionStatus?: JourneyReminderPermissionStatus;
-  remindersActive?: boolean;
-  lastScheduledAt?: string | null;
+type LegacyJourneyDayStatusV3 = {
+  dateKey?: string;
+  completions?: Partial<Record<JourneyPractice, boolean>>;
 };
 
-type LegacyJourneyDayStatus = {
+type LegacyJourneyStateV3 = {
+  version?: number;
+  history?: Record<string, LegacyJourneyDayStatusV3>;
+  lastShareAt?: string | null;
+};
+
+type LegacyJourneyRoutineV2 = {
+  selectedPrayers?: JourneyPrayerKey[];
+};
+
+type LegacyJourneyDayStatusV2 = {
   dateKey?: string;
   prayers?: Partial<Record<JourneyPrayerKey, boolean>>;
   readingCompleted?: boolean;
   fastingCompleted?: boolean;
 };
 
-type LegacyJourneyState = {
-  routine?: LegacyJourneyRoutine;
-  history?: Record<string, LegacyJourneyDayStatus>;
-  notificationIds?: string[];
-  remindersDirty?: boolean;
+type LegacyJourneyStateV2 = {
+  routine?: LegacyJourneyRoutineV2;
+  history?: Record<string, LegacyJourneyDayStatusV2>;
   lastShareAt?: string | null;
 };
-
-function getDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getPreferenceGoals(value: string[]) {
-  return new Set(
-    value.map((goal) => {
-      if (goal === "duas") {
-        return "dhikr";
-      }
-
-      return goal;
-    })
-  );
-}
 
 function cloneDay(day: JourneyDayStatus): JourneyDayStatus {
   return {
     dateKey: day.dateKey,
-    completions: { ...day.completions },
+    prayers: { ...day.prayers },
+    habits: { ...day.habits },
   };
 }
 
-function sanitizePracticePlan(
-  value: Partial<JourneyPracticePlan> | undefined
-): JourneyPracticePlan {
-  const base = createEmptyPracticePlan();
+function sanitizeDay(
+  dateKey: string,
+  value: Partial<JourneyDayStatus> | LegacyJourneyDayStatusV3 | LegacyJourneyDayStatusV2 | undefined
+): JourneyDayStatus {
+  const base = createEmptyJourneyDay(dateKey);
+
+  const prayers = JOURNEY_PRAYERS.reduce<JourneyDayStatus["prayers"]>((accumulator, prayer) => {
+    accumulator[prayer] = value && "prayers" in value ? value.prayers?.[prayer] === true : false;
+    return accumulator;
+  }, createEmptyJourneyPrayers());
+
+  const habits = JOURNEY_HABITS.reduce<JourneyDayStatus["habits"]>((accumulator, habit) => {
+    if (value && "habits" in value) {
+      accumulator[habit] = value.habits?.[habit] === true;
+      return accumulator;
+    }
+
+    if (habit === "quran" && value && "readingCompleted" in value) {
+      accumulator[habit] = value.readingCompleted === true;
+      return accumulator;
+    }
+
+    if (habit === "fasting" && value && "fastingCompleted" in value) {
+      accumulator[habit] = value.fastingCompleted === true;
+      return accumulator;
+    }
+
+    if (value && "completions" in value) {
+      accumulator[habit] = value.completions?.[habit] === true;
+      return accumulator;
+    }
+
+    accumulator[habit] = false;
+    return accumulator;
+  }, createEmptyJourneyHabits());
 
   return {
-    salah: typeof value?.salah === "boolean" ? value.salah : base.salah,
-    quran: typeof value?.quran === "boolean" ? value.quran : base.quran,
-    fasting: typeof value?.fasting === "boolean" ? value.fasting : base.fasting,
-    dhikr: typeof value?.dhikr === "boolean" ? value.dhikr : base.dhikr,
-  };
-}
-
-function sanitizeRoutine(value: Partial<JourneyRoutine> | undefined): JourneyRoutine {
-  const base = createDefaultJourneyRoutine();
-
-  return {
-    practices: sanitizePracticePlan(value?.practices),
-    reminders: {
-      ...base.reminders,
-      ...value?.reminders,
-      wantsPrayerReminders:
-        typeof value?.reminders?.wantsPrayerReminders === "boolean"
-          ? value.reminders.wantsPrayerReminders
-          : base.reminders.wantsPrayerReminders,
-      remindersActive:
-        typeof value?.reminders?.remindersActive === "boolean"
-          ? value.reminders.remindersActive
-          : base.reminders.remindersActive,
-      lastScheduledAt:
-        typeof value?.reminders?.lastScheduledAt === "string" ||
-        value?.reminders?.lastScheduledAt === null
-          ? value.reminders.lastScheduledAt
-          : base.reminders.lastScheduledAt,
-    },
+    ...base,
+    dateKey,
+    prayers,
+    habits,
   };
 }
 
 function sanitizeState(value: Partial<JourneyState> | null | undefined): JourneyState {
   const base = createDefaultJourneyState();
-
   const history = Object.entries(value?.history ?? {}).reduce<JourneyState["history"]>(
     (accumulator, [dateKey, day]) => {
-      accumulator[dateKey] = {
-        ...createEmptyJourneyDay(dateKey),
-        ...day,
-        completions: sanitizePracticePlan(day?.completions),
-      };
+      accumulator[dateKey] = sanitizeDay(dateKey, day);
       return accumulator;
     },
     {}
@@ -133,118 +126,82 @@ function sanitizeState(value: Partial<JourneyState> | null | undefined): Journey
 
   return {
     ...base,
-    ...value,
-    version: 3,
-    routine: sanitizeRoutine(value?.routine),
+    version: 4,
     history,
-    notificationIds: Array.isArray(value?.notificationIds)
-      ? value.notificationIds.filter((item): item is string => typeof item === "string")
-      : [],
-    remindersDirty:
-      typeof value?.remindersDirty === "boolean" ? value.remindersDirty : base.remindersDirty,
     lastShareAt:
       typeof value?.lastShareAt === "string" || value?.lastShareAt === null
         ? value.lastShareAt
-        : base.lastShareAt,
+        : null,
   };
 }
 
-function createSeededStateFromPreferences(planGoals: string[], notificationsEnabled: boolean) {
-  const goals = getPreferenceGoals(planGoals);
-  const state = createDefaultJourneyState();
-  const salahEnabled = goals.has("salah");
-
-  return sanitizeState({
-    ...state,
-    routine: {
-      practices: {
-        salah: salahEnabled,
-        quran: goals.has("quran"),
-        fasting: goals.has("fasting"),
-        dhikr: goals.has("dhikr"),
-      },
-      reminders: {
-        ...state.routine.reminders,
-        wantsPrayerReminders: salahEnabled && notificationsEnabled,
-        permissionStatus: notificationsEnabled ? "granted" : "unknown",
-      },
-    },
-    remindersDirty: salahEnabled && notificationsEnabled,
-  });
-}
-
-function migrateLegacyState(
-  legacy: LegacyJourneyState,
-  preferences: { planGoals: string[] }
-): JourneyState {
-  const base = createDefaultJourneyState();
-  const selectedPrayers = Array.isArray(legacy.routine?.selectedPrayers)
-    ? legacy.routine.selectedPrayers
-    : [];
-  const goals = getPreferenceGoals(preferences.planGoals);
-
+function migrateLegacyV3State(legacy: LegacyJourneyStateV3): JourneyState {
   const history = Object.entries(legacy.history ?? {}).reduce<JourneyState["history"]>(
-    (accumulator, [dateKey, value]) => {
-      const completedPrayers = Object.values(value.prayers ?? {}).filter(Boolean).length;
-      const isLegacyPrayerDayComplete =
-        selectedPrayers.length > 0
-          ? selectedPrayers.every((prayer) => value.prayers?.[prayer] === true)
-          : completedPrayers === 5;
+    (accumulator, [dateKey, day]) => {
+      const migratedDay = createEmptyJourneyDay(dateKey);
+      const salahComplete = day.completions?.salah === true;
 
       accumulator[dateKey] = {
-        dateKey,
-        completions: {
-          salah: isLegacyPrayerDayComplete,
-          quran: value.readingCompleted === true,
-          fasting: value.fastingCompleted === true,
-          dhikr: false,
+        ...migratedDay,
+        prayers: JOURNEY_PRAYERS.reduce((prayers, prayer) => {
+          prayers[prayer] = salahComplete;
+          return prayers;
+        }, createEmptyJourneyPrayers()),
+        habits: {
+          quran: day.completions?.quran === true,
+          fasting: day.completions?.fasting === true,
+          dhikr: day.completions?.dhikr === true,
         },
       };
-
       return accumulator;
     },
     {}
   );
 
   return sanitizeState({
-    ...base,
-    routine: {
-      practices: {
-        salah: selectedPrayers.length > 0 || goals.has("salah"),
-        quran: legacy.routine?.readingEnabled === true || goals.has("quran"),
-        fasting: legacy.routine?.fastingEnabled === true || goals.has("fasting"),
-        dhikr: goals.has("dhikr"),
-      },
-      reminders: {
-        ...base.routine.reminders,
-        wantsPrayerReminders:
-          legacy.routine?.remindersActive === true ||
-          legacy.routine?.reminderPermissionStatus === "granted",
-        remindersActive: legacy.routine?.remindersActive === true,
-        permissionStatus:
-          legacy.routine?.reminderPermissionStatus ?? base.routine.reminders.permissionStatus,
-        leadMinutes:
-          typeof legacy.routine?.reminderLeadMinutes === "number"
-            ? legacy.routine.reminderLeadMinutes
-            : base.routine.reminders.leadMinutes,
-        followUpDelayMinutes:
-          typeof legacy.routine?.followUpDelayMinutes === "number"
-            ? legacy.routine.followUpDelayMinutes
-            : base.routine.reminders.followUpDelayMinutes,
-        lastScheduledAt:
-          typeof legacy.routine?.lastScheduledAt === "string" ||
-          legacy.routine?.lastScheduledAt === null
-            ? legacy.routine.lastScheduledAt
-            : base.routine.reminders.lastScheduledAt,
-      },
-    },
+    version: 4,
     history,
-    notificationIds: Array.isArray(legacy.notificationIds) ? legacy.notificationIds : [],
-    remindersDirty: legacy.remindersDirty === true,
-    lastShareAt:
-      typeof legacy.lastShareAt === "string" || legacy.lastShareAt === null
-        ? legacy.lastShareAt
-        : null,
+    lastShareAt: legacy.lastShareAt ?? null,
+  });
+}
+
+function migrateLegacyV2State(legacy: LegacyJourneyStateV2): JourneyState {
+  const selectedPrayers = Array.isArray(legacy.routine?.selectedPrayers)
+    ? legacy.routine.selectedPrayers
+    : [];
+
+  const history = Object.entries(legacy.history ?? {}).reduce<JourneyState["history"]>(
+    (accumulator, [dateKey, day]) => {
+      const prayers = JOURNEY_PRAYERS.reduce((record, prayer) => {
+        record[prayer] = day.prayers?.[prayer] === true;
+        return record;
+      }, createEmptyJourneyPrayers());
+
+      const selectedSalahComplete =
+        selectedPrayers.length > 0 &&
+        selectedPrayers.every((prayer) => day.prayers?.[prayer] === true);
+
+      if (selectedSalahComplete && JOURNEY_PRAYERS.every((prayer) => prayers[prayer] === false)) {
+        JOURNEY_PRAYERS.forEach((prayer) => {
+          prayers[prayer] = true;
+        });
+      }
+
+      accumulator[dateKey] = sanitizeDay(dateKey, {
+        dateKey,
+        prayers,
+        readingCompleted: day.readingCompleted,
+        fastingCompleted: day.fastingCompleted,
+      });
+      return accumulator;
+    },
+    {}
+  );
+
+  return sanitizeState({
+    version: 4,
+    history,
+    lastShareAt: legacy.lastShareAt ?? null,
   });
 }
 
@@ -258,14 +215,17 @@ async function hydrateJourneyState(): Promise<JourneyState> {
     return sanitizeState(JSON.parse(stored) as Partial<JourneyState>);
   }
 
-  const preferences = await getPreferences();
+  const legacyV3 = await AsyncStorage.getItem(LEGACY_V3_STORAGE_KEY);
+  if (legacyV3) {
+    const migrated = migrateLegacyV3State(JSON.parse(legacyV3) as LegacyJourneyStateV3);
+    await persistState(migrated);
+    await AsyncStorage.removeItem(LEGACY_V3_STORAGE_KEY);
+    return migrated;
+  }
 
   const legacyV2 = await AsyncStorage.getItem(LEGACY_V2_STORAGE_KEY);
   if (legacyV2) {
-    const migrated = migrateLegacyState(
-      JSON.parse(legacyV2) as LegacyJourneyState,
-      preferences
-    );
+    const migrated = migrateLegacyV2State(JSON.parse(legacyV2) as LegacyJourneyStateV2);
     await persistState(migrated);
     await AsyncStorage.removeItem(LEGACY_V2_STORAGE_KEY);
     return migrated;
@@ -276,31 +236,13 @@ async function hydrateJourneyState(): Promise<JourneyState> {
     await AsyncStorage.removeItem(LEGACY_RAMADAN_STORAGE_KEY);
   }
 
-  const seeded = createSeededStateFromPreferences(
-    preferences.planGoals,
-    preferences.notificationsEnabled
-  );
+  const seeded = createDefaultJourneyState();
   await persistState(seeded);
   return seeded;
 }
 
 function getDay(state: JourneyState, dateKey: string): JourneyDayStatus {
   return state.history[dateKey] ?? createEmptyJourneyDay(dateKey);
-}
-
-function getSortedHistoryKeys(history: JourneyState["history"]) {
-  return Object.keys(history).sort((left, right) => left.localeCompare(right));
-}
-
-function isPracticeComplete(practice: JourneyPractice, day: JourneyDayStatus) {
-  return day.completions[practice];
-}
-
-function getPreviousDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  date.setDate(date.getDate() - 1);
-  return getDateKey(date);
 }
 
 export const useJourneyProgress = () => {
@@ -346,169 +288,30 @@ export const useJourneyProgress = () => {
 
   const todayKey = getDateKey(new Date());
   const todayStatus = useMemo(() => getDay(state, todayKey), [state, todayKey]);
-  const routine = state.routine;
-  const hasConfiguredRoutine = isRoutineConfigured(routine);
-  const activePractices = useMemo(
-    () => JOURNEY_PRACTICES.filter((practice) => routine.practices[practice]),
-    [routine.practices]
+
+  const streaks = useMemo(() => getCurrentStreaks(state.history), [state.history]);
+  const longestStreaks = useMemo(() => getLongestStreaks(state.history), [state.history]);
+  const completionCounts = useMemo(() => getCompletionCounts(state.history), [state.history]);
+  const recentPracticeHistory = useMemo(
+    () => getRecentPracticeHistory(state.history),
+    [state.history]
+  );
+  const strongestPractice = useMemo(
+    () => getStrongestPractice(streaks, completionCounts),
+    [completionCounts, streaks]
   );
 
-  const streaks = useMemo(() => {
-    return JOURNEY_PRACTICES.reduce<Record<JourneyPractice, number>>((accumulator, practice) => {
-      let streak = 0;
+  const todaySalahCompletedCount = getJourneySalahCompletedCount(todayStatus);
+  const todaySalahComplete = isJourneyPracticeComplete("salah", todayStatus);
+  const completedTodayCount =
+    (todaySalahComplete ? 1 : 0) + getCompletedHabitCount(todayStatus);
+  const daysReturned = useMemo(() => getDaysReturned(state.history), [state.history]);
 
-      for (let offset = 0; offset < 365; offset += 1) {
-        const date = new Date();
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() - offset);
-
-        const day = state.history[getDateKey(date)];
-        if (!day || !isPracticeComplete(practice, day)) {
-          break;
-        }
-
-        streak += 1;
-      }
-
-      accumulator[practice] = streak;
-      return accumulator;
-    }, createJourneyPracticeRecord(0));
-  }, [state.history]);
-
-  const longestStreaks = useMemo(() => {
-    const historyKeys = getSortedHistoryKeys(state.history);
-
-    return JOURNEY_PRACTICES.reduce<Record<JourneyPractice, number>>((accumulator, practice) => {
-      let longest = 0;
-      let current = 0;
-      let previousKey: string | null = null;
-
-      historyKeys.forEach((dateKey) => {
-        const day = state.history[dateKey];
-        if (!day || !isPracticeComplete(practice, day)) {
-          current = 0;
-          previousKey = null;
-          return;
-        }
-
-        if (previousKey && getPreviousDateKey(dateKey) === previousKey) {
-          current += 1;
-        } else {
-          current = 1;
-        }
-
-        previousKey = dateKey;
-        longest = Math.max(longest, current);
-      });
-
-      accumulator[practice] = longest;
-      return accumulator;
-    }, createJourneyPracticeRecord(0));
-  }, [state.history]);
-
-  const completionCounts = useMemo(() => {
-    return JOURNEY_PRACTICES.reduce<Record<JourneyPractice, number>>((accumulator, practice) => {
-      accumulator[practice] = Object.values(state.history).filter((day) =>
-        isPracticeComplete(practice, day)
-      ).length;
-      return accumulator;
-    }, createJourneyPracticeRecord(0));
-  }, [state.history]);
-
-  const completedTodayCount = activePractices.filter(
-    (practice) => todayStatus.completions[practice]
-  ).length;
-  const todayProgressPercent =
-    activePractices.length === 0
-      ? 0
-      : Math.round((completedTodayCount / activePractices.length) * 100);
-
-  const recentPracticeHistory = useMemo(() => {
-    return JOURNEY_PRACTICES.reduce<
-      Record<JourneyPractice, Array<{ dateKey: string; label: string; isComplete: boolean }>>
-    >((accumulator, practice) => {
-      accumulator[practice] = Array.from({ length: RECENT_HISTORY_DAYS }, (_, index) => {
-        const date = new Date();
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() - (RECENT_HISTORY_DAYS - 1 - index));
-
-        const dateKey = getDateKey(date);
-        const day = getDay(state, dateKey);
-
-        return {
-          dateKey,
-          label: date
-            .toLocaleDateString("en-US", { weekday: "short" })
-            .slice(0, 1),
-          isComplete: day.completions[practice],
-        };
-      });
-      return accumulator;
-    }, createJourneyPracticeRecord([] as Array<{
-      dateKey: string;
-      label: string;
-      isComplete: boolean;
-    }>));
-  }, [state]);
-
-  const strongestPractice = useMemo(() => {
-    if (activePractices.length === 0) {
-      return null;
-    }
-
-    return activePractices.reduce((leading, practice) => {
-      if (!leading) {
-        return practice;
-      }
-
-      if (streaks[practice] > streaks[leading]) {
-        return practice;
-      }
-
-      if (streaks[practice] === streaks[leading] && completionCounts[practice] > completionCounts[leading]) {
-        return practice;
-      }
-
-      return leading;
-    }, activePractices[0]);
-  }, [activePractices, completionCounts, streaks]);
-
-  const setPracticeEnabled = useCallback(
-    (practice: JourneyPractice, enabled: boolean) => {
-      updateState((current) => {
-        const nextPractices = {
-          ...current.routine.practices,
-          [practice]: enabled,
-        };
-        const isDisablingSalah = practice === "salah" && !enabled;
-
-        return {
-          ...current,
-          notificationIds: isDisablingSalah ? [] : current.notificationIds,
-          remindersDirty: isDisablingSalah ? false : current.remindersDirty,
-          routine: {
-            ...current.routine,
-            practices: nextPractices,
-            reminders: isDisablingSalah
-              ? {
-                  ...current.routine.reminders,
-                  wantsPrayerReminders: false,
-                  remindersActive: false,
-                  lastScheduledAt: null,
-                }
-              : current.routine.reminders,
-          },
-        };
-      });
-    },
-    [updateState]
-  );
-
-  const togglePracticeCompletion = useCallback(
-    (practice: JourneyPractice) => {
+  const togglePrayerCompletion = useCallback(
+    (prayer: JourneyPrayerKey) => {
       updateState((current) => {
         const day = cloneDay(getDay(current, todayKey));
-        day.completions[practice] = !day.completions[practice];
+        day.prayers[prayer] = !day.prayers[prayer];
 
         return {
           ...current,
@@ -522,69 +325,21 @@ export const useJourneyProgress = () => {
     [todayKey, updateState]
   );
 
-  const setWantsPrayerReminders = useCallback(
-    (enabled: boolean) => {
-      updateState((current) => ({
-        ...current,
-        notificationIds: enabled ? current.notificationIds : [],
-        remindersDirty: enabled ? true : false,
-        routine: {
-          ...current.routine,
-          reminders: {
-            ...current.routine.reminders,
-            wantsPrayerReminders: enabled,
-            remindersActive: enabled ? current.routine.reminders.remindersActive : false,
-            lastScheduledAt: enabled ? current.routine.reminders.lastScheduledAt : null,
-          },
-        },
-      }));
-    },
-    [updateState]
-  );
+  const toggleHabitCompletion = useCallback(
+    (habit: JourneyHabit) => {
+      updateState((current) => {
+        const day = cloneDay(getDay(current, todayKey));
 
-  const setReminderPermissionStatus = useCallback(
-    (status: JourneyReminderPermissionStatus) => {
-      updateState((current) => ({
-        ...current,
-        routine: {
-          ...current.routine,
-          reminders: {
-            ...current.routine.reminders,
-            permissionStatus: status,
+        return {
+          ...current,
+          history: {
+            ...current.history,
+            [todayKey]: toggleJourneyHabit(day, habit),
           },
-        },
-      }));
+        };
+      });
     },
-    [updateState]
-  );
-
-  const setReminderSchedule = useCallback(
-    ({
-      notificationIds,
-      remindersActive,
-      lastScheduledAt,
-      remindersDirty = false,
-    }: {
-      notificationIds: string[];
-      remindersActive: boolean;
-      lastScheduledAt: string | null;
-      remindersDirty?: boolean;
-    }) => {
-      updateState((current) => ({
-        ...current,
-        notificationIds,
-        remindersDirty,
-        routine: {
-          ...current.routine,
-          reminders: {
-            ...current.routine.reminders,
-            remindersActive,
-            lastScheduledAt,
-          },
-        },
-      }));
-    },
-    [updateState]
+    [todayKey, updateState]
   );
 
   const markShareCreated = useCallback(() => {
@@ -596,26 +351,20 @@ export const useJourneyProgress = () => {
 
   return {
     state,
-    routine,
     todayKey,
     todayStatus,
     isLoading,
-    hasConfiguredRoutine,
-    activePractices,
     streaks,
     longestStreaks,
     completionCounts,
     completedTodayCount,
-    todayProgressPercent,
     recentPracticeHistory,
     strongestPractice,
-    activeReminderCount: state.notificationIds.length,
-    remindersDirty: state.remindersDirty,
-    togglePracticeCompletion,
-    setPracticeEnabled,
-    setWantsPrayerReminders,
-    setReminderPermissionStatus,
-    setReminderSchedule,
+    daysReturned,
+    todaySalahCompletedCount,
+    todaySalahComplete,
+    togglePrayerCompletion,
+    toggleHabitCompletion,
     markShareCreated,
   };
 };

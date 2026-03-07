@@ -6,6 +6,11 @@ export const JOURNEY_PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as co
 
 export type JourneyPrayerKey = (typeof JOURNEY_PRAYERS)[number];
 
+export const JOURNEY_HABITS = ["quran", "fasting", "dhikr"] as const;
+
+export type JourneyHabit = (typeof JOURNEY_HABITS)[number];
+
+// Legacy reminder/routine types are kept for compatibility with untouched route helpers.
 export type JourneyReminderPermissionStatus =
   | "unknown"
   | "granted"
@@ -28,17 +33,19 @@ export type JourneyRoutine = {
   reminders: JourneyReminderSettings;
 };
 
+export type JourneyHabitStatus = Record<JourneyHabit, boolean>;
+
+export type JourneyPrayerStatus = Record<JourneyPrayerKey, boolean>;
+
 export type JourneyDayStatus = {
   dateKey: string;
-  completions: JourneyPracticePlan;
+  prayers: JourneyPrayerStatus;
+  habits: JourneyHabitStatus;
 };
 
 export type JourneyState = {
-  version: 3;
-  routine: JourneyRoutine;
+  version: 4;
   history: Record<string, JourneyDayStatus>;
-  notificationIds: string[];
-  remindersDirty: boolean;
   lastShareAt: string | null;
 };
 
@@ -77,20 +84,36 @@ export function createDefaultJourneyRoutine(): JourneyRoutine {
   };
 }
 
+export function createEmptyJourneyPrayers(): JourneyPrayerStatus {
+  return {
+    fajr: false,
+    dhuhr: false,
+    asr: false,
+    maghrib: false,
+    isha: false,
+  };
+}
+
+export function createEmptyJourneyHabits(): JourneyHabitStatus {
+  return {
+    quran: false,
+    fasting: false,
+    dhikr: false,
+  };
+}
+
 export function createEmptyJourneyDay(dateKey: string): JourneyDayStatus {
   return {
     dateKey,
-    completions: createEmptyPracticePlan(),
+    prayers: createEmptyJourneyPrayers(),
+    habits: createEmptyJourneyHabits(),
   };
 }
 
 export function createDefaultJourneyState(): JourneyState {
   return {
-    version: 3,
-    routine: createDefaultJourneyRoutine(),
+    version: 4,
     history: {},
-    notificationIds: [],
-    remindersDirty: false,
     lastShareAt: null,
   };
 }
@@ -100,7 +123,18 @@ export function isRoutineConfigured(routine: JourneyRoutine): boolean {
 }
 
 export function getJourneyPrayerLabel(prayer: JourneyPrayerKey): string {
-  return prayer.charAt(0).toUpperCase() + prayer.slice(1);
+  switch (prayer) {
+    case "fajr":
+      return "Fajr";
+    case "dhuhr":
+      return "Dhuhr";
+    case "asr":
+      return "Asr";
+    case "maghrib":
+      return "Maghrib";
+    case "isha":
+      return "Isha";
+  }
 }
 
 export function getJourneyPracticeLabel(practice: JourneyPractice): string {
@@ -119,12 +153,12 @@ export function getJourneyPracticeLabel(practice: JourneyPractice): string {
 export function getJourneyPracticeDescription(practice: JourneyPractice): string {
   switch (practice) {
     case "salah":
-      return "Track your full daily salah practice as one return.";
+      return "Mark each prayer as you complete it.";
     case "quran":
-      return "Keep a steady relationship with your daily Quran reading.";
+      return "Keep your daily Quran return in view.";
     case "fasting":
-      return "Mark the days you complete a fast.";
+      return "Hold onto the days you complete your fast.";
     case "dhikr":
-      return "Build consistency with your daily dhikr practice.";
+      return "Keep your daily dhikr close and consistent.";
   }
 }

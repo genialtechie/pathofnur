@@ -99,7 +99,7 @@ export function trackJourneyPrayerCheckinCompleted(
       is_complete: isComplete,
       day_key: dayKey,
     },
-    "journey-routine"
+    "journey-streaks"
   );
 }
 
