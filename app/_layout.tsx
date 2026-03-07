@@ -109,17 +109,18 @@ export default function RootLayout() {
       href: unknown,
       identifier?: string | null
     ) => {
+      const destination = href === "/(tabs)/journey" ? href : null;
+
       if (
         !isMounted ||
-        typeof href !== "string" ||
-        href.length === 0 ||
+        destination === null ||
         (identifier && lastHandledNotificationRef.current === identifier)
       ) {
         return;
       }
 
       lastHandledNotificationRef.current = identifier ?? null;
-      router.push(href);
+      router.push(destination);
       void Notifications.clearLastNotificationResponseAsync();
     };
 
