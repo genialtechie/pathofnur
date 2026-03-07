@@ -12,52 +12,30 @@ import {
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
+import {
+  TASBIH_LOOP_LENGTH,
+  createEmptyTasbihHistoryState,
+  createIncrementedTasbihHistoryState,
+  createResetTasbihHistoryState,
+  getTasbihHistorySnapshot,
+  loadTasbihHistoryState,
+  persistTasbihHistoryState,
+  type TasbihHistoryState,
+} from "@/src/store/tasbih-history";
 import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 
-const TASBIH_STATE_KEY = "@pathofnur/tasbih_state_v2";
-const LEGACY_TASBIH_KEY = "tasbih_count";
-const LOOP_LENGTH = 33;
+const LOOP_LENGTH = TASBIH_LOOP_LENGTH;
 const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
-
-type StoredTasbihState = {
-  count?: number;
-};
-
-async function loadTasbihCount(): Promise<number> {
-  try {
-    const stored = await AsyncStorage.getItem(TASBIH_STATE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as StoredTasbihState;
-      if (typeof parsed.count === "number" && Number.isFinite(parsed.count)) {
-        return parsed.count;
-      }
-    }
-
-    const legacyCount = await AsyncStorage.getItem(LEGACY_TASBIH_KEY);
-    const parsedLegacy = legacyCount ? Number.parseInt(legacyCount, 10) : 0;
-    return Number.isFinite(parsedLegacy) ? parsedLegacy : 0;
-  } catch {
-    return 0;
-  }
-}
-
-async function persistTasbihCount(count: number): Promise<void> {
-  await AsyncStorage.multiSet([
-    [TASBIH_STATE_KEY, JSON.stringify({ count })],
-    [LEGACY_TASBIH_KEY, String(count)],
-  ]);
-}
 
 export default function TasbihScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
-  const [count, setCount] = useState(0);
+  const [historyState, setHistoryState] = useState<TasbihHistoryState>(() => createEmptyTasbihHistoryState());
   const [isLoaded, setIsLoaded] = useState(false);
   const [isResetArmed, setIsResetArmed] = useState(false);
 
@@ -73,9 +51,9 @@ export default function TasbihScreen() {
     void trackScreenView("tools_tasbih");
 
     let isActive = true;
-    void loadTasbihCount().then((savedCount) => {
+    void loadTasbihHistoryState().then((savedState) => {
       if (!isActive) return;
-      setCount(savedCount);
+      setHistoryState(savedState);
       setIsLoaded(true);
     });
 
@@ -122,8 +100,10 @@ export default function TasbihScreen() {
   const ringSize = Math.min(width - spacing.xl * 2, 340);
   const beadSize = Math.max(10, Math.round(ringSize * 0.034));
   const beadRadius = ringSize / 2 - beadSize * 1.9;
-  const loopProgress = count === 0 ? 0 : ((count - 1) % LOOP_LENGTH) + 1;
-  const completedLoops = Math.floor(count / LOOP_LENGTH);
+  const historySnapshot = useMemo(() => getTasbihHistorySnapshot(historyState), [historyState]);
+  const count = historySnapshot.activeCount;
+  const loopProgress = historySnapshot.activeLoopProgress;
+  const completedLoops = historySnapshot.activeCompletedLoops;
   const formattedCount = NUMBER_FORMATTER.format(count);
   const formattedLoops = NUMBER_FORMATTER.format(completedLoops);
   const tapHint = !isLoaded ? "Loading your saved total..." : count === 0 ? "Tap to begin" : "Tap to continue";
@@ -230,17 +210,18 @@ export default function TasbihScreen() {
   );
 
   const handleTap = useCallback(() => {
-    const nextCount = count + 1;
+    const nextHistoryState = createIncrementedTasbihHistoryState(historyState);
+    const nextCount = nextHistoryState.activeCount;
     const didCompleteLoop = nextCount % LOOP_LENGTH === 0;
 
     if (count === 0) {
       void track(EventName.TOOLS_TASBIH_STARTED, {}, "tools_tasbih");
     }
 
-    setCount(nextCount);
+    setHistoryState(nextHistoryState);
     setIsResetArmed(false);
     animateTap(didCompleteLoop);
-    void persistTasbihCount(nextCount);
+    void persistTasbihHistoryState(nextHistoryState);
     void Haptics.impactAsync(didCompleteLoop ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
 
     if (didCompleteLoop) {
@@ -254,7 +235,7 @@ export default function TasbihScreen() {
         "tools_tasbih"
       );
     }
-  }, [animateTap, count]);
+  }, [animateTap, count, historyState]);
 
   const handleResetPress = useCallback(() => {
     if (count === 0) return;
@@ -265,12 +246,13 @@ export default function TasbihScreen() {
       return;
     }
 
-    setCount(0);
+    const nextHistoryState = createResetTasbihHistoryState(historyState);
+    setHistoryState(nextHistoryState);
     setIsResetArmed(false);
-    void persistTasbihCount(0);
+    void persistTasbihHistoryState(nextHistoryState);
     void track(EventName.TOOLS_TASBIH_RESET, {}, "tools_tasbih");
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  }, [count, isResetArmed]);
+  }, [count, historyState, isResetArmed]);
 
   return (
     <SafeAreaView style={styles.container}>

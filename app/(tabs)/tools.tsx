@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -9,19 +9,24 @@ import {
   Text,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Svg, { Circle } from "react-native-svg";
 
 import { useLocation } from "@/src/lib/location";
+import {
+  TASBIH_LOOP_LENGTH,
+  createEmptyTasbihHistoryState,
+  getTasbihHistorySnapshot,
+  loadTasbihHistoryState,
+  type TasbihHistoryState,
+} from "@/src/store/tasbih-history";
 import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 import { darkColors } from "@/src/theme/tokens";
 
 const TASBIH_COVER = require("@/public/images/_source/tools-tasbih-focus-v01.webp");
 const QIBLAH_COVER = require("@/public/images/_source/tools-qiblah-backdrop-v01.webp");
-const TASBIH_STATE_KEY = "@pathofnur/tasbih_state_v2";
-const LEGACY_TASBIH_KEY = "tasbih_count";
 const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
 
 type FeatureCardProps = {
@@ -38,28 +43,123 @@ type FeatureCardProps = {
   onPress: () => void;
 };
 
-type StoredTasbihState = {
-  count?: number;
+type PracticeDayCardProps = {
+  label: string;
+  count: number;
+  accentColor: string;
+  backgroundColor: string;
+  borderColor: string;
+  titleColor: string;
+  textColor: string;
+  secondaryTextColor: string;
+  ringTrackColor: string;
 };
 
-async function readTasbihCount(): Promise<number> {
-  try {
-    const next = await AsyncStorage.getItem(TASBIH_STATE_KEY);
-    if (next) {
-      const parsed = JSON.parse(next) as StoredTasbihState;
-      if (typeof parsed.count === "number" && Number.isFinite(parsed.count)) {
-        return parsed.count;
-      }
-    }
+type ProgressRingProps = {
+  progress: number;
+  accentColor: string;
+  trackColor: string;
+  textColor: string;
+  value: string;
+};
 
-    const legacy = await AsyncStorage.getItem(LEGACY_TASBIH_KEY);
-    if (!legacy) return 0;
+function getLoopProgress(count: number): number {
+  if (count <= 0) return 0;
+  return ((count - 1) % TASBIH_LOOP_LENGTH) + 1;
+}
 
-    const count = Number.parseInt(legacy, 10);
-    return Number.isFinite(count) ? count : 0;
-  } catch {
-    return 0;
-  }
+function ProgressRing({ progress, accentColor, trackColor, textColor, value }: ProgressRingProps) {
+  const size = 74;
+  const strokeWidth = 5;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clampedProgress = Math.max(0, Math.min(progress, 1));
+  const strokeDashoffset = circumference * (1 - clampedProgress);
+
+  return (
+    <View style={styles.ringShell}>
+      <Svg height={size} width={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          fill="none"
+          r={radius}
+          stroke={trackColor}
+          strokeWidth={strokeWidth}
+        />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          fill="none"
+          r={radius}
+          stroke={accentColor}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          strokeWidth={strokeWidth}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View pointerEvents="none" style={styles.ringCenter}>
+        <Text style={[styles.ringValue, { color: textColor }]}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function PracticeDayCard({
+  label,
+  count,
+  accentColor,
+  backgroundColor,
+  borderColor,
+  titleColor,
+  textColor,
+  secondaryTextColor,
+  ringTrackColor,
+}: PracticeDayCardProps) {
+  const overflowCount = count > TASBIH_LOOP_LENGTH ? count - TASBIH_LOOP_LENGTH : 0;
+  const loopProgress = getLoopProgress(count);
+  const ringValue = count === 0 ? "0" : NUMBER_FORMATTER.format(loopProgress);
+  const footerText =
+    count === 0
+      ? "No count yet"
+      : overflowCount > 0
+        ? `${NUMBER_FORMATTER.format(loopProgress)} into the next 33`
+        : count === TASBIH_LOOP_LENGTH
+          ? "33 complete"
+        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} to 33`;
+
+  return (
+    <View style={[styles.dayCard, { backgroundColor, borderColor }]}> 
+      <View style={styles.dayCardTopRow}>
+        <Text style={[styles.dayCardLabel, { color: titleColor }]}>{label}</Text>
+        {overflowCount > 0 ? (
+          <View style={[styles.dayOverflowPill, { backgroundColor: `${accentColor}22`, borderColor: `${accentColor}33` }]}> 
+            <Text style={[styles.dayOverflowText, { color: accentColor }]}>+{NUMBER_FORMATTER.format(overflowCount)}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.dayCardMetricRow}>
+        <View style={styles.dayCardMetricText}>
+          <View style={styles.dayCardCountRow}>
+            <Text style={[styles.dayCardCount, { color: textColor }]}>{NUMBER_FORMATTER.format(count)}</Text>
+            <Text style={[styles.dayCardGoal, { color: secondaryTextColor }]}>/{TASBIH_LOOP_LENGTH}</Text>
+          </View>
+          <Text style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>{footerText}</Text>
+        </View>
+
+        <ProgressRing
+          accentColor={accentColor}
+          progress={loopProgress / TASBIH_LOOP_LENGTH}
+          trackColor={ringTrackColor}
+          textColor={textColor}
+          value={ringValue}
+        />
+      </View>
+    </View>
+  );
 }
 
 function FeatureCard({
@@ -118,15 +218,15 @@ export default function ToolsScreen() {
   const router = useRouter();
   const { location } = useLocation();
   const { colors, isDark } = useTheme();
-  const [tasbihCount, setTasbihCount] = useState(0);
+  const [historyState, setHistoryState] = useState<TasbihHistoryState>(() => createEmptyTasbihHistoryState());
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      void readTasbihCount().then((count) => {
+      void loadTasbihHistoryState().then((nextState) => {
         if (isActive) {
-          setTasbihCount(count);
+          setHistoryState(nextState);
         }
       });
 
@@ -136,32 +236,50 @@ export default function ToolsScreen() {
     }, [])
   );
 
-  const hasSavedDhikr = tasbihCount > 0;
-  const completedRounds = Math.floor(tasbihCount / 33);
-  const currentRoundProgress = tasbihCount % 33;
-  const remainingToRound = currentRoundProgress === 0 ? 33 : 33 - currentRoundProgress;
-  const formattedCount = NUMBER_FORMATTER.format(tasbihCount);
+  const tasbihSnapshot = useMemo(() => getTasbihHistorySnapshot(historyState), [historyState]);
+  const activeCount = tasbihSnapshot.activeCount;
+  const lifetimeCount = tasbihSnapshot.lifetimeCount;
+  const todayCount = tasbihSnapshot.todayCount;
+  const yesterdayCount = tasbihSnapshot.yesterdayCount;
+  const lifetimeLoops = tasbihSnapshot.lifetimeCompletedLoops;
+
+  const formattedActiveCount = NUMBER_FORMATTER.format(activeCount);
+  const formattedLifetimeCount = NUMBER_FORMATTER.format(lifetimeCount);
+  const formattedLifetimeLoops = NUMBER_FORMATTER.format(lifetimeLoops);
+  const formattedTodayCount = NUMBER_FORMATTER.format(todayCount);
   const qiblahLocation = location?.city ?? "Location needed";
-  const practicePrompt =
-    tasbihCount === 0
-      ? "Begin with your first 33."
-      : currentRoundProgress === 0
-        ? "33 complete."
-        : `${remainingToRound} taps until 33.`;
-  const shareMessage =
-    tasbihCount === 0
-      ? "I am using Path of Nur for tasbih and qiblah."
-      : completedRounds > 0
-        ? `I have logged ${formattedCount} tasbih taps on Path of Nur, including ${completedRounds} completed loops.`
-        : `I have logged ${formattedCount} tasbih taps on Path of Nur.`;
-  const practicePanelColor = colors.surface.card;
-  const practicePanelBorder = colors.surface.borderInteractive;
+  const hasHistory = lifetimeCount > 0;
+  const hasActiveCount = activeCount > 0;
+
+  const shareMessage = useMemo(() => {
+    if (lifetimeCount === 0) {
+      return "I am using Path of Nur for tasbih and qiblah.";
+    }
+
+    if (todayCount > 0) {
+      return `I have made ${formattedLifetimeCount} tasbih on Path of Nur, including ${formattedTodayCount} today.`;
+    }
+
+    return `I have made ${formattedLifetimeCount} tasbih on Path of Nur.`;
+  }, [formattedLifetimeCount, formattedTodayCount, lifetimeCount, todayCount]);
+
   const practiceBadgeBackground = isDark ? "rgba(7, 11, 20, 0.62)" : "rgba(255, 255, 255, 0.82)";
   const practiceBadgeBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)";
-  const practiceStatBackground = isDark ? "rgba(7, 11, 20, 0.72)" : "rgba(255, 255, 255, 0.9)";
-  const practiceStatBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(17,24,39,0.08)";
-  const shareButtonBackground = isDark ? "rgba(255,255,255,0.12)" : "rgba(17,24,39,0.06)";
-  const shareButtonDisabledBackground = isDark ? "rgba(255,255,255,0.06)" : "rgba(17,24,39,0.03)";
+  const shareButtonBackground = isDark ? "rgba(255,255,255,0.1)" : "rgba(17,24,39,0.05)";
+  const shareButtonDisabledBackground = isDark ? "rgba(255,255,255,0.05)" : "rgba(17,24,39,0.03)";
+  const practicePanelColor = colors.surface.card;
+  const practicePanelBorder = colors.surface.borderInteractive;
+  const loopsCapsuleBackground = isDark ? "rgba(7, 11, 20, 0.62)" : "rgba(255,255,255,0.86)";
+  const loopsCapsuleBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)";
+  const yesterdayAccentColor = isDark ? "#D99283" : "#CC7A6D";
+  const yesterdayCardBackground = isDark ? "rgba(60, 28, 28, 0.42)" : "rgba(249, 239, 236, 0.98)";
+  const yesterdayCardBorder = isDark ? "rgba(217, 146, 131, 0.18)" : "rgba(204, 122, 109, 0.18)";
+  const todayAccentColor = colors.brand.metallicGold;
+  const todayCardBackground = isDark ? "rgba(7, 11, 20, 0.76)" : "rgba(255, 255, 255, 0.98)";
+  const todayCardBorder = isDark ? "rgba(197, 160, 33, 0.22)" : "rgba(197, 160, 33, 0.18)";
+  const dayCardTextColor = colors.text.primary;
+  const dayCardSecondaryColor = colors.text.secondary;
+  const dayRingTrackColor = isDark ? "rgba(255,255,255,0.09)" : "rgba(17,24,39,0.08)";
 
   const handleShareProgress = useCallback(async () => {
     try {
@@ -175,7 +293,7 @@ export default function ToolsScreen() {
   }, [shareMessage]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}> 
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -186,64 +304,76 @@ export default function ToolsScreen() {
           <Text style={[styles.pageTitle, { color: colors.text.primary }]}>Tools</Text>
         </View>
 
-        <View style={[styles.practiceCard, { backgroundColor: practicePanelColor, borderColor: practicePanelBorder }]}>
+        <View style={[styles.practiceCard, { backgroundColor: practicePanelColor, borderColor: practicePanelBorder }]}> 
           <View style={styles.practiceGlowLarge} />
           <View style={styles.practiceGlowSmall} />
 
           <View style={styles.practiceTopRow}>
-            <View style={[styles.practiceBadge, { backgroundColor: practiceBadgeBackground, borderColor: practiceBadgeBorder }]}>
+            <View style={[styles.practiceBadge, { backgroundColor: practiceBadgeBackground, borderColor: practiceBadgeBorder }]}> 
               <Ionicons name="sparkles" size={14} color={colors.brand.metallicGold} />
-              <Text style={[styles.practiceBadgeText, { color: colors.text.light }]}>Your Practice</Text>
+              <Text style={[styles.practiceBadgeText, { color: colors.text.light }]}>Practice</Text>
             </View>
+
             <Pressable
               accessibilityRole="button"
-              disabled={!hasSavedDhikr}
+              disabled={!hasHistory}
               onPress={() => {
                 void handleShareProgress();
               }}
               style={({ pressed }) => [
-                styles.shareButton,
-                { backgroundColor: hasSavedDhikr ? shareButtonBackground : shareButtonDisabledBackground },
-                pressed && hasSavedDhikr && styles.shareButtonPressed,
+                styles.shareIconButton,
+                { backgroundColor: hasHistory ? shareButtonBackground : shareButtonDisabledBackground },
+                pressed && hasHistory && styles.shareButtonPressed,
               ]}
             >
               <Ionicons
                 name="share-social-outline"
                 size={16}
-                color={hasSavedDhikr ? colors.text.primary : colors.text.tertiary}
+                color={hasHistory ? colors.text.primary : colors.text.tertiary}
               />
-              <Text
-                style={[
-                  styles.shareButtonText,
-                  { color: hasSavedDhikr ? colors.text.primary : colors.text.tertiary },
-                ]}
-              >
-                Share
-              </Text>
             </Pressable>
           </View>
 
-          <View style={styles.practiceBody}>
+          <View style={styles.practiceHeroRow}>
             <View style={styles.practiceLead}>
-              <Text style={[styles.practiceCount, { color: colors.text.primary }]}>{formattedCount}</Text>
-              <Text style={styles.practiceCountLabel}>total count</Text>
-              <Text style={[styles.practicePrompt, { color: colors.text.secondary }]}>{practicePrompt}</Text>
+              <Text style={[styles.practiceCount, { color: colors.text.primary }]}>{formattedLifetimeCount}</Text>
+              <Text style={[styles.practiceCountLabel, { color: colors.brand.metallicGold }]}>all-time tasbih</Text>
             </View>
 
-            <View style={styles.practiceStatsColumn}>
-              <View style={[styles.practiceStatCard, { backgroundColor: practiceStatBackground, borderColor: practiceStatBorder }]}>
-                <Text style={[styles.practiceStatValue, { color: colors.text.primary }]}>
-                  {NUMBER_FORMATTER.format(completedRounds)}
-                </Text>
-                <Text style={[styles.practiceStatLabel, { color: colors.text.tertiary }]}>completed loops</Text>
-              </View>
-              <View style={[styles.practiceStatCard, { backgroundColor: practiceStatBackground, borderColor: practiceStatBorder }]}>
-                <Text numberOfLines={1} style={[styles.practiceStatLocation, { color: colors.text.primary }]}>
-                  {qiblahLocation}
-                </Text>
-                <Text style={[styles.practiceStatLabel, { color: colors.text.tertiary }]}>qiblah location</Text>
-              </View>
+            <View
+              style={[
+                styles.loopsCapsule,
+                { backgroundColor: loopsCapsuleBackground, borderColor: loopsCapsuleBorder },
+              ]}
+            >
+              <Text style={[styles.loopsCapsuleValue, { color: colors.text.primary }]}>{formattedLifetimeLoops}</Text>
+              <Text style={[styles.loopsCapsuleLabel, { color: colors.text.tertiary }]}>completed loops</Text>
             </View>
+          </View>
+
+          <View style={styles.practiceComparisonRow}>
+            <PracticeDayCard
+              accentColor={yesterdayAccentColor}
+              backgroundColor={yesterdayCardBackground}
+              borderColor={yesterdayCardBorder}
+              count={yesterdayCount}
+              label="Yesterday"
+              ringTrackColor={dayRingTrackColor}
+              secondaryTextColor={dayCardSecondaryColor}
+              textColor={dayCardTextColor}
+              titleColor={yesterdayAccentColor}
+            />
+            <PracticeDayCard
+              accentColor={todayAccentColor}
+              backgroundColor={todayCardBackground}
+              borderColor={todayCardBorder}
+              count={todayCount}
+              label="Today"
+              ringTrackColor={dayRingTrackColor}
+              secondaryTextColor={dayCardSecondaryColor}
+              textColor={dayCardTextColor}
+              titleColor={colors.text.primary}
+            />
           </View>
 
           <Pressable
@@ -251,7 +381,7 @@ export default function ToolsScreen() {
             onPress={() => router.push("/tools/tasbih")}
             style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryActionPressed]}
           >
-            <Text style={styles.primaryActionText}>{hasSavedDhikr ? "Return to Tasbih" : "Open Tasbih"}</Text>
+            <Text style={styles.primaryActionText}>{hasActiveCount ? "Return to Tasbih" : "Open Tasbih"}</Text>
             <Ionicons name="arrow-forward" size={18} color={darkColors.text.onAccent} />
           </Pressable>
         </View>
@@ -259,17 +389,11 @@ export default function ToolsScreen() {
         <FeatureCard
           label="Tasbih"
           title="Return to your tasbih."
-          description="Pick up where you left off and continue your count."
-          primaryLabel="Total"
-          primaryValue={hasSavedDhikr ? formattedCount : "0"}
-          secondaryLabel="To 33"
-          secondaryValue={
-            tasbihCount === 0
-              ? "Start now"
-              : currentRoundProgress === 0
-                ? "33 complete"
-                : `${remainingToRound} left`
-          }
+          description="Open the orb and continue from your saved counter."
+          primaryLabel="Live"
+          primaryValue={activeCount > 0 ? formattedActiveCount : "0"}
+          secondaryLabel="Today"
+          secondaryValue={todayCount > 0 ? formattedTodayCount : hasHistory ? "0" : "Start now"}
           cta="Open"
           imageSource={TASBIH_COVER}
           icon="sparkles"
@@ -282,7 +406,7 @@ export default function ToolsScreen() {
           description="Open the compass and align from your current location."
           primaryLabel="Location"
           primaryValue={qiblahLocation}
-          secondaryLabel="Status"
+          secondaryLabel="Live"
           secondaryValue={location?.coords ? "Ready" : "Needs location"}
           cta="Open"
           imageSource={QIBLAH_COVER}
@@ -363,36 +487,31 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
   },
-  shareButton: {
-    flexDirection: "row",
+  shareIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    justifyContent: "center",
   },
   shareButtonPressed: {
     opacity: 0.9,
   },
-  shareButtonText: {
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
-  },
-  practiceBody: {
+  practiceHeroRow: {
     flexDirection: "row",
-    alignItems: "stretch",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: spacing.md,
   },
   practiceLead: {
-    flex: 1.2,
+    flex: 1,
     gap: spacing.xxs,
   },
   practiceCount: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
-    fontSize: 54,
-    lineHeight: 58,
+    fontSize: 58,
+    lineHeight: 62,
     fontVariant: ["tabular-nums"],
   },
   practiceCountLabel: {
@@ -401,47 +520,110 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.2,
   },
-  practicePrompt: {
-    color: darkColors.text.secondary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: spacing.xs,
-    maxWidth: "92%",
-  },
-  practiceStatsColumn: {
-    flex: 1,
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  practiceStatCard: {
-    flex: 1,
-    minHeight: 88,
-    padding: spacing.md,
+  loopsCapsule: {
+    minWidth: 116,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radii.lg,
-    backgroundColor: "rgba(7, 11, 20, 0.72)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
-    justifyContent: "space-between",
-    gap: spacing.sm,
+    gap: 2,
   },
-  practiceStatValue: {
-    color: darkColors.text.primary,
+  loopsCapsuleValue: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 26,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 26,
     fontVariant: ["tabular-nums"],
   },
-  practiceStatLocation: {
-    color: darkColors.text.primary,
+  loopsCapsuleLabel: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  practiceComparisonRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  dayCard: {
+    flex: 1,
+    minHeight: 176,
+    padding: spacing.md,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  dayCardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  dayCardLabel: {
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
+  },
+  dayOverflowPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+  },
+  dayOverflowText: {
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 12,
+    lineHeight: 14,
+    fontVariant: ["tabular-nums"],
+  },
+  dayCardMetricRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  dayCardMetricText: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  dayCardCountRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 2,
+    flexWrap: "wrap",
+  },
+  dayCardCount: {
+    fontFamily: fontFamily.appBold,
+    fontSize: 34,
+    lineHeight: 38,
+    fontVariant: ["tabular-nums"],
+  },
+  dayCardGoal: {
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 20,
+    lineHeight: 28,
+    fontVariant: ["tabular-nums"],
+  },
+  dayCardFootnote: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
+    lineHeight: 18,
+    maxWidth: "88%",
+  },
+  ringShell: {
+    width: 74,
+    height: 74,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringCenter: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringValue: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 18,
     lineHeight: 22,
-  },
-  practiceStatLabel: {
-    color: darkColors.text.tertiary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 12,
+    fontVariant: ["tabular-nums"],
   },
   primaryAction: {
     minHeight: 52,
