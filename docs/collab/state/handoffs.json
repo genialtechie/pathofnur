@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:25:29Z",
+  "last_updated_utc": "2026-03-07T21:29:10Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -473,6 +473,41 @@
       "follow_ups": [],
       "next_recommended_actions": [
         "Smoke-test the Tools and Journey tabs on device to confirm the removed hero labels improve hierarchy as intended"
+      ]
+    },
+    {
+      "handoff_id": "H-20260307-025",
+      "task_id": "T-20260307-025",
+      "branch_name": "fix/T-20260307-025-home-hadith-share-cta",
+      "worktree_path": ".worktrees/T-20260307-025",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-07T21:29:10Z",
+      "summary": {
+        "completed": [
+          "Centered the home hadith label, quote, and source so the module reads as one composed focal block",
+          "Moved the share action below the quote and rebuilt it as a clearer pill CTA",
+          "Preserved the existing native share and web clipboard fallback behavior while keeping the copied/unavailable states visible"
+        ],
+        "remaining": [
+          "Merge the branch if the updated CTA weight feels right in the running app"
+        ]
+      },
+      "changed_files": [
+        "src/features/home/HomeHadithCard.tsx"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm run check:typography"
+        ],
+        "result": "pass",
+        "notes": "Typecheck passed after re-running once to clear a stale hanging tsc process. Typography validator returned OK but still reported `Files scanned: 0` from the worktree, so the touched home component was manually checked for typography-token compliance."
+      },
+      "risks": [],
+      "follow_ups": [],
+      "next_recommended_actions": [
+        "Merge fix/T-20260307-025-home-hadith-share-cta if the CTA prominence looks right during visual review"
       ]
     }
   ]

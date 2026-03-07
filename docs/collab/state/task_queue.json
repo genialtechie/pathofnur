@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:25:29Z",
+  "last_updated_utc": "2026-03-07T21:29:10Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -277,7 +277,7 @@
         "src/features/home/HomeHadithCard.tsx"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "depends_on": [],
       "branch_name": "fix/T-20260307-025-home-hadith-share-cta",
@@ -291,7 +291,7 @@
         "npm run check:typography passes"
       ],
       "implementation_notes": "Keep the diff contained to src/features/home/HomeHadithCard.tsx. Preserve current share behavior and state labels while making the bottom CTA clearer and easier to notice.",
-      "updated_at_utc": "2026-03-07T21:24:50Z"
+      "updated_at_utc": "2026-03-07T21:29:10Z"
     }
   ]
 }
