@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
+import { fontFamily, spacing, useTheme } from "@/src/theme";
 
 const DAILY_HADITH = {
   label: "Today's Hadith",
@@ -18,7 +18,7 @@ const DAILY_HADITH = {
 } as const;
 
 export function HomeHadithCard() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [shareState, setShareState] = useState<"idle" | "copied" | "unavailable">("idle");
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,39 +67,8 @@ export function HomeHadithCard() {
   }, []);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.surface.card,
-          borderColor: colors.surface.borderInteractive,
-        },
-      ]}
-    >
-      <View
-        pointerEvents="none"
-        style={[
-          styles.glowLarge,
-          {
-            backgroundColor: isDark
-              ? "rgba(197, 160, 33, 0.12)"
-              : "rgba(197, 160, 33, 0.08)",
-          },
-        ]}
-      />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.glowSmall,
-          {
-            backgroundColor: isDark
-              ? "rgba(44, 82, 146, 0.18)"
-              : "rgba(44, 82, 146, 0.08)",
-          },
-        ]}
-      />
-
-      <View style={styles.topRow}>
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
         <View style={styles.labelRow}>
           <View
             style={[
@@ -116,20 +85,14 @@ export function HomeHadithCard() {
           accessibilityRole="button"
           accessibilityLabel="Share today's hadith"
           onPress={handleShare}
-          style={[
-            styles.shareButton,
-            {
-              backgroundColor: colors.interactive.selectedBackground,
-              borderColor: colors.surface.borderInteractive,
-            },
-          ]}
+          style={styles.shareButton}
         >
           <Ionicons
             name="share-social-outline"
             size={14}
-            color={colors.brand.metallicGold}
+            color={colors.text.secondary}
           />
-          <Text style={[styles.shareLabel, { color: colors.brand.metallicGold }]}>
+          <Text style={[styles.shareLabel, { color: colors.text.secondary }]}>
             {shareState === "copied"
               ? "Copied"
               : shareState === "unavailable"
@@ -143,7 +106,7 @@ export function HomeHadithCard() {
         "{DAILY_HADITH.quote}"
       </Text>
 
-      <Text style={[styles.source, { color: colors.text.secondary }]} selectable>
+      <Text style={[styles.source, { color: colors.text.muted }]} selectable>
         {DAILY_HADITH.source}
       </Text>
     </View>
@@ -154,33 +117,13 @@ const styles = StyleSheet.create({
   container: {
     marginTop: spacing.xl,
     marginHorizontal: spacing.xl,
-    borderWidth: 1,
-    borderRadius: radii.xl,
-    overflow: "hidden",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.lg,
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
   },
-  glowLarge: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 999,
-    top: -90,
-    right: -24,
-  },
-  glowSmall: {
-    position: "absolute",
-    width: 120,
-    height: 120,
-    borderRadius: 999,
-    bottom: -48,
-    left: -18,
-  },
-  topRow: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   labelRow: {
@@ -203,10 +146,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    minHeight: 32,
-    borderWidth: 1,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.sm,
+    minHeight: 24,
   },
   shareLabel: {
     fontFamily: fontFamily.appSemiBold,
@@ -214,8 +154,8 @@ const styles = StyleSheet.create({
   },
   quote: {
     fontFamily: fontFamily.scriptureRegular,
-    fontSize: 22,
-    lineHeight: 32,
+    fontSize: 24,
+    lineHeight: 36,
   },
   source: {
     fontFamily: fontFamily.appSemiBold,
