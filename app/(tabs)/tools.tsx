@@ -284,8 +284,6 @@ export default function ToolsScreen() {
   const hasActiveCount = activeCount > 0;
   const manualShareArtifact = useMemo(() => createManualToolsShareArtifact(tasbihSnapshot), [tasbihSnapshot]);
 
-  const practiceBadgeBackground = isDark ? "rgba(7, 11, 20, 0.62)" : "rgba(255, 255, 255, 0.82)";
-  const practiceBadgeBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)";
   const shareButtonBackground = isDark ? "rgba(255,255,255,0.1)" : "rgba(17,24,39,0.05)";
   const shareButtonDisabledBackground = isDark ? "rgba(255,255,255,0.05)" : "rgba(17,24,39,0.03)";
   const practicePanelColor = colors.surface.card;
@@ -372,11 +370,6 @@ export default function ToolsScreen() {
           <View style={styles.practiceGlowSmall} />
 
           <View style={styles.practiceTopRow}>
-            <View style={[styles.practiceBadge, { backgroundColor: practiceBadgeBackground, borderColor: practiceBadgeBorder }]}> 
-              <Ionicons name="sparkles" size={14} color={colors.brand.metallicGold} />
-              <Text style={[styles.practiceBadgeText, { color: colors.text.light }]}>Practice</Text>
-            </View>
-
             <Pressable
               accessibilityRole="button"
               disabled={!hasHistory}
@@ -553,24 +546,8 @@ const styles = StyleSheet.create({
   practiceTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     gap: spacing.sm,
-  },
-  practiceBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.pill,
-    backgroundColor: "rgba(7, 11, 20, 0.62)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  practiceBadgeText: {
-    color: darkColors.text.light,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
   },
   shareIconButton: {
     width: 38,

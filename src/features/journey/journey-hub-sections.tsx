@@ -59,12 +59,6 @@ export function JourneyHeroCard({
       <View style={[styles.heroGlowOne, { backgroundColor: "rgba(197, 160, 33, 0.18)" }]} />
       <View style={[styles.heroGlowTwo, { backgroundColor: "rgba(44, 82, 146, 0.16)" }]} />
 
-      <View style={styles.heroBadge}>
-        <Text style={[styles.heroBadgeLabel, { color: colors.text.primary }]} selectable>
-          Journey
-        </Text>
-      </View>
-
       <View style={styles.heroCopy}>
         <Text style={[styles.heroTitle, { color: colors.text.primary }]} selectable>
           Keep showing up.
@@ -128,10 +122,10 @@ export function JourneyStreakGatewayPanel({
         ]}
       >
         <View style={styles.gatewayTagRow}>
-          <JourneyTag label="Salah" tone={getJourneyPracticeTone("salah")} />
-          <JourneyTag label="Quran" tone={getJourneyPracticeTone("quran")} />
-          <JourneyTag label="Fasting" tone={getJourneyPracticeTone("fasting")} />
-          <JourneyTag label="Dhikr" tone={getJourneyPracticeTone("dhikr")} />
+          <JourneyTag label="🤲 Salah" tone={getJourneyPracticeTone("salah")} />
+          <JourneyTag label="📖 Quran" tone={getJourneyPracticeTone("quran")} />
+          <JourneyTag label="🌙 Fasting" tone={getJourneyPracticeTone("fasting")} />
+          <JourneyTag label="📿 Dhikr" tone={getJourneyPracticeTone("dhikr")} />
         </View>
 
         <Text style={[styles.gatewayBody, { color: colors.text.secondary }]} selectable>
@@ -226,21 +220,6 @@ const styles = StyleSheet.create({
     height: 164,
     borderRadius: radii.pill,
     opacity: 0.85,
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "rgba(7, 11, 20, 0.62)",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  heroBadgeLabel: {
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
   },
   heroCopy: {
     gap: spacing.xs,
