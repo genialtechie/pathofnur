@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   hadith: {
     color: "#dce3ed",
-    fontFamily: fontFamily.scriptureRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 17,
     textAlign: "center",
     fontStyle: "italic",
