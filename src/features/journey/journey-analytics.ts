@@ -5,20 +5,18 @@ import {
 } from "@/src/lib/analytics/track";
 
 import type {
-  JourneyHabit,
   JourneyPrayerKey,
+  JourneyPractice,
   JourneyReminderPermissionStatus,
   JourneyRoutine,
 } from "./journey-types";
 
-const JOURNEY_SCREEN = "journey";
-
-export function trackJourneyScreenView() {
-  return trackScreenView(JOURNEY_SCREEN);
+export function trackJourneyScreenView(screenName: string = "journey") {
+  return trackScreenView(screenName);
 }
 
 export function trackJourneyHabitToggled(
-  habit: JourneyHabit,
+  habit: JourneyPractice,
   isComplete: boolean,
   dayKey: string
 ) {
@@ -29,7 +27,7 @@ export function trackJourneyHabitToggled(
       is_complete: isComplete,
       day_key: dayKey,
     },
-    JOURNEY_SCREEN
+    "journey-streaks"
   );
 }
 
@@ -37,16 +35,19 @@ export function trackJourneyRoutineSaved(
   routine: JourneyRoutine,
   eventName: typeof EventName.JOURNEY_ROUTINE_CREATED | typeof EventName.JOURNEY_ROUTINE_UPDATED
 ) {
+  const activePracticeCount = Object.values(routine.practices).filter(Boolean).length;
+
   return track(
     eventName,
     {
-      selected_prayer_count: routine.selectedPrayers.length,
-      includes_reading: routine.readingEnabled,
-      includes_fasting: routine.fastingEnabled,
-      reminder_lead_minutes: routine.reminderLeadMinutes,
-      follow_up_delay_minutes: routine.followUpDelayMinutes,
+      active_practice_count: activePracticeCount,
+      includes_salah: routine.practices.salah,
+      includes_quran: routine.practices.quran,
+      includes_fasting: routine.practices.fasting,
+      includes_dhikr: routine.practices.dhikr,
+      prayer_reminders_enabled: routine.reminders.wantsPrayerReminders,
     },
-    JOURNEY_SCREEN
+    "journey-routine"
   );
 }
 
@@ -54,7 +55,7 @@ export function trackJourneyReminderPermissionRequested() {
   return track(
     EventName.JOURNEY_REMINDER_PERMISSION_REQUESTED,
     {},
-    JOURNEY_SCREEN
+    "journey-routine"
   );
 }
 
@@ -66,23 +67,23 @@ export function trackJourneyReminderPermissionGranted(
     {
       permission_status: status,
     },
-    JOURNEY_SCREEN
+    "journey-routine"
   );
 }
 
 export function trackJourneyReminderScheduled(
   reminderCount: number,
-  selectedPrayerCount: number,
-  windowDays: number
+  windowDays: number,
+  prayerRemindersEnabled: boolean
 ) {
   return track(
     EventName.JOURNEY_REMINDER_SCHEDULED,
     {
       reminder_count: reminderCount,
-      selected_prayer_count: selectedPrayerCount,
       window_days: windowDays,
+      prayer_reminders_enabled: prayerRemindersEnabled,
     },
-    JOURNEY_SCREEN
+    "journey-routine"
   );
 }
 
@@ -98,7 +99,7 @@ export function trackJourneyPrayerCheckinCompleted(
       is_complete: isComplete,
       day_key: dayKey,
     },
-    JOURNEY_SCREEN
+    "journey-routine"
   );
 }
 
@@ -108,13 +109,13 @@ export function trackJourneyShareCardCreated(shareType: string) {
     {
       share_type: shareType,
     },
-    JOURNEY_SCREEN
+    "journey"
   );
 }
 
 export function trackJourneyStreakMilestone(
   streakDays: number,
-  habit: JourneyHabit
+  habit: JourneyPractice
 ) {
   return track(
     EventName.JOURNEY_STREAK_MILESTONE,
@@ -123,6 +124,6 @@ export function trackJourneyStreakMilestone(
       milestone_type: String(streakDays) as "3" | "7" | "14" | "30",
       habit,
     },
-    JOURNEY_SCREEN
+    "journey-streaks"
   );
 }

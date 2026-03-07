@@ -41,7 +41,7 @@ export default function PlanIntroScreen() {
         <View style={styles.spacer} />
 
         <Text style={styles.headline} selectable>
-          Let's build your personal{"\n"}prayer plan.
+          Let's build your daily{"\n"}practice.
         </Text>
         <Text style={styles.hadith} selectable>
           "The most beloved of deeds to Allah are those that are most consistent,

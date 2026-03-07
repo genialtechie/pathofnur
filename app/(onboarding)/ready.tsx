@@ -30,12 +30,11 @@ const TIME_LABELS: Record<string, string> = {
 };
 
 const GOAL_LABELS: Record<string, string> = {
-  salah: "Salah",
+  salah: "Daily Salah",
   fasting: "Fasting",
   quran: "Quran",
-  duas: "Duas & Dhikr",
-  calm: "Sleep & Calm",
-  ramadan: "Ramadan"
+  dhikr: "Dhikr",
+  duas: "Dhikr"
 };
 
 export default function ReadyScreen() {

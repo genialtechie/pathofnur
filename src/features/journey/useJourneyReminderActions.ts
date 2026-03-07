@@ -53,24 +53,42 @@ export function useJourneyReminderActions({
   }, [setReminderPermissionStatus]);
 
   const syncReminders = useCallback(
-    async (shouldRequestPermission: boolean) => {
-      if (routine.selectedPrayers.length === 0) {
-        Alert.alert("Choose prayers first", "Select at least one prayer before turning reminders on.");
-        return;
+    async (
+      shouldRequestPermission: boolean,
+      showAlerts: boolean = true,
+      routineOverride?: JourneyRoutine
+    ) => {
+      const effectiveRoutine = routineOverride ?? routine;
+
+      if (!effectiveRoutine.practices.salah || !effectiveRoutine.reminders.wantsPrayerReminders) {
+        if (showAlerts) {
+          Alert.alert(
+            "Enable salah reminders first",
+            "Turn on Daily Salah and prayer reminders before syncing."
+          );
+        }
+        return false;
       }
 
       if (!coords) {
-        Alert.alert(
-          "Location needed",
-          "Prayer reminders need your current or saved location so Path of Nur can calculate prayer times."
-        );
-        return;
+        if (showAlerts) {
+          Alert.alert(
+            "Location needed",
+            "Prayer reminders need your current or saved location so Path of Nur can calculate prayer times."
+          );
+        }
+        return false;
       }
 
       setIsScheduling(true);
 
       try {
-        let permissionStatus = routine.reminderPermissionStatus;
+        let permissionStatus = effectiveRoutine.reminders.permissionStatus;
+
+        if (!shouldRequestPermission && permissionStatus === "granted") {
+          permissionStatus = await getJourneyReminderPermissionStatus();
+          setReminderPermissionStatus(permissionStatus);
+        }
 
         if (shouldRequestPermission || permissionStatus === "unknown") {
           void trackJourneyReminderPermissionRequested();
@@ -87,16 +105,13 @@ export function useJourneyReminderActions({
             notificationIds: [],
             remindersActive: false,
             lastScheduledAt: null,
-            remindersDirty: false,
+            remindersDirty: true,
           });
-          return;
+          return false;
         }
 
         const result = await rescheduleRoutineReminders({
-          routine: {
-            ...routine,
-            remindersActive: true,
-          },
+          routine: effectiveRoutine,
           latitude: coords.latitude,
           longitude: coords.longitude,
         });
@@ -110,15 +125,20 @@ export function useJourneyReminderActions({
 
         void trackJourneyReminderScheduled(
           result.scheduledCount,
-          routine.selectedPrayers.length,
-          result.windowDays
+          result.windowDays,
+          effectiveRoutine.reminders.wantsPrayerReminders
         );
+
+        return true;
       } catch (error) {
         console.error("Failed to sync journey reminders:", error);
-        Alert.alert(
-          "Reminder sync failed",
-          "The prayer reminder schedule could not be updated. Try again in a moment."
-        );
+        if (showAlerts) {
+          Alert.alert(
+            "Reminder sync failed",
+            "The prayer reminder schedule could not be updated. Try again in a moment."
+          );
+        }
+        return false;
       } finally {
         setIsScheduling(false);
       }
