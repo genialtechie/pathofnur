@@ -41,7 +41,8 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const hasPreloadedImage = useRef<Set<number>>(new Set());
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
-  const cardWidth = width - spacing["4xl"] * 2;
+  const pageWidth = width;
+  const cardWidth = Math.max(1, width - spacing["4xl"] * 2);
 
   // Track hero view on mount and when index changes
   const trackHeroView = useCallback(
@@ -118,7 +119,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const contentOffset = event.nativeEvent.contentOffset.x;
-      const index = Math.round(contentOffset / (cardWidth + CARD_MARGIN));
+      const index = Math.round(contentOffset / pageWidth);
 
       if (index === activeIndex || index < 0 || index >= items.length) {
         return;
@@ -135,27 +136,26 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
         "home"
       );
     },
-    [activeIndex, cardWidth, items.length, trackHeroView]
+    [activeIndex, items.length, pageWidth, trackHeroView]
   );
 
   return (
     <View style={styles.container}>
       <ScrollView
         horizontal
+        pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={cardWidth + CARD_MARGIN}
-        snapToAlignment="center"
+        snapToInterval={pageWidth}
       >
         {items.map((item, index) => (
           <View
             key={item.id}
             style={[
               styles.cardContainer,
-              { width: cardWidth },
-              index < items.length - 1 && { marginRight: CARD_MARGIN },
+              { width: pageWidth },
             ]}
           >
             <HeroCard
@@ -164,6 +164,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
               subtitle={item.subtitle}
               onPress={() => handlePress(item, index)}
               ratio="portrait"
+              style={[styles.heroCard, { width: cardWidth }]}
             />
           </View>
         ))}
@@ -191,10 +192,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   scrollContent: {
-    paddingHorizontal: spacing["4xl"],
+    // Each item owns its own horizontal centering.
   },
   cardContainer: {
-    // Width is set dynamically
+    alignItems: "center",
+  },
+  heroCard: {
+    maxWidth: 420,
   },
   pagination: {
     flexDirection: "row",
