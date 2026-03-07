@@ -41,6 +41,7 @@ export default function RootLayout() {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const themeKey = isDark ? "dark" : "light";
   const appColors = isDark ? darkColors : lightColors;
   const navigationTheme = useMemo(() => {
     const baseTheme = isDark ? DarkTheme : DefaultTheme;
@@ -91,9 +92,13 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style={isDark ? "light" : "dark"} translucent />
       <LocationProvider>
-        <ThemeProvider value={navigationTheme}>
-          <GestureHandlerRootView style={[styles.container, { backgroundColor }]}>
+        <ThemeProvider key={themeKey} value={navigationTheme}>
+          <GestureHandlerRootView
+            key={`root-${themeKey}`}
+            style={[styles.container, { backgroundColor }]}
+          >
             <Stack
+              key={`stack-${themeKey}`}
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor }
