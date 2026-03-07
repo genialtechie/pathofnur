@@ -426,51 +426,19 @@ export function LibraryScreen() {
               },
             ]}
           >
-            <View style={styles.sessionHeaderRow}>
+            <View style={styles.sessionTopRow}>
               <View style={styles.sessionTextBlock}>
                 <Text style={[styles.sessionTitle, { color: colors.text.primary }]}>
                   {surah?.englishName ?? "Daily Quran"}
                 </Text>
-                <Text
-                  style={[styles.sessionCaption, { color: colors.text.tertiary }]}
-                >
-                  {resumeLabel}
-                </Text>
               </View>
 
-              <Pressable
-                style={[
-                  styles.ambientButton,
-                  {
-                    borderColor: colors.surface.borderInteractive,
-                    backgroundColor: colors.surface.background,
-                  },
-                ]}
-                onPress={handleAmbientCycle}
+              <Text
+                style={[styles.sessionCaptionInline, { color: colors.text.tertiary }]}
+                numberOfLines={1}
               >
-                <Ionicons
-                  name={activeAmbient.icon as never}
-                  size={13}
-                  color={
-                    activeAmbient.type === "silence"
-                      ? colors.text.tertiary
-                      : colors.brand.metallicGold
-                  }
-                />
-                <Text
-                  style={[
-                    styles.ambientButtonText,
-                    {
-                      color:
-                        activeAmbient.type === "silence"
-                          ? colors.text.tertiary
-                          : colors.brand.metallicGold,
-                    },
-                  ]}
-                >
-                  {activeAmbient.label}
-                </Text>
-              </Pressable>
+                {resumeLabel}
+              </Text>
             </View>
 
             <View style={styles.sessionControlsRow}>
@@ -530,6 +498,27 @@ export function LibraryScreen() {
                   </Text>
                 </View>
               </View>
+
+              <Pressable
+                style={[
+                  styles.ambientButton,
+                  {
+                    borderColor: colors.surface.borderInteractive,
+                    backgroundColor: colors.surface.background,
+                  },
+                ]}
+                onPress={handleAmbientCycle}
+              >
+                <Ionicons
+                  name={activeAmbient.icon as never}
+                  size={12}
+                  color={
+                    activeAmbient.type === "silence"
+                      ? colors.text.tertiary
+                      : colors.brand.metallicGold
+                  }
+                />
+              </Pressable>
             </View>
           </View>
 
@@ -660,12 +649,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chrome: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   header: {
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   headerTop: {
     flexDirection: "row",
@@ -685,8 +674,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamily.appBold,
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 22,
+    lineHeight: 26,
   },
   timelineButton: {
     flexDirection: "row",
@@ -694,24 +683,24 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     borderRadius: radii.pill,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
   },
   timelineButtonText: {
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
   },
   surahMetaBlock: {
-    gap: spacing.xxs,
+    gap: 1,
   },
   surahName: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 20,
   },
   surahMeta: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 13,
+    fontSize: 12,
   },
   translationToggle: {
     alignSelf: "flex-start",
@@ -720,71 +709,68 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     borderRadius: radii.pill,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
   },
   translationToggleText: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 12,
+    fontSize: 11,
   },
   sessionCard: {
     borderRadius: radii.lg,
     borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
   },
-  sessionHeaderRow: {
+  sessionTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: spacing.sm,
   },
   sessionTextBlock: {
     flex: 1,
-    gap: 2,
   },
   sessionTitle: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 15,
+    fontSize: 14,
   },
-  sessionCaption: {
-    fontFamily: fontFamily.appRegular,
-    fontSize: 12,
-  },
-  ambientButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  ambientButtonText: {
+  sessionCaptionInline: {
     fontFamily: fontFamily.appRegular,
     fontSize: 11,
+    flexShrink: 1,
+    textAlign: "right",
+  },
+  ambientButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    width: 32,
+    height: 32,
   },
   sessionControlsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   playButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   scrubberColumn: {
     flex: 1,
-    gap: spacing.xs,
+    gap: 4,
   },
   scrubberHitArea: {
-    paddingVertical: spacing.xs,
+    paddingVertical: 4,
   },
   scrubberTrack: {
-    height: 4,
+    height: 3,
     borderRadius: radii.pill,
     overflow: "hidden",
   },
@@ -798,10 +784,10 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 11,
+    fontSize: 10,
   },
   readingProgressTrack: {
-    height: 3,
+    height: 2,
     borderRadius: radii.pill,
     overflow: "hidden",
   },
@@ -813,7 +799,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
   },
