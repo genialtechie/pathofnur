@@ -38,12 +38,12 @@ export function getJourneyPracticeTone(practice: JourneyPractice) {
 export function getJourneyPracticeActionCopy(practice: JourneyPractice) {
   switch (practice) {
     case "salah":
-      return "Mark when you complete your daily salah.";
+      return "Mark each prayer as it is completed.";
     case "quran":
-      return "Mark when your Quran time is done.";
+      return "Mark your Quran return for today.";
     case "fasting":
-      return "Mark once the day's fast is complete.";
+      return "Mark the day once your fast is complete.";
     case "dhikr":
-      return "Mark when you finish your dhikr goal.";
+      return "Mark your dhikr when it is done.";
   }
 }
