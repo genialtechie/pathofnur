@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   title: {
-    fontFamily: fontFamily.accentDisplay,
+    fontFamily: fontFamily.appBold,
     fontSize: 32,
   },
   subtitle: {

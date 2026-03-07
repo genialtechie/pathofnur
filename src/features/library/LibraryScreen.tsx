@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   translationText: {
-    fontFamily: fontFamily.scriptureRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 14,
     lineHeight: 22,
   },

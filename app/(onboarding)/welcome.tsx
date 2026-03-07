@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   translation: {
     color: "#c5a021",
-    fontFamily: fontFamily.scriptureRegular,
+    fontFamily: fontFamily.appRegular,
     fontSize: 16,
     textAlign: "center",
     fontStyle: "italic",
