@@ -44,7 +44,7 @@ const HERO_ITEMS = [
   },
   {
     id: "prayer-invitation",
-    imageSource: require("@/public/images/_delivery/home-hero-prayer-invitation-v01-card.webp"),
+    imageSource: require("@/public/images/_delivery/library-cover-anxiety-contour-v01-card.webp"),
     title: "Prayer Invitation",
     subtitle: "An invitation to pause and connect",
     collectionId: "anxiety",

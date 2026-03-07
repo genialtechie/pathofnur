@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { Image, type ImageSource } from "expo-image";
 
-import { fontFamily, radii, shadows, spacing, useTheme } from "@/src/theme";
+import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 import { darkColors } from "@/src/theme/tokens";
 
 // ---------------------------------------------------------------------------
@@ -84,7 +84,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radii.xl,
     overflow: "hidden",
-    ...shadows.card,
   },
   pressed: {
     opacity: 0.92,
