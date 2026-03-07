@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
-  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -22,6 +21,17 @@ import { darkColors } from "@/src/theme/tokens";
 
 const ALIGNMENT_THRESHOLD = 8;
 const MAGNETOMETER_INTERVAL_MS = 120;
+const IS_WEB = process.env.EXPO_OS === "web";
+
+type SensorStatus = "loading" | "ready" | "permission-required" | "denied" | "unavailable" | "error";
+
+type WebCompassEvent = DeviceOrientationEvent & {
+  webkitCompassHeading?: number | null;
+};
+
+type WebDeviceOrientationEvent = typeof DeviceOrientationEvent & {
+  requestPermission?: () => Promise<"granted" | "denied">;
+};
 
 function normalizeDegrees(value: number): number {
   return ((value % 360) + 360) % 360;
@@ -37,6 +47,18 @@ function measurementToHeading({ x, y }: MagnetometerMeasurement): number {
   return normalizeDegrees(90 - angle);
 }
 
+function webCompassEventToHeading(event: WebCompassEvent): number | null {
+  if (typeof event.webkitCompassHeading === "number" && Number.isFinite(event.webkitCompassHeading)) {
+    return normalizeDegrees(event.webkitCompassHeading);
+  }
+
+  if (typeof event.alpha === "number" && Number.isFinite(event.alpha)) {
+    return normalizeDegrees(360 - event.alpha);
+  }
+
+  return null;
+}
+
 export default function QiblahScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -47,8 +69,10 @@ export default function QiblahScreen() {
   const { bearing: qiblahBearing } = useQiblah(coords?.latitude, coords?.longitude);
 
   const [heading, setHeading] = useState<number | null>(null);
-  const [sensorStatus, setSensorStatus] = useState<"loading" | "ready" | "unavailable" | "error">("loading");
+  const [sensorStatus, setSensorStatus] = useState<SensorStatus>("loading");
   const [sensorError, setSensorError] = useState<string | null>(null);
+  const [webCompassGranted, setWebCompassGranted] = useState(false);
+  const headingRef = useRef<number | null>(null);
   const hasTrackedLock = useRef(false);
 
   useEffect(() => {
@@ -58,22 +82,84 @@ export default function QiblahScreen() {
 
   useEffect(() => {
     let isActive = true;
-    let subscription: { remove: () => void } | null = null;
+    let webTimeout: ReturnType<typeof setTimeout> | null = null;
+    let removeWebListener: (() => void) | null = null;
+    let nativeSubscription: { remove: () => void } | null = null;
+
+    const setWebUnavailable = (message: string) => {
+      if (!isActive) return;
+      setSensorStatus("unavailable");
+      setSensorError(message);
+    };
+
+    const attachWebCompass = () => {
+      const handleOrientation = (nativeEvent: Event) => {
+        const nextHeading = webCompassEventToHeading(nativeEvent as WebCompassEvent);
+        if (nextHeading === null || !isActive) return;
+
+        headingRef.current = nextHeading;
+        setHeading(nextHeading);
+        setSensorStatus("ready");
+        setSensorError(null);
+
+        if (webTimeout) {
+          clearTimeout(webTimeout);
+          webTimeout = null;
+        }
+      };
+
+      window.addEventListener("deviceorientation", handleOrientation as EventListener);
+
+      removeWebListener = () => {
+        window.removeEventListener("deviceorientation", handleOrientation as EventListener);
+      };
+
+      webTimeout = setTimeout(() => {
+        if (isActive && headingRef.current === null) {
+          setWebUnavailable("No live compass data was detected. Use an iPhone or the app for a live heading.");
+        }
+      }, 2400);
+    };
 
     const startCompass = async () => {
+      if (IS_WEB) {
+        if (typeof window === "undefined") return;
+
+        const orientationEvent = window.DeviceOrientationEvent as WebDeviceOrientationEvent | undefined;
+        if (!orientationEvent) {
+          setWebUnavailable("This browser does not expose compass data.");
+          return;
+        }
+
+        if (typeof orientationEvent.requestPermission === "function" && !webCompassGranted) {
+          if (!isActive) return;
+          setSensorStatus("permission-required");
+          setSensorError("Safari needs motion access before it can read the compass.");
+          return;
+        }
+
+        if (!isActive) return;
+        setSensorStatus("loading");
+        setSensorError("Move your phone slowly to start the compass.");
+        attachWebCompass();
+        return;
+      }
+
       try {
         const available = await Magnetometer.isAvailableAsync();
         if (!available) {
           if (!isActive) return;
           setSensorStatus("unavailable");
-          setSensorError("Compass sensor not available on this device.");
+          setSensorError("Live compass is not available on this device.");
           return;
         }
 
         Magnetometer.setUpdateInterval(MAGNETOMETER_INTERVAL_MS);
-        subscription = Magnetometer.addListener((measurement) => {
+        nativeSubscription = Magnetometer.addListener((measurement) => {
           if (!isActive) return;
-          setHeading(measurementToHeading(measurement));
+          const nextHeading = measurementToHeading(measurement);
+          headingRef.current = nextHeading;
+          setHeading(nextHeading);
           setSensorStatus("ready");
           setSensorError(null);
         });
@@ -88,9 +174,11 @@ export default function QiblahScreen() {
 
     return () => {
       isActive = false;
-      subscription?.remove();
+      nativeSubscription?.remove();
+      removeWebListener?.();
+      if (webTimeout) clearTimeout(webTimeout);
     };
-  }, []);
+  }, [webCompassGranted]);
 
   const signedOffset = useMemo(() => {
     if (heading === null || qiblahBearing === null) return null;
@@ -99,16 +187,23 @@ export default function QiblahScreen() {
 
   const alignmentDelta = signedOffset === null ? null : Math.abs(signedOffset);
   const isLocked = alignmentDelta !== null && alignmentDelta <= ALIGNMENT_THRESHOLD;
-  const alignmentPercent = alignmentDelta === null ? 0 : Math.max(0, 100 - (alignmentDelta / 90) * 100);
   const dialSize = Math.min(width - spacing.xl * 2, 340);
+  const pointerRotation = signedOffset ?? qiblahBearing ?? 0;
+  const centerValue =
+    alignmentDelta === null ? (qiblahBearing === null ? "--" : `${Math.round(qiblahBearing)}°`) : `${Math.round(alignmentDelta)}°`;
+  const centerLabel = alignmentDelta === null ? "from north" : isLocked ? "aligned" : "off target";
   const sensorStatusLabel =
     sensorStatus === "ready"
       ? "Live"
-      : sensorStatus === "loading"
-        ? "Starting"
-        : sensorStatus === "unavailable"
-          ? "Unavailable"
-          : "Error";
+      : sensorStatus === "permission-required"
+        ? "Enable"
+        : sensorStatus === "denied"
+          ? "Denied"
+          : sensorStatus === "loading"
+            ? "Starting"
+            : sensorStatus === "unavailable"
+              ? "Unavailable"
+              : "Error";
 
   useEffect(() => {
     if (!isLocked || hasTrackedLock.current) return;
@@ -119,21 +214,69 @@ export default function QiblahScreen() {
   }, [isLocked]);
 
   const directionText =
-    signedOffset === null
-      ? "Finding your bearing..."
-      : isLocked
-        ? "Locked on Qiblah"
-        : signedOffset > 0
-          ? `Rotate ${Math.round(Math.abs(signedOffset))}° right`
-          : `Rotate ${Math.round(Math.abs(signedOffset))}° left`;
+    !hasLocation || qiblahBearing === null
+      ? "Location needed"
+      : sensorStatus === "permission-required"
+        ? "Enable compass access"
+        : sensorStatus === "denied"
+          ? "Compass access denied"
+          : sensorStatus === "unavailable"
+            ? "Live compass unavailable"
+            : sensorStatus === "error"
+              ? "Compass unavailable"
+              : heading === null
+                ? "Finding your heading"
+                : isLocked
+                  ? "Qiblah aligned"
+                  : signedOffset !== null && signedOffset > 0
+                    ? `Turn ${Math.round(Math.abs(signedOffset))}° right`
+                    : `Turn ${Math.round(Math.abs(signedOffset ?? 0))}° left`;
 
-  const handleShare = useCallback(async () => {
-    if (qiblahBearing === null) return;
+  const feedbackBody =
+    !hasLocation || qiblahBearing === null
+      ? locationStatus === "loading"
+        ? "Loading your saved coordinates."
+        : "Give Path of Nur a location so the qiblah can be calculated from where you are."
+      : sensorStatus === "permission-required"
+        ? "Safari on iPhone requires motion access before it can read your heading."
+        : sensorStatus === "denied"
+          ? "Motion access was denied. Enable Motion & Orientation Access in Safari settings and try again."
+          : sensorStatus === "unavailable"
+            ? `The bearing is still calculated from ${cityLabel}, but this browser is not providing a live compass.`
+            : sensorStatus === "error"
+              ? sensorError ?? "Compass failed to start."
+              : heading === null
+                ? "Hold the phone flat and move slowly while the compass settles."
+                : `Qiblah bearing ${Math.round(qiblahBearing)}°. Your heading ${Math.round(heading)}°.`;
 
-    await Share.share({
-      message: `Path of Nur Qiblah check: ${Math.round(qiblahBearing)}° from ${cityLabel}. ${isLocked ? "Locked in." : directionText}.`,
-    });
-  }, [cityLabel, directionText, isLocked, qiblahBearing]);
+  const handleEnableCompass = useCallback(async () => {
+    if (!IS_WEB || typeof window === "undefined") return;
+
+    const orientationEvent = window.DeviceOrientationEvent as WebDeviceOrientationEvent | undefined;
+    if (!orientationEvent) {
+      setSensorStatus("unavailable");
+      setSensorError("This browser does not expose compass data.");
+      return;
+    }
+
+    try {
+      if (typeof orientationEvent.requestPermission === "function") {
+        const permission = await orientationEvent.requestPermission();
+        if (permission !== "granted") {
+          setSensorStatus("denied");
+          setSensorError("Motion access was denied. Enable it in Safari settings and try again.");
+          return;
+        }
+      }
+
+      setSensorStatus("loading");
+      setSensorError("Move your phone slowly to start the compass.");
+      setWebCompassGranted(true);
+    } catch (error) {
+      setSensorStatus("error");
+      setSensorError(error instanceof Error ? error.message : "Compass permission failed.");
+    }
+  }, []);
 
   const ticks = useMemo(
     () =>
@@ -141,7 +284,7 @@ export default function QiblahScreen() {
         const rotation = `${index * 15}deg`;
         const isMajor = index % 6 === 0;
         return (
-          <View key={index} style={[styles.tickWrap, { transform: [{ rotate: rotation }] }]}>
+          <View key={index} style={[styles.tickWrap, { transform: [{ rotate: rotation }] }]}> 
             <View style={[styles.tick, isMajor && styles.tickMajor]} />
           </View>
         );
@@ -149,32 +292,26 @@ export default function QiblahScreen() {
     []
   );
 
+  const showCompassButton = hasLocation && (sensorStatus === "permission-required" || sensorStatus === "denied");
+  const showRefreshLocation = !hasLocation && locationStatus !== "loading";
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar barStyle="light-content" />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerButton} hitSlop={18}>
+        <Pressable accessibilityRole="button" hitSlop={18} onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={22} color={darkColors.text.primary} />
         </Pressable>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerEyebrow}>Qiblah Lock</Text>
-          <Text style={styles.headerTitle}>Rotate until it clicks</Text>
-        </View>
-        <Pressable onPress={() => void handleShare()} style={styles.headerButton} hitSlop={18} disabled={!hasLocation}>
-          <Ionicons
-            name="share-outline"
-            size={22}
-            color={hasLocation ? darkColors.text.primary : darkColors.text.tertiary}
-          />
-        </Pressable>
+        <Text style={styles.headerTitle}>Qiblah</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.metaRow}>
         <View style={styles.metaCard}>
-          <Text style={styles.metaLabel}>Base</Text>
-          <Text style={styles.metaValue}>{hasLocation ? cityLabel : "Needs location"}</Text>
+          <Text style={styles.metaLabel}>Location</Text>
+          <Text numberOfLines={1} style={styles.metaValue}>{hasLocation ? cityLabel : "Needs location"}</Text>
         </View>
         <View style={styles.metaCard}>
           <Text style={styles.metaLabel}>Compass</Text>
@@ -208,7 +345,7 @@ export default function QiblahScreen() {
                 style={[
                   styles.pointerWrap,
                   {
-                    transform: [{ rotate: `${signedOffset ?? 0}deg` }],
+                    transform: [{ rotate: `${pointerRotation}deg` }],
                   },
                 ]}
               >
@@ -217,47 +354,46 @@ export default function QiblahScreen() {
               </View>
 
               <View style={styles.centerOrb}>
-                <Text style={styles.centerValue}>{alignmentDelta === null ? "--" : `${Math.round(alignmentDelta)}°`}</Text>
-                <Text style={styles.centerLabel}>{isLocked ? "aligned" : "off target"}</Text>
+                <Text style={styles.centerValue}>{centerValue}</Text>
+                <Text style={styles.centerLabel}>{centerLabel}</Text>
               </View>
             </View>
 
             <View style={styles.feedbackPanel}>
               <Text style={[styles.feedbackTitle, isLocked && styles.feedbackTitleLocked]}>{directionText}</Text>
-              <Text style={styles.feedbackBody}>
-                {heading === null
-                  ? "Hold the phone flat while the compass wakes up."
-                  : `Qiblah bearing ${Math.round(qiblahBearing)}°. Heading ${Math.round(heading)}°. Alignment ${Math.round(alignmentPercent)}%.`}
-              </Text>
+              <Text style={styles.feedbackBody}>{feedbackBody}</Text>
             </View>
           </>
         ) : (
           <View style={styles.errorPanel}>
             <Ionicons name="location-outline" size={54} color={darkColors.text.tertiary} />
             <Text style={styles.errorTitle}>
-              {locationStatus === "loading" ? "Loading location" : "Location needed for Qiblah"}
+              {locationStatus === "loading" ? "Loading location" : "Location needed for qiblah"}
             </Text>
-            <Text style={styles.errorBody}>
-              {locationStatus === "loading"
-                ? "Pulling your saved coordinates so the compass can line up the Kaaba."
-                : "Give Path of Nur a location so the Qiblah line can be calculated from where you are."}
-            </Text>
-            <Pressable style={styles.refreshButton} onPress={() => void refresh()}>
-              <Text style={styles.refreshButtonLabel}>Refresh location</Text>
-            </Pressable>
+            <Text style={styles.errorBody}>{feedbackBody}</Text>
           </View>
         )}
       </View>
 
       <View style={styles.bottomPanel}>
         <View style={styles.readoutCard}>
-          <Text style={styles.readoutLabel}>Sensor note</Text>
-          <Text style={styles.readoutValue}>{sensorError ?? "Keep your device flat and rotate slowly for a steadier lock."}</Text>
+          <Text style={styles.readoutLabel}>Compass note</Text>
+          <Text style={styles.readoutValue}>
+            {sensorError ?? "Hold your phone flat and rotate slowly for the steadiest heading."}
+          </Text>
         </View>
-        <View style={styles.readoutCard}>
-          <Text style={styles.readoutLabel}>Share moment</Text>
-          <Text style={styles.readoutValue}>When the line locks, send the city + bearing as a quick spiritual check-in.</Text>
-        </View>
+
+        {showCompassButton ? (
+          <Pressable accessibilityRole="button" onPress={() => void handleEnableCompass()} style={styles.primaryButton}>
+            <Text style={styles.primaryButtonLabel}>{sensorStatus === "denied" ? "Try again" : "Enable compass"}</Text>
+          </Pressable>
+        ) : null}
+
+        {showRefreshLocation ? (
+          <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonLabel}>Refresh location</Text>
+          </Pressable>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -284,21 +420,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.04)",
   },
-  headerCopy: {
-    alignItems: "center",
-    gap: 2,
-  },
-  headerEyebrow: {
-    color: darkColors.brand.metallicGold,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
   headerTitle: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 20,
+  },
+  headerSpacer: {
+    width: 42,
+    height: 42,
   },
   metaRow: {
     flexDirection: "row",
@@ -489,18 +618,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     maxWidth: 300,
   },
-  refreshButton: {
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
-    backgroundColor: darkColors.brand.metallicGold,
-  },
-  refreshButtonLabel: {
-    color: darkColors.text.onAccent,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 14,
-  },
   bottomPanel: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
@@ -526,5 +643,33 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
     lineHeight: 20,
+  },
+  primaryButton: {
+    minHeight: 52,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: darkColors.brand.metallicGold,
+    paddingHorizontal: spacing.lg,
+  },
+  primaryButtonLabel: {
+    color: darkColors.text.onAccent,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
+  },
+  secondaryButton: {
+    minHeight: 52,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: darkColors.surface.card,
+    borderWidth: 1,
+    borderColor: darkColors.surface.borderInteractive,
+    paddingHorizontal: spacing.lg,
+  },
+  secondaryButtonLabel: {
+    color: darkColors.text.primary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
   },
 });
