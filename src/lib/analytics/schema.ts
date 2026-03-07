@@ -61,6 +61,13 @@ export const EventName = {
   JOURNEY_DAY_COMPLETED: 'journey_day_completed',
   JOURNEY_STREAK_MILESTONE: 'journey_streak_milestone',
   JOURNEY_SHARE_CARD_CREATED: 'journey_share_card_created',
+  JOURNEY_HABIT_TOGGLED: 'journey_habit_toggled',
+  JOURNEY_ROUTINE_CREATED: 'journey_routine_created',
+  JOURNEY_ROUTINE_UPDATED: 'journey_routine_updated',
+  JOURNEY_REMINDER_PERMISSION_REQUESTED: 'journey_reminder_permission_requested',
+  JOURNEY_REMINDER_PERMISSION_GRANTED: 'journey_reminder_permission_granted',
+  JOURNEY_REMINDER_SCHEDULED: 'journey_reminder_scheduled',
+  JOURNEY_PRAYER_CHECKIN_COMPLETED: 'journey_prayer_checkin_completed',
   
   // Donation events
   DONATION_PROMPT_VIEWED: 'donation_prompt_viewed',
@@ -181,6 +188,37 @@ export const JourneyDayCompletedSchema = BaseEventPropertiesSchema.extend({
 export const JourneyStreakMilestoneSchema = BaseEventPropertiesSchema.extend({
   streak_days: z.number().int(),
   milestone_type: z.enum(['3', '7', '14', '30']),
+  habit: z.enum(['prayer', 'fasting', 'reading']).optional(),
+});
+
+export const JourneyHabitToggledSchema = BaseEventPropertiesSchema.extend({
+  habit: z.enum(['prayer', 'fasting', 'reading']),
+  is_complete: z.boolean(),
+  day_key: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const JourneyRoutineSavedSchema = BaseEventPropertiesSchema.extend({
+  selected_prayer_count: z.number().int().min(0).max(5),
+  includes_reading: z.boolean(),
+  includes_fasting: z.boolean(),
+  reminder_lead_minutes: z.number().int().min(0),
+  follow_up_delay_minutes: z.number().int().min(0),
+});
+
+export const JourneyReminderPermissionGrantedSchema = BaseEventPropertiesSchema.extend({
+  permission_status: z.enum(['granted', 'denied', 'unknown', 'unsupported']),
+});
+
+export const JourneyReminderScheduledSchema = BaseEventPropertiesSchema.extend({
+  reminder_count: z.number().int().min(0),
+  selected_prayer_count: z.number().int().min(0).max(5),
+  window_days: z.number().int().min(1).max(14),
+});
+
+export const JourneyPrayerCheckinCompletedSchema = BaseEventPropertiesSchema.extend({
+  prayer_name: z.enum(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']),
+  is_complete: z.boolean(),
+  day_key: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
 /**
@@ -247,6 +285,13 @@ export const EventSchemas = {
   [EventName.JOURNEY_SHARE_CARD_CREATED]: BaseEventPropertiesSchema.extend({
     share_type: z.string().min(1),
   }),
+  [EventName.JOURNEY_HABIT_TOGGLED]: JourneyHabitToggledSchema,
+  [EventName.JOURNEY_ROUTINE_CREATED]: JourneyRoutineSavedSchema,
+  [EventName.JOURNEY_ROUTINE_UPDATED]: JourneyRoutineSavedSchema,
+  [EventName.JOURNEY_REMINDER_PERMISSION_REQUESTED]: BaseEventPropertiesSchema,
+  [EventName.JOURNEY_REMINDER_PERMISSION_GRANTED]: JourneyReminderPermissionGrantedSchema,
+  [EventName.JOURNEY_REMINDER_SCHEDULED]: JourneyReminderScheduledSchema,
+  [EventName.JOURNEY_PRAYER_CHECKIN_COMPLETED]: JourneyPrayerCheckinCompletedSchema,
   
   [EventName.DONATION_PROMPT_VIEWED]: DonationPromptViewedSchema,
   [EventName.DONATION_AMOUNT_SELECTED]: DonationAmountSelectedSchema,
