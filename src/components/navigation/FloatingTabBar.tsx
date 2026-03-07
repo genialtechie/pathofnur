@@ -1,9 +1,10 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useTheme as useNavigationTheme } from "@react-navigation/native";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TabBarIcon } from "@/src/components/navigation/TabBarIcon";
-import { useTheme } from "@/src/theme";
+import { spacing } from "@/src/theme";
 
 const ICON_BY_ROUTE = {
   home: "home",
@@ -14,12 +15,25 @@ const ICON_BY_ROUTE = {
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { colors, radii, shadows, spacing } = useTheme();
+  const navigationTheme = useNavigationTheme();
+  const isDark = navigationTheme.dark;
 
   const containerBottom = Math.max(insets.bottom, spacing.xs);
+  const capsuleStyle = {
+    backgroundColor: isDark ? "rgba(6, 10, 18, 0.78)" : "rgba(255, 255, 255, 0.76)",
+    borderColor: isDark ? "rgba(163, 184, 212, 0.18)" : "rgba(15, 23, 42, 0.08)",
+    shadowColor: isDark ? "#000000" : "#0f172a",
+  };
+  const sheenStyle = {
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(255, 255, 255, 0.3)",
+    borderColor: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.5)",
+  };
+  const activePillStyle = {
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.14)" : "rgba(15, 23, 42, 0.1)",
+  };
   const iconColor = {
-    active: colors.text.primary,
-    inactive: colors.text.secondary,
+    active: navigationTheme.colors.text,
+    inactive: isDark ? "rgba(226, 232, 240, 0.82)" : "rgba(15, 23, 42, 0.7)",
   };
 
   return (
@@ -27,15 +41,13 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       <View
         style={[
           styles.capsule,
-          shadows.card,
           {
             bottom: containerBottom,
-            backgroundColor: colors.surface.card,
-            borderColor: colors.surface.borderElevated,
-            borderRadius: radii.pill,
           },
+          capsuleStyle,
         ]}
       >
+        <View pointerEvents="none" style={[styles.sheen, sheenStyle]} />
         {state.routes.map((route, index) => {
           if (route.name === "index") return null;
 
@@ -76,7 +88,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
               onLongPress={onLongPress}
               style={({ pressed }) => [
                 styles.tabButton,
-                isFocused && { backgroundColor: colors.interactive.selectedBackground },
+                isFocused && activePillStyle,
                 pressed && styles.pressed,
               ]}
             >
@@ -101,17 +113,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 16,
     right: 16,
+    overflow: "hidden",
+    borderRadius: 999,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingVertical: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  sheen: {
+    ...StyleSheet.absoluteFillObject,
+    top: 1,
+    bottom: "48%",
+    borderTopWidth: 1,
   },
   tabButton: {
-    minWidth: 68,
-    height: 58,
-    borderRadius: 28,
+    minWidth: 66,
+    height: 54,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
