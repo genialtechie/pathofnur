@@ -286,6 +286,12 @@ export default function ToolsScreen() {
   const qiblahLocation = location?.city ?? "Location needed";
   const hasHistory = lifetimeCount > 0;
   const hasActiveCount = activeCount > 0;
+  const practiceStoryTitle = hasHistory ? "Keep the rhythm close." : "Start your remembrance softly.";
+  const practiceStoryBody = hasActiveCount
+    ? "Your counter is already in motion. Step back in and let the next remembrance arrive naturally."
+    : hasHistory
+      ? "A quiet return still shapes the day. Open Tasbih and keep the bead moving without overthinking it."
+      : "Begin with one calm round, then let the next remembrance come with ease.";
   const manualShareArtifact = useMemo(() => createManualToolsShareArtifact(tasbihSnapshot), [tasbihSnapshot]);
 
   const shareButtonBackground = isDark ? "rgba(255,255,255,0.1)" : "rgba(17,24,39,0.05)";
@@ -425,6 +431,15 @@ export default function ToolsScreen() {
             </View>
           </View>
 
+          <View style={styles.practiceStoryBlock}>
+            <Text style={[styles.practiceStoryTitle, { color: colors.text.primary }]} selectable>
+              {practiceStoryTitle}
+            </Text>
+            <Text style={[styles.practiceStoryBody, { color: colors.text.secondary }]} selectable>
+              {practiceStoryBody}
+            </Text>
+          </View>
+
           <View style={styles.practiceComparisonRow}>
             <PracticeDayCard
               accentColor={yesterdayAccentColor}
@@ -521,13 +536,13 @@ const styles = StyleSheet.create({
   },
   practiceCard: {
     marginHorizontal: spacing.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     borderRadius: radii.xl,
     backgroundColor: darkColors.surface.card,
     borderWidth: 1,
     borderColor: darkColors.surface.borderInteractive,
     overflow: "hidden",
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   practiceGlowLarge: {
     position: "absolute",
@@ -565,20 +580,20 @@ const styles = StyleSheet.create({
   },
   practiceHeroRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
   },
   practiceLead: {
     flex: 1,
-    gap: spacing.xxs,
+    gap: 2,
     minWidth: 0,
   },
   practiceCount: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
-    fontSize: 58,
-    lineHeight: 62,
+    fontSize: 54,
+    lineHeight: 58,
     fontVariant: ["tabular-nums"],
   },
   practiceCountLabel: {
@@ -586,6 +601,20 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
     letterSpacing: 0.2,
+  },
+  practiceStoryBlock: {
+    gap: spacing.xs,
+    maxWidth: "92%",
+  },
+  practiceStoryTitle: {
+    fontFamily: fontFamily.appBold,
+    fontSize: 24,
+    lineHeight: 29,
+  },
+  practiceStoryBody: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 15,
+    lineHeight: 22,
   },
   loopsCapsule: {
     minWidth: 104,
@@ -613,7 +642,7 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     flex: 1,
-    minHeight: 164,
+    minHeight: 148,
     padding: spacing.sm,
     borderRadius: radii.xl,
     borderWidth: 1,
