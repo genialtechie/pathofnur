@@ -1,6 +1,5 @@
 import { Tabs } from "expo-router";
-import { TabBarIcon } from "@/src/components/navigation/TabBarIcon";
-import { fontFamily } from "@/src/components/navigation/typography";
+import { FloatingTabBar } from "@/src/components/navigation/FloatingTabBar";
 
 import { useTheme } from "@/src/theme";
 
@@ -9,21 +8,10 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.brand.metallicGold,
-        tabBarInactiveTintColor: colors.text.tertiary,
-        tabBarStyle: {
-          backgroundColor: colors.surface.tabBar,
-          borderTopColor: colors.surface.border,
-          height: 60,
-          paddingTop: 8,
-          marginBottom: 0,
-        },
-        tabBarLabelStyle: {
-          fontFamily: fontFamily.appRegular,
-          fontSize: 11
-        },
+        tabBarStyle: { display: "none" },
         sceneStyle: {
           backgroundColor: colors.surface.background
         }
@@ -32,40 +20,25 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? "home" : "home-outline"} color={color} />
-          )
+          title: "Home"
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
-          title: "Library",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? "book" : "book-outline"} color={color} />
-          )
+          title: "Library"
         }}
       />
       <Tabs.Screen
         name="tools"
         options={{
-          title: "Tools",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? "compass" : "compass-outline"} color={color} />
-          )
+          title: "Tools"
         }}
       />
       <Tabs.Screen
         name="journey"
         options={{
-          title: "Journey",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "sparkles" : "sparkles-outline"}
-              color={color}
-            />
-          )
+          title: "Journey"
         }}
       />
       <Tabs.Screen

@@ -1,10 +1,11 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { MinimalTabIcon, type MinimalTabIconName } from "@/src/components/icons/MinimalTabIcon";
 
 type TabBarIconProps = {
-  name: React.ComponentProps<typeof Ionicons>["name"];
+  name: MinimalTabIconName;
+  focused: boolean;
   color: string;
 };
 
-export function TabBarIcon({ name, color }: TabBarIconProps) {
-  return <Ionicons size={22} name={name} color={color} />;
+export function TabBarIcon({ name, focused, color }: TabBarIconProps) {
+  return <MinimalTabIcon name={name} focused={focused} color={color} size={28} />;
 }
