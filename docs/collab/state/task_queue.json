@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T22:02:00Z",
+  "last_updated_utc": "2026-03-07T21:46:05Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -301,7 +301,7 @@
         "src/features/journey/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "depends_on": [
         "T-20260307-024"
@@ -317,7 +317,7 @@
         "npm run check:typography passes"
       ],
       "implementation_notes": "Keep the redesign contained to the existing Tools tab hero plus Journey hub surfaces. Borrow the warmth and contrast of the Tools card, but do not duplicate it exactly. Preserve current navigation and behavior while improving hierarchy, density, and emotional pull.",
-      "updated_at_utc": "2026-03-07T22:02:00Z"
+      "updated_at_utc": "2026-03-07T21:46:05Z"
     }
   ]
 }

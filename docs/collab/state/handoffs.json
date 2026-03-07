@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:29:10Z",
+  "last_updated_utc": "2026-03-07T21:46:05Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -508,6 +508,40 @@
       "follow_ups": [],
       "next_recommended_actions": [
         "Merge fix/T-20260307-025-home-hadith-share-cta if the CTA prominence looks right during visual review"
+      ]
+    },
+    {
+      "handoff_id": "H-20260307-027",
+      "task_id": "T-20260307-027",
+      "branch_name": "feat/T-20260307-027-tools-journey-card-rebalance",
+      "worktree_path": ".worktrees/T-20260307-027",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-07T21:46:05Z",
+      "summary": {
+        "completed": [
+          "Tightened the Tools hero card and added compact motivating copy so the surface keeps its premium identity without feeling sparse",
+          "Redesigned the Journey hero around a stronger focal streak tile, warmer status pills, and more emotionally inviting copy",
+          "Rebuilt the Journey My Streaks gateway into a richer card with warmer color treatment, clearer hierarchy, and a stronger CTA"
+        ],
+        "remaining": []
+      },
+      "changed_files": [
+        "app/(tabs)/tools.tsx",
+        "src/features/journey/journey-hub-sections.tsx"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm run check:typography"
+        ],
+        "result": "pass",
+        "notes": "Typecheck passed in the task worktree. Typography policy validator returned OK."
+      },
+      "risks": [],
+      "follow_ups": [],
+      "next_recommended_actions": [
+        "Visually review the new Journey card density on device and trim copy if the top stack still feels heavier than the Tools page"
       ]
     }
   ]
