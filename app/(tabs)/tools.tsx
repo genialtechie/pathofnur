@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
 import {
+  Pressable,
   SafeAreaView,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   Text,
   View,
-  Pressable,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -21,13 +22,16 @@ const TASBIH_COVER = require("@/public/images/_source/tools-tasbih-focus-v01.web
 const QIBLAH_COVER = require("@/public/images/_source/tools-qiblah-backdrop-v01.webp");
 const TASBIH_STATE_KEY = "@pathofnur/tasbih_state_v2";
 const LEGACY_TASBIH_KEY = "tasbih_count";
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
 
 type FeatureCardProps = {
-  eyebrow: string;
+  label: string;
   title: string;
   description: string;
-  primaryStat: string;
-  secondaryStat: string;
+  primaryLabel: string;
+  primaryValue: string;
+  secondaryLabel: string;
+  secondaryValue: string;
   cta: string;
   imageSource: number;
   icon: keyof typeof Ionicons.glyphMap;
@@ -59,11 +63,13 @@ async function readTasbihCount(): Promise<number> {
 }
 
 function FeatureCard({
-  eyebrow,
+  label,
   title,
   description,
-  primaryStat,
-  secondaryStat,
+  primaryLabel,
+  primaryValue,
+  secondaryLabel,
+  secondaryValue,
   cta,
   imageSource,
   icon,
@@ -78,13 +84,14 @@ function FeatureCard({
       <Image source={imageSource} style={StyleSheet.absoluteFillObject} contentFit="cover" transition={180} />
       <View style={styles.featureOverlay} />
       <View style={styles.featureGlow} />
+
       <View style={styles.featureTopRow}>
         <View style={styles.badgePill}>
           <Ionicons name={icon} size={14} color={darkColors.brand.metallicGold} />
-          <Text style={styles.badgeText}>{eyebrow}</Text>
+          <Text style={styles.badgeText}>{label}</Text>
         </View>
-        <View style={styles.playPill}>
-          <Text style={styles.playPillText}>{cta}</Text>
+        <View style={styles.ctaPill}>
+          <Text style={styles.ctaText}>{cta}</Text>
         </View>
       </View>
 
@@ -95,12 +102,12 @@ function FeatureCard({
 
       <View style={styles.featureStatsRow}>
         <View style={styles.featureStatCard}>
-          <Text style={styles.featureStatLabel}>Now</Text>
-          <Text style={styles.featureStatValue}>{primaryStat}</Text>
+          <Text style={styles.featureStatLabel}>{primaryLabel}</Text>
+          <Text style={styles.featureStatValue}>{primaryValue}</Text>
         </View>
         <View style={styles.featureStatCard}>
-          <Text style={styles.featureStatLabel}>Hook</Text>
-          <Text style={styles.featureStatValue}>{secondaryStat}</Text>
+          <Text style={styles.featureStatLabel}>{secondaryLabel}</Text>
+          <Text style={styles.featureStatValue}>{secondaryValue}</Text>
         </View>
       </View>
     </Pressable>
@@ -128,86 +135,144 @@ export default function ToolsScreen() {
     }, [])
   );
 
-  const completedLoops = Math.floor(tasbihCount / 33);
-  const tasbihHook =
+  const hasSavedDhikr = tasbihCount > 0;
+  const completedRounds = Math.floor(tasbihCount / 33);
+  const currentRoundProgress = tasbihCount % 33;
+  const remainingToRound = currentRoundProgress === 0 ? 33 : 33 - currentRoundProgress;
+  const formattedCount = NUMBER_FORMATTER.format(tasbihCount);
+  const qiblahLocation = location?.city ?? "Location needed";
+  const practicePrompt =
     tasbihCount === 0
-      ? "33-tap loop"
-      : tasbihCount % 33 === 0
-        ? "Loop glowing"
-        : `${33 - (tasbihCount % 33)} taps to glow`;
-  const qiblahReadiness = location?.city ? `${location.city}` : "Set your location";
+      ? "Begin with one round of 33."
+      : currentRoundProgress === 0
+        ? "A full round is complete. Continue when you are ready."
+        : `${remainingToRound} more to complete this round.`;
+  const shareMessage =
+    tasbihCount === 0
+      ? "I am using Path of Nur for tasbih and qiblah."
+      : completedRounds > 0
+        ? `I have saved ${formattedCount} dhikr on Path of Nur, including ${completedRounds} completed rounds of tasbih.`
+        : `I have saved ${formattedCount} dhikr on Path of Nur.`;
+
+  const handleShareProgress = useCallback(async () => {
+    try {
+      await Share.share({
+        title: "Path of Nur",
+        message: shareMessage,
+      });
+    } catch {
+      // Ignore share-sheet failures.
+    }
+  }, [shareMessage]);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroPanel}>
-          <View style={styles.heroGlowLarge} />
-          <View style={styles.heroGlowSmall} />
-          <Text style={styles.heroKicker}>Ritual Play</Text>
-          <Text style={styles.heroTitle}>Tools that should feel impossible to put down.</Text>
-          <Text style={styles.heroDescription}>
-            Tap, rotate, lock in, and share the moment. These are no longer utility pages. They are
-            short-form spiritual games.
-          </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>Tools</Text>
+        </View>
 
-          <View style={styles.heroChipRow}>
-            <View style={styles.heroChip}>
-              <Text style={styles.heroChipValue}>{tasbihCount}</Text>
-              <Text style={styles.heroChipLabel}>saved taps</Text>
+        <View style={styles.practiceCard}>
+          <View style={styles.practiceGlowLarge} />
+          <View style={styles.practiceGlowSmall} />
+
+          <View style={styles.practiceTopRow}>
+            <View style={styles.practiceBadge}>
+              <Ionicons name="sparkles" size={14} color={darkColors.brand.metallicGold} />
+              <Text style={styles.practiceBadgeText}>Your Practice</Text>
             </View>
-            <View style={styles.heroChip}>
-              <Text style={styles.heroChipValue}>{completedLoops}</Text>
-              <Text style={styles.heroChipLabel}>full loops</Text>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!hasSavedDhikr}
+              onPress={() => {
+                void handleShareProgress();
+              }}
+              style={({ pressed }) => [
+                styles.shareButton,
+                !hasSavedDhikr && styles.shareButtonDisabled,
+                pressed && hasSavedDhikr && styles.shareButtonPressed,
+              ]}
+            >
+              <Ionicons
+                name="share-social-outline"
+                size={16}
+                color={hasSavedDhikr ? darkColors.text.primary : darkColors.text.tertiary}
+              />
+              <Text style={[styles.shareButtonText, !hasSavedDhikr && styles.shareButtonTextDisabled]}>
+                Share
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.practiceBody}>
+            <View style={styles.practiceLead}>
+              <Text style={styles.practiceCount}>{formattedCount}</Text>
+              <Text style={styles.practiceCountLabel}>saved dhikr</Text>
+              <Text style={styles.practicePrompt}>{practicePrompt}</Text>
             </View>
-            <View style={styles.heroChip}>
-              <Text style={styles.heroChipValue}>{qiblahReadiness}</Text>
-              <Text style={styles.heroChipLabel}>qiblah base</Text>
+
+            <View style={styles.practiceStatsColumn}>
+              <View style={styles.practiceStatCard}>
+                <Text style={styles.practiceStatValue}>{NUMBER_FORMATTER.format(completedRounds)}</Text>
+                <Text style={styles.practiceStatLabel}>completed rounds</Text>
+              </View>
+              <View style={styles.practiceStatCard}>
+                <Text numberOfLines={1} style={styles.practiceStatLocation}>
+                  {qiblahLocation}
+                </Text>
+                <Text style={styles.practiceStatLabel}>qiblah location</Text>
+              </View>
             </View>
           </View>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/tools/tasbih")}
+            style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryActionPressed]}
+          >
+            <Text style={styles.primaryActionText}>{hasSavedDhikr ? "Return to Tasbih" : "Open Tasbih"}</Text>
+            <Ionicons name="arrow-forward" size={18} color={darkColors.text.onAccent} />
+          </Pressable>
         </View>
 
         <FeatureCard
-          eyebrow="Tasbih Flow"
-          title="Build momentum with every tap."
-          description="A living bead loop with milestones, quick-share moments, and a stronger reset flow."
-          primaryStat={tasbihCount > 0 ? `Resume at ${tasbihCount}` : "Fresh start"}
-          secondaryStat={tasbihHook}
-          cta="Open the loop"
+          label="Tasbih"
+          title="Keep count in rhythm."
+          description="Resume where you left off and complete another round."
+          primaryLabel="Saved"
+          primaryValue={hasSavedDhikr ? formattedCount : "0"}
+          secondaryLabel="Next round"
+          secondaryValue={
+            tasbihCount === 0
+              ? "33 to begin"
+              : currentRoundProgress === 0
+                ? "Round complete"
+                : `${remainingToRound} remaining`
+          }
+          cta="Open"
           imageSource={TASBIH_COVER}
           icon="sparkles"
           onPress={() => router.push("/tools/tasbih")}
         />
 
         <FeatureCard
-          eyebrow="Qiblah Lock"
-          title="Turn direction into a little challenge."
-          description="A compass chase with live alignment feedback, lock-state celebration, and a share-ready readout."
-          primaryStat={qiblahReadiness}
-          secondaryStat="Rotate until locked"
-          cta="Find the line"
+          label="Qiblah"
+          title="Find the qiblah with clarity."
+          description="Open the compass and align from your current location."
+          primaryLabel="Location"
+          primaryValue={qiblahLocation}
+          secondaryLabel="Compass"
+          secondaryValue={location?.coords ? "Ready" : "Needs location"}
+          cta="Open"
           imageSource={QIBLAH_COVER}
           icon="compass"
           onPress={() => router.push("/tools/qiblah")}
         />
-
-        <View style={styles.playbookPanel}>
-          <Text style={styles.playbookTitle}>Why this tab matters now</Text>
-          <View style={styles.playbookRow}>
-            <View style={styles.playbookCard}>
-              <Text style={styles.playbookCardTitle}>Fidget-worthy</Text>
-              <Text style={styles.playbookCardBody}>Tasbih should reward idle moments with rhythm, progress, and glow.</Text>
-            </View>
-            <View style={styles.playbookCard}>
-              <Text style={styles.playbookCardTitle}>Motion-led</Text>
-              <Text style={styles.playbookCardBody}>Qiblah should make you want to keep rotating until the compass locks clean.</Text>
-            </View>
-            <View style={styles.playbookCard}>
-              <Text style={styles.playbookCardTitle}>Share-ready</Text>
-              <Text style={styles.playbookCardBody}>Both tools should produce moments that feel worth screenshotting or sending.</Text>
-            </View>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -223,7 +288,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing["5xl"],
     gap: spacing.lg,
   },
-  heroPanel: {
+  header: {
+    marginHorizontal: spacing.xl,
+    gap: spacing.xs,
+  },
+  pageTitle: {
+    color: darkColors.text.primary,
+    fontFamily: fontFamily.appBold,
+    fontSize: 34,
+    lineHeight: 40,
+  },
+  practiceCard: {
     marginHorizontal: spacing.xl,
     padding: spacing.xl,
     borderRadius: radii.xl,
@@ -231,75 +306,154 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: darkColors.surface.borderInteractive,
     overflow: "hidden",
-    gap: spacing.sm,
+    gap: spacing.lg,
   },
-  heroGlowLarge: {
+  practiceGlowLarge: {
     position: "absolute",
-    width: 220,
-    height: 220,
+    width: 240,
+    height: 240,
     borderRadius: 999,
-    backgroundColor: "rgba(197, 160, 33, 0.14)",
-    top: -90,
-    right: -40,
+    backgroundColor: "rgba(197, 160, 33, 0.16)",
+    top: -96,
+    right: -36,
   },
-  heroGlowSmall: {
+  practiceGlowSmall: {
     position: "absolute",
     width: 160,
     height: 160,
     borderRadius: 999,
-    backgroundColor: "rgba(44, 82, 146, 0.20)",
+    backgroundColor: "rgba(44, 82, 146, 0.22)",
     bottom: -70,
-    left: -40,
+    left: -30,
   },
-  heroKicker: {
-    color: darkColors.brand.metallicGold,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  heroTitle: {
-    color: darkColors.text.primary,
-    fontFamily: fontFamily.appBold,
-    fontSize: 32,
-    lineHeight: 38,
-    maxWidth: "90%",
-  },
-  heroDescription: {
-    color: darkColors.text.secondary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 16,
-    lineHeight: 23,
-    maxWidth: "92%",
-  },
-  heroChipRow: {
+  practiceTopRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
-    marginTop: spacing.sm,
   },
-  heroChip: {
-    minWidth: 92,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.lg,
-    backgroundColor: "rgba(255,255,255,0.05)",
+  practiceBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(7, 11, 20, 0.62)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
-    gap: 2,
   },
-  heroChipValue: {
+  practiceBadgeText: {
+    color: darkColors.text.light,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 12,
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  shareButtonDisabled: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  shareButtonPressed: {
+    opacity: 0.9,
+  },
+  shareButtonText: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 15,
+    fontSize: 13,
   },
-  heroChipLabel: {
+  shareButtonTextDisabled: {
+    color: darkColors.text.tertiary,
+  },
+  practiceBody: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.md,
+  },
+  practiceLead: {
+    flex: 1.2,
+    gap: spacing.xxs,
+  },
+  practiceCount: {
+    color: darkColors.text.primary,
+    fontFamily: fontFamily.appBold,
+    fontSize: 54,
+    lineHeight: 58,
+    fontVariant: ["tabular-nums"],
+  },
+  practiceCountLabel: {
+    color: darkColors.brand.metallicGold,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
+  practicePrompt: {
+    color: darkColors.text.secondary,
+    fontFamily: fontFamily.appRegular,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: spacing.xs,
+    maxWidth: "92%",
+  },
+  practiceStatsColumn: {
+    flex: 1,
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  practiceStatCard: {
+    flex: 1,
+    minHeight: 88,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: "rgba(7, 11, 20, 0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  practiceStatValue: {
+    color: darkColors.text.primary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 26,
+    lineHeight: 30,
+    fontVariant: ["tabular-nums"],
+  },
+  practiceStatLocation: {
+    color: darkColors.text.primary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  practiceStatLabel: {
     color: darkColors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
   },
+  primaryAction: {
+    minHeight: 52,
+    borderRadius: radii.pill,
+    backgroundColor: darkColors.brand.metallicGold,
+    paddingHorizontal: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  primaryActionPressed: {
+    opacity: 0.92,
+  },
+  primaryActionText: {
+    color: darkColors.text.onAccent,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 15,
+  },
   featureCard: {
-    height: 260,
+    height: 240,
     marginHorizontal: spacing.xl,
     borderRadius: radii.xl,
     overflow: "hidden",
@@ -310,19 +464,19 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
   },
   featureCardPressed: {
-    opacity: 0.9,
+    opacity: 0.92,
     transform: [{ scale: 0.99 }],
   },
   featureOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(4, 8, 15, 0.56)",
+    backgroundColor: "rgba(4, 8, 15, 0.58)",
   },
   featureGlow: {
     position: "absolute",
     width: 180,
     height: 180,
     borderRadius: 999,
-    backgroundColor: "rgba(197, 160, 33, 0.16)",
+    backgroundColor: "rgba(197, 160, 33, 0.14)",
     right: -30,
     bottom: -40,
   },
@@ -348,13 +502,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
   },
-  playPill: {
+  ctaPill: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
     backgroundColor: "rgba(255,255,255,0.14)",
   },
-  playPillText: {
+  ctaText: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
@@ -367,14 +521,14 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appBold,
     fontSize: 30,
     lineHeight: 36,
-    maxWidth: "78%",
+    maxWidth: "82%",
   },
   featureDescription: {
     color: darkColors.text.light,
     fontFamily: fontFamily.appRegular,
     fontSize: 15,
     lineHeight: 21,
-    maxWidth: "82%",
+    maxWidth: "84%",
   },
   featureStatsRow: {
     flexDirection: "row",
@@ -398,39 +552,5 @@ const styles = StyleSheet.create({
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 15,
-  },
-  playbookPanel: {
-    marginHorizontal: spacing.xl,
-    padding: spacing.lg,
-    borderRadius: radii.xl,
-    backgroundColor: "rgba(11, 18, 32, 0.78)",
-    borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
-    gap: spacing.md,
-  },
-  playbookTitle: {
-    color: darkColors.text.primary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 20,
-  },
-  playbookRow: {
-    gap: spacing.sm,
-  },
-  playbookCard: {
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    gap: spacing.xxs,
-  },
-  playbookCardTitle: {
-    color: darkColors.brand.metallicGold,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 14,
-  },
-  playbookCardBody: {
-    color: darkColors.text.secondary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 14,
-    lineHeight: 20,
   },
 });
