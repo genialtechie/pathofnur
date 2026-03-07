@@ -57,6 +57,7 @@ export function HeroCard({
         source={imageSource}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
+        cachePolicy="memory-disk"
         transition={200}
       />
 

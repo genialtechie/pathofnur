@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import {
-  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +13,8 @@ import {
   trackOnboardingStepCompleted,
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
+import { OnboardingImageBackground } from "@/src/features/donate/onboarding-image-background";
+import { onboardingImages } from "@/src/features/donate/onboarding-images";
 import { fontFamily } from "@/src/components/navigation/typography";
 
 const STEP = 1;
@@ -33,13 +34,11 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/onboarding/bismillah.png")}
+    <OnboardingImageBackground
+      source={onboardingImages.bismillah}
       style={styles.bg}
-      resizeMode="cover"
+      overlayOpacity={0.55}
     >
-      <View style={styles.overlay} />
-
       <View style={styles.content}>
         <View style={styles.spacer} />
 
@@ -63,7 +62,7 @@ export default function WelcomeScreen() {
           </Text>
         </View>
       </View>
-    </ImageBackground>
+    </OnboardingImageBackground>
   );
 }
 
@@ -71,10 +70,6 @@ const styles = StyleSheet.create({
   bg: {
     flex: 1,
     backgroundColor: "#070b14"
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7,11,20,0.55)"
   },
   content: {
     flex: 1,

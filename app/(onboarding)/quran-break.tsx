@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import {
-  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -13,6 +12,8 @@ import {
   trackOnboardingStepCompleted,
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
+import { OnboardingImageBackground } from "@/src/features/donate/onboarding-image-background";
+import { onboardingImages } from "@/src/features/donate/onboarding-images";
 import { fontFamily } from "@/src/components/navigation/typography";
 
 const STEP = 4;
@@ -31,13 +32,11 @@ export default function QuranBreakScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/onboarding/quran-break.png")}
+    <OnboardingImageBackground
+      source={onboardingImages.quranBreak}
       style={styles.bg}
-      resizeMode="cover"
+      overlayOpacity={0.45}
     >
-      <View style={styles.overlay} />
-
       <View style={styles.content}>
         <View style={styles.spacer} />
 
@@ -54,7 +53,7 @@ export default function QuranBreakScreen() {
           </Pressable>
         </View>
       </View>
-    </ImageBackground>
+    </OnboardingImageBackground>
   );
 }
 
@@ -62,10 +61,6 @@ const styles = StyleSheet.create({
   bg: {
     flex: 1,
     backgroundColor: "#070b14"
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7,11,20,0.45)"
   },
   content: {
     flex: 1,

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import {
-  ImageBackground,
   Platform,
   Pressable,
   StyleSheet,
@@ -14,6 +13,8 @@ import {
   trackOnboardingStepCompleted,
   trackOnboardingStepViewed
 } from "@/src/features/donate/onboarding-analytics";
+import { OnboardingImageBackground } from "@/src/features/donate/onboarding-image-background";
+import { onboardingImages } from "@/src/features/donate/onboarding-images";
 import { updatePreferences } from "@/src/lib/preferences/preferences-store";
 import { fontFamily } from "@/src/components/navigation/typography";
 
@@ -51,13 +52,11 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/onboarding/notifications.png")}
+    <OnboardingImageBackground
+      source={onboardingImages.notifications}
       style={styles.bg}
-      resizeMode="cover"
+      overlayOpacity={0.5}
     >
-      <View style={styles.overlay} />
-
       <View style={styles.content}>
         <View style={styles.spacer} />
 
@@ -84,7 +83,7 @@ export default function NotificationsScreen() {
           </Text>
         </View>
       </View>
-    </ImageBackground>
+    </OnboardingImageBackground>
   );
 }
 
@@ -92,10 +91,6 @@ const styles = StyleSheet.create({
   bg: {
     flex: 1,
     backgroundColor: "#070b14"
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7,11,20,0.50)"
   },
   content: {
     flex: 1,

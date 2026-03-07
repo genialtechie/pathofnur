@@ -4,18 +4,16 @@
  * The main sanctuary dashboard with hero carousel and prayer timeline
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   ScrollView,
   View,
   Text,
   StatusBar,
-  Pressable,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
+import { Asset } from "expo-asset";
 
 import { HeroCarousel } from "./HeroCarousel";
 import { PrayerTimeline } from "./PrayerTimeline";
@@ -24,42 +22,46 @@ import { trackScreenView } from "@/src/lib/analytics/track";
 import {
   useTheme,
   fontFamily,
-  radii,
-  shadows,
   spacing,
-  aspectRatios,
 } from "@/src/theme";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 
 // Hero items configuration
 const HERO_ITEMS = [
   {
     id: "daily-path",
-    imageSource: require("@/public/images/_source/home-hero-daily-path-v01.webp"),
+    imageSource: require("@/public/images/_delivery/home-hero-daily-path-v01-card.webp"),
     title: "Your Daily Path",
     subtitle: "Begin today's journey of reflection and peace",
     collectionId: "gratitude",
   },
   {
     id: "night-reflection",
-    imageSource: require("@/public/images/_source/home-hero-night-reflection-v01.webp"),
+    imageSource: require("@/public/images/_delivery/home-hero-night-reflection-v01-card.webp"),
     title: "Night Reflection",
     subtitle: "Wind down with calming recitations",
     collectionId: "sleep",
   },
   {
     id: "prayer-invitation",
-    imageSource: require("@/public/images/_source/library-cover-anxiety-contour-v01.webp"),
+    imageSource: require("@/public/images/_delivery/home-hero-prayer-invitation-v01-card.webp"),
     title: "Prayer Invitation",
     subtitle: "An invitation to pause and connect",
     collectionId: "anxiety",
   },
 ];
 
+const HOME_HERO_IMAGE_MODULES = HERO_ITEMS
+  .map((item) => item.imageSource)
+  .filter((source): source is number => typeof source === "number");
+
 export function HomeScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const { colors, isDark } = useTheme();
-  const router = useRouter();
+
+  useEffect(() => {
+    void Asset.loadAsync(HOME_HERO_IMAGE_MODULES);
+  }, []);
 
   // Track screen view when focused
   useFocusEffect(
@@ -151,4 +153,3 @@ const styles = StyleSheet.create({
     height: 120, // Space for bottom navigation
   },
 });
-
