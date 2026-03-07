@@ -15,6 +15,13 @@ import * as Haptics from "expo-haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
+import { shareToolsArtifact, type ToolsShareCapture, type ToolsShareResult } from "@/src/lib/share/share-tools-artifact";
+import {
+  getToolsShareAnalyticsPayload,
+  getTriggeredTasbihShareArtifact,
+  type ToolsShareArtifact,
+} from "@/src/lib/share/tools-share";
+import { ToolsSharePreviewSheet } from "@/src/lib/share/tools-share-preview-sheet";
 import {
   TASBIH_LOOP_LENGTH,
   createEmptyTasbihHistoryState,
@@ -25,6 +32,13 @@ import {
   persistTasbihHistoryState,
   type TasbihHistoryState,
 } from "@/src/store/tasbih-history";
+import {
+  createEmptyTasbihShareState,
+  loadTasbihShareState,
+  markTasbihShareHandled,
+  persistTasbihShareState,
+  type TasbihShareState,
+} from "@/src/store/tasbih-share-state";
 import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 
 const LOOP_LENGTH = TASBIH_LOOP_LENGTH;
@@ -36,8 +50,13 @@ export default function TasbihScreen() {
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const [historyState, setHistoryState] = useState<TasbihHistoryState>(() => createEmptyTasbihHistoryState());
+  const [shareState, setShareState] = useState<TasbihShareState>(() => createEmptyTasbihShareState());
   const [isLoaded, setIsLoaded] = useState(false);
   const [isResetArmed, setIsResetArmed] = useState(false);
+  const [pendingShareArtifact, setPendingShareArtifact] = useState<ToolsShareArtifact | null>(null);
+  const [activeShareArtifact, setActiveShareArtifact] = useState<ToolsShareArtifact | null>(null);
+  const [isSharePreviewVisible, setIsSharePreviewVisible] = useState(false);
+  const [isSharePending, setIsSharePending] = useState(false);
 
   const pulseScale = useRef(new Animated.Value(1)).current;
   const ringScale = useRef(new Animated.Value(1)).current;
@@ -51,11 +70,14 @@ export default function TasbihScreen() {
     void trackScreenView("tools_tasbih");
 
     let isActive = true;
-    void loadTasbihHistoryState().then((savedState) => {
-      if (!isActive) return;
-      setHistoryState(savedState);
-      setIsLoaded(true);
-    });
+    void Promise.all([loadTasbihHistoryState(), loadTasbihShareState()]).then(
+      ([savedState, savedShareState]) => {
+        if (!isActive) return;
+        setHistoryState(savedState);
+        setShareState(savedShareState);
+        setIsLoaded(true);
+      }
+    );
 
     return () => {
       isActive = false;
@@ -209,10 +231,26 @@ export default function TasbihScreen() {
     [burstGlowOpacity, burstGlowScale, pulseScale, ringScale, rippleOpacity, rippleScale]
   );
 
+  const markShareArtifactHandled = useCallback((artifact: ToolsShareArtifact | null) => {
+    if (!artifact?.milestoneKey) return;
+
+    setShareState((currentState) => {
+      const nextState = markTasbihShareHandled(currentState, artifact.milestoneKey!);
+      void persistTasbihShareState(nextState);
+      return nextState;
+    });
+  }, []);
+
   const handleTap = useCallback(() => {
+    const previousSnapshot = historySnapshot;
     const nextHistoryState = createIncrementedTasbihHistoryState(historyState);
+    const nextSnapshot = getTasbihHistorySnapshot(nextHistoryState);
     const nextCount = nextHistoryState.activeCount;
     const didCompleteLoop = nextCount % LOOP_LENGTH === 0;
+    const nextShareArtifact =
+      pendingShareArtifact || activeShareArtifact
+        ? null
+        : getTriggeredTasbihShareArtifact(previousSnapshot, nextSnapshot, shareState);
 
     if (count === 0) {
       void track(EventName.TOOLS_TASBIH_STARTED, {}, "tools_tasbih");
@@ -223,6 +261,15 @@ export default function TasbihScreen() {
     animateTap(didCompleteLoop);
     void persistTasbihHistoryState(nextHistoryState);
     void Haptics.impactAsync(didCompleteLoop ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+
+    if (nextShareArtifact) {
+      setPendingShareArtifact(nextShareArtifact);
+      void track(
+        EventName.TOOLS_SHARE_PROMPT_VIEWED,
+        getToolsShareAnalyticsPayload(nextShareArtifact),
+        "tools_tasbih"
+      );
+    }
 
     if (didCompleteLoop) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -235,7 +282,7 @@ export default function TasbihScreen() {
         "tools_tasbih"
       );
     }
-  }, [animateTap, count, historyState]);
+  }, [activeShareArtifact, animateTap, count, historySnapshot, historyState, pendingShareArtifact, shareState]);
 
   const handleResetPress = useCallback(() => {
     if (count === 0) return;
@@ -253,6 +300,74 @@ export default function TasbihScreen() {
     void track(EventName.TOOLS_TASBIH_RESET, {}, "tools_tasbih");
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   }, [count, historyState, isResetArmed]);
+
+  const dismissSharePrompt = useCallback(() => {
+    if (!pendingShareArtifact) return;
+
+    void track(
+      EventName.TOOLS_SHARE_DISMISSED,
+      getToolsShareAnalyticsPayload(pendingShareArtifact),
+      "tools_tasbih"
+    );
+    markShareArtifactHandled(pendingShareArtifact);
+    setPendingShareArtifact(null);
+  }, [markShareArtifactHandled, pendingShareArtifact]);
+
+  const openSharePreview = useCallback(() => {
+    if (!pendingShareArtifact) return;
+
+    setActiveShareArtifact(pendingShareArtifact);
+    setPendingShareArtifact(null);
+    setIsSharePreviewVisible(true);
+    void track(
+      EventName.TOOLS_SHARE_PREVIEW_VIEWED,
+      getToolsShareAnalyticsPayload(pendingShareArtifact),
+      "tools_tasbih"
+    );
+  }, [pendingShareArtifact]);
+
+  const dismissSharePreview = useCallback(() => {
+    if (!activeShareArtifact) {
+      setIsSharePreviewVisible(false);
+      return;
+    }
+
+    void track(
+      EventName.TOOLS_SHARE_DISMISSED,
+      getToolsShareAnalyticsPayload(activeShareArtifact),
+      "tools_tasbih"
+    );
+    markShareArtifactHandled(activeShareArtifact);
+    setIsSharePreviewVisible(false);
+    setActiveShareArtifact(null);
+  }, [activeShareArtifact, markShareArtifactHandled]);
+
+  const handleShareRequest = useCallback(
+    async (capture: ToolsShareCapture) => {
+      if (!activeShareArtifact || isSharePending) return;
+
+      const analyticsPayload = getToolsShareAnalyticsPayload(activeShareArtifact);
+      setIsSharePending(true);
+      void track(EventName.TOOLS_SHARE_STARTED, analyticsPayload, "tools_tasbih");
+
+      try {
+        const shareResult: ToolsShareResult = await shareToolsArtifact(activeShareArtifact, capture);
+        if (shareResult === "dismissed") {
+          return;
+        }
+
+        markShareArtifactHandled(activeShareArtifact);
+        void track(EventName.TOOLS_SHARE_COMPLETED, analyticsPayload, "tools_tasbih");
+        setIsSharePreviewVisible(false);
+        setActiveShareArtifact(null);
+      } catch (error) {
+        console.error("Tasbih share failed:", error);
+      } finally {
+        setIsSharePending(false);
+      }
+    },
+    [activeShareArtifact, isSharePending, markShareArtifactHandled]
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -361,6 +476,33 @@ export default function TasbihScreen() {
         </Animated.View>
       </Pressable>
 
+      {pendingShareArtifact ? (
+        <View style={styles.sharePromptWrap}>
+          <View style={styles.sharePromptCard}>
+            <View style={styles.sharePromptHeader}>
+              <View style={styles.sharePromptDot} />
+              <Text style={styles.sharePromptEyebrow}>{pendingShareArtifact.eyebrow}</Text>
+            </View>
+
+            <View style={styles.sharePromptCopy}>
+              <Text style={styles.sharePromptTitle}>{pendingShareArtifact.headline}</Text>
+              <Text style={styles.sharePromptText}>{pendingShareArtifact.supportingText}</Text>
+            </View>
+
+            <View style={styles.sharePromptActions}>
+              <Pressable accessibilityRole="button" onPress={dismissSharePrompt} style={styles.sharePromptDismiss}>
+                <Text style={styles.sharePromptDismissLabel}>Not now</Text>
+              </Pressable>
+
+              <Pressable accessibilityRole="button" onPress={openSharePreview} style={styles.sharePromptPrimary}>
+                <Text style={styles.sharePromptPrimaryLabel}>Share</Text>
+                <Ionicons name="arrow-forward" size={16} color={colors.text.onAccent} />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.footer}>
         <Text style={styles.loopCaption}>{loopCaption}</Text>
 
@@ -391,6 +533,14 @@ export default function TasbihScreen() {
           </Text>
         </Pressable>
       </View>
+
+      <ToolsSharePreviewSheet
+        artifact={activeShareArtifact}
+        isSharing={isSharePending}
+        onClose={dismissSharePreview}
+        onShare={handleShareRequest}
+        visible={isSharePreviewVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -534,6 +684,83 @@ const createStyles = (colors: ThemeColors, isDark: boolean) =>
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
     gap: spacing.md,
+  },
+  sharePromptWrap: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
+  },
+  sharePromptCard: {
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface.card,
+    borderWidth: 1,
+    borderColor: colors.surface.borderInteractive,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  sharePromptHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  sharePromptDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.brand.metallicGold,
+  },
+  sharePromptEyebrow: {
+    color: colors.brand.metallicGold,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  sharePromptCopy: {
+    gap: spacing.xxs,
+  },
+  sharePromptTitle: {
+    color: colors.text.primary,
+    fontFamily: fontFamily.appBold,
+    fontSize: 20,
+    lineHeight: 24,
+  },
+  sharePromptText: {
+    color: colors.text.secondary,
+    fontFamily: fontFamily.appRegular,
+    fontSize: 14,
+    lineHeight: 19,
+  },
+  sharePromptActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  sharePromptDismiss: {
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sharePromptDismissLabel: {
+    color: colors.text.secondary,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 13,
+  },
+  sharePromptPrimary: {
+    minHeight: 46,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.xs,
+    backgroundColor: colors.brand.metallicGold,
+  },
+  sharePromptPrimaryLabel: {
+    color: colors.text.onAccent,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 13,
   },
   loopCaption: {
     color: colors.text.secondary,

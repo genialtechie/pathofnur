@@ -3,7 +3,6 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
-  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -14,7 +13,15 @@ import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Svg, { Circle } from "react-native-svg";
 
+import { EventName, track } from "@/src/lib/analytics/track";
 import { useLocation } from "@/src/lib/location";
+import { shareToolsArtifact, type ToolsShareCapture, type ToolsShareResult } from "@/src/lib/share/share-tools-artifact";
+import {
+  createManualToolsShareArtifact,
+  getToolsShareAnalyticsPayload,
+  type ToolsShareArtifact,
+} from "@/src/lib/share/tools-share";
+import { ToolsSharePreviewSheet } from "@/src/lib/share/tools-share-preview-sheet";
 import {
   TASBIH_LOOP_LENGTH,
   createEmptyTasbihHistoryState,
@@ -221,6 +228,9 @@ export default function ToolsScreen() {
   const { location } = useLocation();
   const { colors, isDark } = useTheme();
   const [historyState, setHistoryState] = useState<TasbihHistoryState>(() => createEmptyTasbihHistoryState());
+  const [activeShareArtifact, setActiveShareArtifact] = useState<ToolsShareArtifact | null>(null);
+  const [isSharePreviewVisible, setIsSharePreviewVisible] = useState(false);
+  const [isSharePending, setIsSharePending] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -252,18 +262,7 @@ export default function ToolsScreen() {
   const qiblahLocation = location?.city ?? "Location needed";
   const hasHistory = lifetimeCount > 0;
   const hasActiveCount = activeCount > 0;
-
-  const shareMessage = useMemo(() => {
-    if (lifetimeCount === 0) {
-      return "I am using Path of Nur for tasbih and qiblah.";
-    }
-
-    if (todayCount > 0) {
-      return `I have made ${formattedLifetimeCount} tasbih on Path of Nur, including ${formattedTodayCount} today.`;
-    }
-
-    return `I have made ${formattedLifetimeCount} tasbih on Path of Nur.`;
-  }, [formattedLifetimeCount, formattedTodayCount, lifetimeCount, todayCount]);
+  const manualShareArtifact = useMemo(() => createManualToolsShareArtifact(tasbihSnapshot), [tasbihSnapshot]);
 
   const practiceBadgeBackground = isDark ? "rgba(7, 11, 20, 0.62)" : "rgba(255, 255, 255, 0.82)";
   const practiceBadgeBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)";
@@ -283,16 +282,58 @@ export default function ToolsScreen() {
   const dayCardSecondaryColor = colors.text.secondary;
   const dayRingTrackColor = isDark ? "rgba(255,255,255,0.09)" : "rgba(17,24,39,0.08)";
 
-  const handleShareProgress = useCallback(async () => {
-    try {
-      await Share.share({
-        title: "Path of Nur",
-        message: shareMessage,
-      });
-    } catch {
-      // Ignore share-sheet failures.
+  const dismissSharePreview = useCallback(() => {
+    if (!activeShareArtifact) {
+      setIsSharePreviewVisible(false);
+      return;
     }
-  }, [shareMessage]);
+
+    void track(
+      EventName.TOOLS_SHARE_DISMISSED,
+      getToolsShareAnalyticsPayload(activeShareArtifact),
+      "tools"
+    );
+    setIsSharePreviewVisible(false);
+    setActiveShareArtifact(null);
+  }, [activeShareArtifact]);
+
+  const openSharePreview = useCallback(() => {
+    if (!hasHistory) return;
+
+    setActiveShareArtifact(manualShareArtifact);
+    setIsSharePreviewVisible(true);
+    void track(
+      EventName.TOOLS_SHARE_PREVIEW_VIEWED,
+      getToolsShareAnalyticsPayload(manualShareArtifact),
+      "tools"
+    );
+  }, [hasHistory, manualShareArtifact]);
+
+  const handleShareRequest = useCallback(
+    async (capture: ToolsShareCapture) => {
+      if (!activeShareArtifact || isSharePending) return;
+
+      const analyticsPayload = getToolsShareAnalyticsPayload(activeShareArtifact);
+      setIsSharePending(true);
+      void track(EventName.TOOLS_SHARE_STARTED, analyticsPayload, "tools");
+
+      try {
+        const shareResult: ToolsShareResult = await shareToolsArtifact(activeShareArtifact, capture);
+        if (shareResult === "dismissed") {
+          return;
+        }
+
+        void track(EventName.TOOLS_SHARE_COMPLETED, analyticsPayload, "tools");
+        setIsSharePreviewVisible(false);
+        setActiveShareArtifact(null);
+      } catch (error) {
+        console.error("Tools share failed:", error);
+      } finally {
+        setIsSharePending(false);
+      }
+    },
+    [activeShareArtifact, isSharePending]
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}> 
@@ -319,9 +360,7 @@ export default function ToolsScreen() {
             <Pressable
               accessibilityRole="button"
               disabled={!hasHistory}
-              onPress={() => {
-                void handleShareProgress();
-              }}
+              onPress={openSharePreview}
               style={({ pressed }) => [
                 styles.shareIconButton,
                 { backgroundColor: hasHistory ? shareButtonBackground : shareButtonDisabledBackground },
@@ -418,6 +457,14 @@ export default function ToolsScreen() {
           onPress={() => router.push("/tools/qiblah")}
         />
       </ScrollView>
+
+      <ToolsSharePreviewSheet
+        artifact={activeShareArtifact}
+        isSharing={isSharePending}
+        onClose={dismissSharePreview}
+        onShare={handleShareRequest}
+        visible={isSharePreviewVisible}
+      />
     </SafeAreaView>
   );
 }

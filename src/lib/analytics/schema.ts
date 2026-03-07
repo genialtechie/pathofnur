@@ -56,6 +56,11 @@ export const EventName = {
   TOOLS_TASBIH_STARTED: 'tools_tasbih_started',
   TOOLS_TASBIH_COMPLETED: 'tools_tasbih_completed',
   TOOLS_TASBIH_RESET: 'tools_tasbih_reset',
+  TOOLS_SHARE_PROMPT_VIEWED: 'tools_share_prompt_viewed',
+  TOOLS_SHARE_PREVIEW_VIEWED: 'tools_share_preview_viewed',
+  TOOLS_SHARE_STARTED: 'tools_share_started',
+  TOOLS_SHARE_COMPLETED: 'tools_share_completed',
+  TOOLS_SHARE_DISMISSED: 'tools_share_dismissed',
   
   // Journey events
   JOURNEY_DAY_COMPLETED: 'journey_day_completed',
@@ -221,6 +226,13 @@ export const JourneyPrayerCheckinCompletedSchema = BaseEventPropertiesSchema.ext
   day_key: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+export const ToolsShareSchema = BaseEventPropertiesSchema.extend({
+  share_type: z.enum(['manual', 'milestone']),
+  milestone_key: z.string().min(1).optional(),
+  artifact_type: z.enum(['story_card']),
+  trigger_surface: z.enum(['tools_overview', 'tasbih_prompt']),
+});
+
 /**
  * Error occurred properties
  */
@@ -279,6 +291,11 @@ export const EventSchemas = {
     dhikr_type: z.string().min(1),
   }),
   [EventName.TOOLS_TASBIH_RESET]: BaseEventPropertiesSchema,
+  [EventName.TOOLS_SHARE_PROMPT_VIEWED]: ToolsShareSchema,
+  [EventName.TOOLS_SHARE_PREVIEW_VIEWED]: ToolsShareSchema,
+  [EventName.TOOLS_SHARE_STARTED]: ToolsShareSchema,
+  [EventName.TOOLS_SHARE_COMPLETED]: ToolsShareSchema,
+  [EventName.TOOLS_SHARE_DISMISSED]: ToolsShareSchema,
   
   [EventName.JOURNEY_DAY_COMPLETED]: JourneyDayCompletedSchema,
   [EventName.JOURNEY_STREAK_MILESTONE]: JourneyStreakMilestoneSchema,
