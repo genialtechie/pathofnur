@@ -68,47 +68,83 @@ export function HomeHadithCard() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.labelRow}>
-          <View
-            style={[
-              styles.labelDot,
-              { backgroundColor: colors.brand.metallicGold },
-            ]}
-          />
-          <Text style={[styles.label, { color: colors.text.tertiary }]}>
-            {DAILY_HADITH.label}
-          </Text>
-        </View>
+      <View style={styles.labelRow}>
+        <View
+          style={[
+            styles.labelDot,
+            { backgroundColor: colors.brand.metallicGold },
+          ]}
+        />
+        <Text style={[styles.label, { color: colors.text.tertiary }]}>
+          {DAILY_HADITH.label}
+        </Text>
+      </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Share today's hadith"
-          onPress={handleShare}
-          style={styles.shareButton}
+      <View style={styles.copyBlock}>
+        <Text style={[styles.quote, { color: colors.text.primary }]} selectable>
+          "{DAILY_HADITH.quote}"
+        </Text>
+
+        <Text style={[styles.source, { color: colors.text.muted }]} selectable>
+          {DAILY_HADITH.source}
+        </Text>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Share today's hadith"
+        onPress={handleShare}
+        style={({ pressed }) => [
+          styles.shareButton,
+          {
+            backgroundColor: colors.surface.card,
+            borderColor:
+              shareState === "unavailable"
+                ? colors.surface.border
+                : colors.brand.metallicGold,
+          },
+          pressed ? styles.shareButtonPressed : null,
+        ]}
+      >
+        <View
+          style={[
+            styles.shareIconWrap,
+            {
+              backgroundColor:
+                shareState === "unavailable"
+                  ? colors.surface.background
+                  : "rgba(197, 160, 33, 0.14)",
+            },
+          ]}
         >
           <Ionicons
             name="share-social-outline"
-            size={14}
-            color={colors.text.secondary}
+            size={16}
+            color={
+              shareState === "unavailable"
+                ? colors.text.secondary
+                : colors.brand.metallicGold
+            }
           />
-          <Text style={[styles.shareLabel, { color: colors.text.secondary }]}>
-            {shareState === "copied"
-              ? "Copied"
-              : shareState === "unavailable"
-                ? "Unavailable"
-                : "Share"}
-          </Text>
-        </Pressable>
-      </View>
-
-      <Text style={[styles.quote, { color: colors.text.primary }]} selectable>
-        "{DAILY_HADITH.quote}"
-      </Text>
-
-      <Text style={[styles.source, { color: colors.text.muted }]} selectable>
-        {DAILY_HADITH.source}
-      </Text>
+        </View>
+        <Text
+          style={[
+            styles.shareLabel,
+            {
+              color:
+                shareState === "unavailable"
+                  ? colors.text.secondary
+                  : colors.text.primary,
+            },
+          ]}
+        >
+          {shareState === "copied"
+            ? "Copied to clipboard"
+            : shareState === "unavailable"
+              ? "Sharing unavailable"
+              : "Share this hadith"}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -119,17 +155,18 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xl,
     paddingVertical: spacing.sm,
     gap: spacing.md,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
+    alignItems: "center",
   },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: spacing.xs,
+  },
+  copyBlock: {
+    alignItems: "center",
+    gap: spacing.sm,
+    maxWidth: 320,
   },
   labelDot: {
     width: 8,
@@ -145,21 +182,40 @@ const styles = StyleSheet.create({
   shareButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    minHeight: 24,
+    justifyContent: "center",
+    gap: spacing.sm,
+    minHeight: 48,
+    minWidth: 192,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  shareButtonPressed: {
+    opacity: 0.82,
+  },
+  shareIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
   },
   shareLabel: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 18,
   },
   quote: {
     fontFamily: fontFamily.scriptureRegular,
     fontSize: 24,
     lineHeight: 36,
+    textAlign: "center",
   },
   source: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 13,
     letterSpacing: 0.3,
+    textAlign: "center",
   },
 });
