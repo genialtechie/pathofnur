@@ -1,12 +1,13 @@
 import "react-native-gesture-handler";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, useColorScheme, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as Notifications from "expo-notifications";
 import { Amiri_400Regular, Amiri_700Bold } from "@expo-google-fonts/amiri";
 import { Lora_400Regular, Lora_600SemiBold } from "@expo-google-fonts/lora";
 import { PlayfairDisplay_600SemiBold } from "@expo-google-fonts/playfair-display";
@@ -25,9 +26,22 @@ export const unstable_settings = {
   initialRouteName: "(onboarding)"
 };
 
+if (process.env.EXPO_OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
+  const lastHandledNotificationRef = useRef<string | null>(null);
   const [fontsLoaded] = useFonts({
     ZalandoSans_400Regular,
     ZalandoSans_600SemiBold,
@@ -83,6 +97,53 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  useEffect(() => {
+    if (process.env.EXPO_OS === "web") {
+      return;
+    }
+
+    let isMounted = true;
+
+    const handleNotificationRoute = (
+      href: unknown,
+      identifier?: string | null
+    ) => {
+      if (
+        !isMounted ||
+        typeof href !== "string" ||
+        href.length === 0 ||
+        (identifier && lastHandledNotificationRef.current === identifier)
+      ) {
+        return;
+      }
+
+      lastHandledNotificationRef.current = identifier ?? null;
+      router.push(href);
+      void Notifications.clearLastNotificationResponseAsync();
+    };
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        handleNotificationRoute(
+          response.notification.request.content.data?.href,
+          response.notification.request.identifier
+        );
+      }
+    );
+
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      handleNotificationRoute(
+        response?.notification.request.content.data?.href,
+        response?.notification.request.identifier
+      );
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
+  }, [router]);
 
   if (!fontsLoaded) {
     return null;
