@@ -15,7 +15,11 @@ import * as Haptics from "expo-haptics";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
-import { shareToolsArtifact, type ToolsShareCapture, type ToolsShareResult } from "@/src/lib/share/share-tools-artifact";
+import {
+  shareToolsArtifact,
+  type ToolsShareCaptureSource,
+  type ToolsShareResult,
+} from "@/src/lib/share/share-tools-artifact";
 import {
   getToolsShareAnalyticsPayload,
   getTriggeredTasbihShareArtifact,
@@ -343,7 +347,7 @@ export default function TasbihScreen() {
   }, [activeShareArtifact, markShareArtifactHandled]);
 
   const handleShareRequest = useCallback(
-    async (capture: ToolsShareCapture) => {
+    async (capture: ToolsShareCaptureSource) => {
       if (!activeShareArtifact || isSharePending) return;
 
       const analyticsPayload = getToolsShareAnalyticsPayload(activeShareArtifact);

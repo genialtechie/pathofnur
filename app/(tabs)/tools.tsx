@@ -15,7 +15,11 @@ import Svg, { Circle } from "react-native-svg";
 
 import { EventName, track } from "@/src/lib/analytics/track";
 import { useLocation } from "@/src/lib/location";
-import { shareToolsArtifact, type ToolsShareCapture, type ToolsShareResult } from "@/src/lib/share/share-tools-artifact";
+import {
+  shareToolsArtifact,
+  type ToolsShareCaptureSource,
+  type ToolsShareResult,
+} from "@/src/lib/share/share-tools-artifact";
 import {
   createManualToolsShareArtifact,
   getToolsShareAnalyticsPayload,
@@ -328,7 +332,7 @@ export default function ToolsScreen() {
   }, [hasHistory, manualShareArtifact]);
 
   const handleShareRequest = useCallback(
-    async (capture: ToolsShareCapture) => {
+    async (capture: ToolsShareCaptureSource) => {
       if (!activeShareArtifact || isSharePending) return;
 
       const analyticsPayload = getToolsShareAnalyticsPayload(activeShareArtifact);

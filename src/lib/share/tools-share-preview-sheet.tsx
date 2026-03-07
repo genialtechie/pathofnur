@@ -1,7 +1,10 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -10,18 +13,19 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import ViewShot from "react-native-view-shot";
 import type { CaptureOptions } from "react-native-view-shot";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 
 import type { ToolsShareArtifact } from "./tools-share";
-import type { ToolsShareCapture } from "./share-tools-artifact";
+import type { ToolsShareCapture, ToolsShareCaptureSource } from "./share-tools-artifact";
 
 type ToolsSharePreviewSheetProps = {
   artifact: ToolsShareArtifact | null;
   visible: boolean;
   isSharing: boolean;
   onClose: () => void;
-  onShare: (capture: ToolsShareCapture) => void;
+  onShare: (capture: ToolsShareCaptureSource) => Promise<void> | void;
 };
 
 const STORY = {
@@ -80,121 +84,220 @@ export function ToolsSharePreviewSheet({
   onClose,
   onShare,
 }: ToolsSharePreviewSheetProps) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const viewShotRef = useRef<ViewShot | null>(null);
+  const [preparedCaptureUri, setPreparedCaptureUri] = useState<string | null>(null);
+  const [isPreparingPreview, setIsPreparingPreview] = useState(false);
   const cardWidth = Math.min(width - spacing.xl * 2, 292);
+  const sheetMaxHeight = Math.max(height - insets.top - spacing.lg * 2, 360);
+  const bottomSafePadding = Math.max(insets.bottom, spacing.lg);
   const captureOptions = useMemo<CaptureOptions>(
     () => ({
       format: "png",
       quality: 1,
-      result: process.env.EXPO_OS === "web" ? "data-uri" : "tmpfile",
+      result: Platform.OS === "web" ? "data-uri" : "tmpfile",
       width: 1080,
       height: 1920,
     }),
     []
   );
 
+  useEffect(() => {
+    setPreparedCaptureUri(null);
+
+    if (!visible || !artifact || Platform.OS !== "web") {
+      setIsPreparingPreview(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setIsPreparingPreview(true);
+
+    const timeout = setTimeout(() => {
+      void viewShotRef.current?.capture?.()
+        .then((uri) => {
+          if (!isCancelled) {
+            setPreparedCaptureUri(uri ?? null);
+          }
+        })
+        .catch((error) => {
+          if (!isCancelled) {
+            console.error("Tools share preview capture failed:", error);
+          }
+        })
+        .finally(() => {
+          if (!isCancelled) {
+            setIsPreparingPreview(false);
+          }
+        });
+    }, 120);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [artifact, cardWidth, visible]);
+
   if (!visible || !artifact) {
     return null;
   }
 
   const handleSharePress = () => {
-    void onShare(async () => {
+    if (Platform.OS === "web" && preparedCaptureUri) {
+      void onShare(preparedCaptureUri);
+      return;
+    }
+
+    const captureCard: ToolsShareCapture = async () => {
       const uri = await viewShotRef.current?.capture?.();
       if (!uri) {
         throw new Error("Unable to export share card");
       }
       return uri;
-    });
+    };
+
+    void onShare(captureCard);
   };
 
+  const isShareDisabled = isSharing || (Platform.OS === "web" && isPreparingPreview && !preparedCaptureUri);
+  const primaryButtonLabel =
+    Platform.OS === "web" && isPreparingPreview && !preparedCaptureUri ? "Preparing card" : artifact.actionLabel;
+
   return (
-    <View pointerEvents="box-none" style={styles.overlayRoot}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onClose}
-        style={[
-          styles.overlayBackdrop,
-          { backgroundColor: isDark ? "rgba(7, 11, 20, 0.78)" : "rgba(17, 24, 39, 0.28)" },
-        ]}
-      />
+    <Modal
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      transparent
+    >
+      <View pointerEvents="box-none" style={styles.overlayRoot}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onClose}
+          style={[
+            styles.overlayBackdrop,
+            { backgroundColor: isDark ? "rgba(7, 11, 20, 0.78)" : "rgba(17, 24, 39, 0.28)" },
+          ]}
+        />
 
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: colors.surface.card,
-            borderColor: colors.surface.borderInteractive,
-          },
-        ]}
-      >
-        <View style={styles.sheetHeader}>
-          <View style={styles.sheetHeaderCopy}>
-            <Text style={[styles.sheetTitle, { color: colors.text.primary }]}>{artifact.previewTitle}</Text>
-            <Text style={[styles.sheetSubtitle, { color: colors.text.secondary }]}>A clean story card travels better than plain text.</Text>
-          </View>
-          <Pressable accessibilityRole="button" hitSlop={16} onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={20} color={colors.text.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.cardStage}>
-          <ViewShot options={captureOptions} ref={viewShotRef} style={{ width: cardWidth }}>
-            <ToolsStoryCard artifact={artifact} />
-          </ViewShot>
-        </View>
-
-        <View style={styles.sheetActions}>
-          <Pressable
-            accessibilityRole="button"
-            disabled={isSharing}
-            onPress={handleSharePress}
-            style={({ pressed }) => [styles.primaryButton, pressed && !isSharing && styles.primaryButtonPressed]}
-          >
-            {isSharing ? (
-              <ActivityIndicator color="#070B14" size="small" />
-            ) : (
-              <>
-                <Text style={styles.primaryButtonText}>{artifact.actionLabel}</Text>
-                <Ionicons name="arrow-forward" size={18} color="#070B14" />
-              </>
-            )}
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            disabled={isSharing}
-            onPress={onClose}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              { borderColor: colors.surface.borderInteractive },
-              pressed && !isSharing && styles.secondaryButtonPressed,
+        <View style={[styles.sheetShell, { paddingTop: insets.top + spacing.lg, paddingBottom: bottomSafePadding }]}>
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.surface.card,
+                borderColor: colors.surface.borderInteractive,
+                maxHeight: sheetMaxHeight,
+              },
             ]}
           >
-            <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>Not now</Text>
-          </Pressable>
+            <View style={[styles.handleBar, { backgroundColor: colors.surface.borderInteractive }]} />
+
+            <ScrollView
+              bounces={false}
+              contentContainerStyle={styles.sheetScrollContent}
+              showsVerticalScrollIndicator={false}
+              style={styles.sheetScroll}
+            >
+              <View style={styles.sheetHeader}>
+                <View style={styles.sheetHeaderCopy}>
+                  <Text style={[styles.sheetTitle, { color: colors.text.primary }]}>{artifact.previewTitle}</Text>
+                  <Text style={[styles.sheetSubtitle, { color: colors.text.secondary }]}>
+                    A clean story card travels better than plain text.
+                  </Text>
+                </View>
+                <Pressable accessibilityRole="button" hitSlop={16} onPress={onClose} style={styles.closeButton}>
+                  <Ionicons name="close" size={20} color={colors.text.primary} />
+                </Pressable>
+              </View>
+
+              <View style={styles.cardStage}>
+                <ViewShot options={captureOptions} ref={viewShotRef} style={{ width: cardWidth }}>
+                  <ToolsStoryCard artifact={artifact} />
+                </ViewShot>
+              </View>
+
+              <View style={styles.sheetActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isShareDisabled}
+                  onPress={handleSharePress}
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && !isShareDisabled && styles.primaryButtonPressed,
+                    isShareDisabled && styles.primaryButtonDisabled,
+                  ]}
+                >
+                  {isSharing || (Platform.OS === "web" && isPreparingPreview && !preparedCaptureUri) ? (
+                    <>
+                      <ActivityIndicator color="#070B14" size="small" />
+                      <Text style={styles.primaryButtonText}>{primaryButtonLabel}</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonText}>{primaryButtonLabel}</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#070B14" />
+                    </>
+                  )}
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSharing}
+                  onPress={onClose}
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    { borderColor: colors.surface.borderInteractive },
+                    pressed && !isSharing && styles.secondaryButtonPressed,
+                  ]}
+                >
+                  <Text style={[styles.secondaryButtonText, { color: colors.text.primary }]}>Not now</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
         </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlayRoot: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "flex-end",
   },
   overlayBackdrop: {
     ...StyleSheet.absoluteFillObject,
+  },
+  sheetShell: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: spacing.md,
   },
   sheet: {
     borderTopLeftRadius: radii.xl,
     borderTopRightRadius: radii.xl,
     borderWidth: 1,
+    overflow: "hidden",
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: radii.pill,
+    alignSelf: "center",
+    marginTop: spacing.sm,
+  },
+  sheetScroll: {
+    flexGrow: 0,
+  },
+  sheetScrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.lg,
     gap: spacing.lg,
   },
   sheetHeader: {
@@ -242,6 +345,9 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: {
     opacity: 0.92,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.72,
   },
   primaryButtonText: {
     color: "#070B14",

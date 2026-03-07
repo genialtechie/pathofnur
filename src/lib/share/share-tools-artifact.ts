@@ -1,10 +1,11 @@
-import { Share } from "react-native";
+import { Platform, Share } from "react-native";
 import * as Sharing from "expo-sharing";
 import { releaseCapture } from "react-native-view-shot";
 
 import type { ToolsShareArtifact } from "./tools-share";
 
 export type ToolsShareCapture = () => Promise<string>;
+export type ToolsShareCaptureSource = ToolsShareCapture | string;
 export type ToolsShareResult = "shared" | "dismissed" | "exported";
 
 function isAbortError(error: unknown): boolean {
@@ -54,14 +55,14 @@ async function shareOnWeb(uri: string, artifact: ToolsShareArtifact): Promise<To
 
 export async function shareToolsArtifact(
   artifact: ToolsShareArtifact,
-  capture: ToolsShareCapture
+  capture: ToolsShareCaptureSource
 ): Promise<ToolsShareResult> {
   let captureUri: string | null = null;
 
   try {
-    captureUri = await capture();
+    captureUri = typeof capture === "string" ? capture : await capture();
 
-    if (process.env.EXPO_OS === "web") {
+    if (Platform.OS === "web") {
       return await shareOnWeb(captureUri, artifact);
     }
 
