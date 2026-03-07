@@ -9,8 +9,7 @@ import {
 import { Image, type ImageSource } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
-import { fontFamily } from "@/src/theme";
-import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
+import { fontFamily, radii, shadows, spacing, useTheme } from "@/src/theme";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,13 +41,15 @@ export function UtilityCard({
   aspectRatio = 1,
   style,
 }: UtilityCardProps) {
+  const { colors } = useTheme();
+
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
         styles.container,
-        { aspectRatio },
+        { aspectRatio, backgroundColor: colors.surface.card },
         pressed && onPress ? styles.pressed : undefined,
         style,
       ]}
@@ -69,9 +70,9 @@ export function UtilityCard({
           size={36}
           color={colors.brand.metallicGold}
         />
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={2}>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
@@ -88,7 +89,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radii.lg,
     overflow: "hidden",
-    backgroundColor: colors.surface.card,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.cardSubtle,
@@ -102,13 +102,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   title: {
-    color: colors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 16,
     textAlign: "center",
   },
   subtitle: {
-    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 13,
     textAlign: "center",

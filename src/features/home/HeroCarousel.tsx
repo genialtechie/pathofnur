@@ -16,7 +16,7 @@ import {
 
 import { HeroCard } from "@/src/components/cards/HeroCard";
 import { track, EventName } from "@/src/lib/analytics/track";
-import { colors, spacing } from "@/src/theme/tokens";
+import { spacing, useTheme } from "@/src/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - spacing["4xl"] * 2; // 80px padding total
@@ -40,6 +40,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const hasTrackedView = useRef<Set<number>>(new Set());
+  const { colors } = useTheme();
 
   // Track hero view on mount and when index changes
   const trackHeroView = useCallback(
@@ -146,6 +147,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
             key={index}
             style={[
               styles.dot,
+              { backgroundColor: index === activeIndex ? colors.interactive.active : colors.interactive.inactive },
               index === activeIndex && styles.activeDot,
             ]}
           />
@@ -176,10 +178,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.interactive.inactive,
   },
   activeDot: {
-    backgroundColor: colors.interactive.active,
     width: 20,
     borderRadius: 3,
   },

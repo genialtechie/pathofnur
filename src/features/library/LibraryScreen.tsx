@@ -35,7 +35,7 @@ export function LibraryScreen() {
   const { surah, translation, audioUrl, isLoading, error, surahNumber } = 
     useDailyRecommendation(selectedDate);
   const { state, toggleQuran, setAmbient } = useLayeredAudio();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const scrollViewRef = useRef(null);
 
@@ -101,7 +101,7 @@ export function LibraryScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
-      <StatusBar barStyle={colors.surface.background === "#ffffff" ? "dark-content" : "light-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       {/* Main Content with swipe-to-open */}
       {/* Main Content with swipe-to-open */}
@@ -189,12 +189,12 @@ export function LibraryScreen() {
             {/* Content */}
             {error ? (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Unable to load surah</Text>
-                <Text style={styles.errorDetail}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.text.error }]}>Unable to load surah</Text>
+                <Text style={[styles.errorDetail, { color: colors.text.secondary }]}>{error}</Text>
               </View>
             ) : isLoading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading surah...</Text>
+                <Text style={[styles.loadingText, { color: colors.text.tertiary }]}>Loading surah...</Text>
               </View>
             ) : (
               <View style={styles.versesContainer}>
@@ -404,7 +404,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#ef9a9a",
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
   },

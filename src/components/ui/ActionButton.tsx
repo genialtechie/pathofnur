@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, Text, type ViewStyle, type TextStyle } from "react-native";
 
-import { fontFamily } from "@/src/theme";
-import { colors, radii } from "@/src/theme/tokens";
+import { fontFamily, radii, useTheme } from "@/src/theme";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,6 +27,31 @@ export function ActionButton({
   disabled = false,
   style,
 }: ActionButtonProps) {
+  const { colors } = useTheme();
+  const variantStyle: ViewStyle =
+    variant === "primary"
+      ? { backgroundColor: colors.brand.metallicGold }
+      : variant === "secondary"
+        ? {
+            backgroundColor: "transparent",
+            borderWidth: 1,
+            borderColor: colors.surface.borderInteractive,
+          }
+        : {
+            backgroundColor: "transparent",
+            minHeight: 40,
+          };
+  const variantLabelStyle: TextStyle =
+    variant === "primary"
+      ? { color: colors.text.onAccent }
+      : variant === "secondary"
+        ? { color: colors.text.light, fontFamily: fontFamily.appSemiBold }
+        : {
+            color: colors.text.light,
+            fontFamily: fontFamily.appSemiBold,
+            fontSize: 15,
+          };
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -35,13 +59,13 @@ export function ActionButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        variantStyles[variant],
+        variantStyle,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}
     >
-      <Text style={[styles.labelBase, variantLabelStyles[variant]]}>
+      <Text style={[styles.labelBase, variantLabelStyle]}>
         {label}
       </Text>
     </Pressable>
@@ -71,33 +95,3 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
 });
-
-const variantStyles: Record<ButtonVariant, ViewStyle> = {
-  primary: {
-    backgroundColor: colors.brand.metallicGold,
-  },
-  secondary: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: colors.surface.borderInteractive,
-  },
-  tertiary: {
-    backgroundColor: "transparent",
-    minHeight: 40,
-  },
-};
-
-const variantLabelStyles: Record<ButtonVariant, TextStyle> = {
-  primary: {
-    color: colors.text.onAccent,
-  },
-  secondary: {
-    color: colors.text.light,
-    fontFamily: fontFamily.appSemiBold,
-  },
-  tertiary: {
-    color: colors.text.light,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 15,
-  },
-};

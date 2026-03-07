@@ -58,7 +58,7 @@ const HERO_ITEMS = [
 
 export function HomeScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const router = useRouter();
 
   // Track screen view when focused
@@ -82,7 +82,7 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
-      <StatusBar barStyle={colors.surface.background === "#FFFFFF" ? "dark-content" : "light-content"} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -151,5 +151,4 @@ const styles = StyleSheet.create({
     height: 120, // Space for bottom navigation
   },
 });
-
 

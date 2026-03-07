@@ -177,7 +177,7 @@ export function CollectionBottomSheet({
                   )}
 
                   {state.quran.error ? (
-                    <Text style={styles.errorText}>{state.quran.error}</Text>
+                    <Text style={[styles.errorText, { color: colors.text.error }]}>{state.quran.error}</Text>
                   ) : null}
 
                   <View style={styles.bottomSpacer} />
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
   handleBar: {
     width: 40,
     height: 4,
-    borderRadius: 2,
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: spacing.md,
@@ -308,7 +307,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   errorText: {
-    color: "#ef9a9a",
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
     marginTop: spacing.xxs,

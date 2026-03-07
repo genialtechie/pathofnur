@@ -6,8 +6,7 @@ import {
 } from "react-native";
 import { Image, type ImageSource } from "expo-image";
 
-import { fontFamily } from "@/src/theme";
-import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
+import { fontFamily, radii, shadows, spacing, useTheme } from "@/src/theme";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,8 +35,10 @@ export function ShareCard({
   footerLabel,
   style,
 }: ShareCardProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.surface.card }, style]}>
       <Image
         source={imageSource}
         style={StyleSheet.absoluteFill}
@@ -47,9 +48,9 @@ export function ShareCard({
 
       {/* Top text-safe zone (~22%) */}
       <View style={styles.topZone}>
-        <Text style={styles.headline}>{headline}</Text>
+        <Text style={[styles.headline, { color: colors.text.primary }]}>{headline}</Text>
         {body ? (
-          <Text style={styles.body} numberOfLines={3}>
+          <Text style={[styles.body, { color: colors.text.secondary }]} numberOfLines={3}>
             {body}
           </Text>
         ) : null}
@@ -58,7 +59,7 @@ export function ShareCard({
       {/* Bottom text-safe zone (~20%) */}
       {footerLabel ? (
         <View style={styles.bottomZone}>
-          <Text style={styles.footer}>{footerLabel}</Text>
+          <Text style={[styles.footer, { color: colors.text.tertiary }]}>{footerLabel}</Text>
         </View>
       ) : null}
     </View>
@@ -74,7 +75,6 @@ const styles = StyleSheet.create({
     aspectRatio: 9 / 16,
     borderRadius: radii.xl,
     overflow: "hidden",
-    backgroundColor: colors.surface.card,
     ...shadows.card,
   },
   topZone: {
@@ -88,14 +88,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   headline: {
-    color: colors.text.primary,
     fontFamily: fontFamily.accentDisplay,
     fontSize: 28,
     lineHeight: 34,
     textAlign: "center",
   },
   body: {
-    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 16,
     lineHeight: 22,
@@ -110,7 +108,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   footer: {
-    color: colors.text.tertiary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 13,
     textAlign: "center",

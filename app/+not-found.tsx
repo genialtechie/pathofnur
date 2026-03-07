@@ -1,15 +1,18 @@
 import { Link, Stack } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { fontFamily, useTheme } from "@/src/theme";
 
 export default function NotFoundRoute() {
+  const { colors } = useTheme();
+
   return (
     <>
       <Stack.Screen options={{ title: "Not Found" }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>This screen does not exist.</Text>
+      <View style={[styles.container, { backgroundColor: colors.surface.background }]}>
+        <Text style={[styles.title, { color: colors.text.primary }]}>This screen does not exist.</Text>
         <Link href="/" asChild>
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Return Home</Text>
+          <Pressable style={[styles.button, { backgroundColor: colors.brand.metallicGold }]}>
+            <Text style={[styles.buttonText, { color: colors.text.onAccent }]}>Return Home</Text>
           </Pressable>
         </Link>
       </View>
@@ -22,24 +25,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#070b14",
     padding: 24
   },
   title: {
-    color: "#f3f5f7",
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: fontFamily.appSemiBold,
     marginBottom: 16,
     textAlign: "center"
   },
   button: {
     borderRadius: 999,
-    backgroundColor: "#c5a021",
     paddingHorizontal: 20,
     paddingVertical: 12
   },
   buttonText: {
-    color: "#070b14",
-    fontWeight: "700"
+    fontFamily: fontFamily.appBold,
   }
 });

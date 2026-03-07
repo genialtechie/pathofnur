@@ -28,13 +28,23 @@ export default function Root({ children }: PropsWithChildren) {
           - Ensures min-height is 100% to fill viewport.
         */}
         <style dangerouslySetInnerHTML={{ __html: `
-          body {
-            background-color: #070b14;
+          :root {
+            color-scheme: light dark;
+            background-color: #ffffff;
+          }
+          html, body {
+            background-color: #ffffff;
             min-height: 100%;
           }
-          /* Ensure no white background during overscroll */
-          html {
-            background-color: #070b14;
+          @media (prefers-color-scheme: light) {
+            html, body, :root {
+              background-color: #ffffff;
+            }
+          }
+          @media (prefers-color-scheme: dark) {
+            html, body, :root {
+              background-color: #070b14;
+            }
           }
         `}} />
       </head>

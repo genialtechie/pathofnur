@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, useColorScheme, Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -19,6 +19,7 @@ import { ThemeProvider, DarkTheme, DefaultTheme } from "@react-navigation/native
 
 
 import { LocationProvider } from "@/src/lib/location";
+import { darkColors, lightColors } from "@/src/theme/tokens";
 
 export const unstable_settings = {
   initialRouteName: "(onboarding)"
@@ -40,10 +41,26 @@ export default function RootLayout() {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const theme = isDark ? DarkTheme : DefaultTheme;
+  const appColors = isDark ? darkColors : lightColors;
+  const navigationTheme = useMemo(() => {
+    const baseTheme = isDark ? DarkTheme : DefaultTheme;
 
-  // Use the theme's background color for consistency
-  const backgroundColor = theme.colors.background;
+    return {
+      ...baseTheme,
+      dark: isDark,
+      colors: {
+        ...baseTheme.colors,
+        primary: appColors.brand.metallicGold,
+        background: appColors.surface.background,
+        card: appColors.surface.card,
+        border: appColors.surface.border,
+        text: appColors.text.primary,
+        notification: appColors.brand.metallicGold,
+      },
+    };
+  }, [appColors, isDark]);
+
+  const backgroundColor = appColors.surface.background;
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -74,7 +91,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style={isDark ? "light" : "dark"} translucent />
       <LocationProvider>
-        <ThemeProvider value={theme}>
+        <ThemeProvider value={navigationTheme}>
           <GestureHandlerRootView style={[styles.container, { backgroundColor }]}>
             <Stack
               screenOptions={{
@@ -95,6 +112,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#070b14",
   },
 });

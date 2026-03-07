@@ -7,8 +7,7 @@ import {
 } from "react-native";
 import { Image, type ImageSource } from "expo-image";
 
-import { fontFamily } from "@/src/theme";
-import { colors, radii, shadows, spacing } from "@/src/theme/tokens";
+import { fontFamily, radii, shadows, spacing, useTheme } from "@/src/theme";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,6 +38,7 @@ export function HeroCard({
   ratio = "portrait",
   style,
 }: HeroCardProps) {
+  const { colors } = useTheme();
   const aspectRatio = ratio === "landscape" ? 16 / 9 : 4 / 5;
 
   return (
@@ -47,7 +47,7 @@ export function HeroCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.container,
-        { aspectRatio },
+        { aspectRatio, backgroundColor: colors.surface.card },
         pressed && onPress ? styles.pressed : undefined,
         style,
       ]}
@@ -61,11 +61,11 @@ export function HeroCard({
 
       {/* Top text-safe zone (top ~28%) */}
       <View style={styles.topOverlay}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text.primary }]} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={2}>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
@@ -82,7 +82,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radii.xl,
     overflow: "hidden",
-    backgroundColor: colors.surface.card,
     ...shadows.card,
   },
   pressed: {
@@ -98,13 +97,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   title: {
-    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 28,
     lineHeight: 34,
   },
   subtitle: {
-    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 16,
     lineHeight: 22,
