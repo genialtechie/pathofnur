@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   Pressable,
   SafeAreaView,
-  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -22,52 +22,34 @@ import { darkColors } from "@/src/theme/tokens";
 const TASBIH_STATE_KEY = "@pathofnur/tasbih_state_v2";
 const LEGACY_TASBIH_KEY = "tasbih_count";
 const LOOP_LENGTH = 33;
+const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
 
-const DHIKR_OPTIONS = [
-  { id: "subhanallah", label: "SubhanAllah", shareLabel: "SubhanAllah" },
-  { id: "alhamdulillah", label: "Alhamdulillah", shareLabel: "Alhamdulillah" },
-  { id: "allahuakbar", label: "Allahu Akbar", shareLabel: "Allahu Akbar" },
-] as const;
-
-type DhikrId = (typeof DHIKR_OPTIONS)[number]["id"];
-
-type TasbihState = {
-  count: number;
-  selectedDhikr: DhikrId;
+type StoredTasbihState = {
+  count?: number;
 };
 
-const DEFAULT_STATE: TasbihState = {
-  count: 0,
-  selectedDhikr: "subhanallah",
-};
-
-async function loadTasbihState(): Promise<TasbihState> {
+async function loadTasbihCount(): Promise<number> {
   try {
     const stored = await AsyncStorage.getItem(TASBIH_STATE_KEY);
     if (stored) {
-      const parsed = JSON.parse(stored) as Partial<TasbihState>;
-      const count = typeof parsed.count === "number" && Number.isFinite(parsed.count) ? parsed.count : 0;
-      const selectedDhikr = DHIKR_OPTIONS.some((option) => option.id === parsed.selectedDhikr)
-        ? (parsed.selectedDhikr as DhikrId)
-        : DEFAULT_STATE.selectedDhikr;
-      return { count, selectedDhikr };
+      const parsed = JSON.parse(stored) as StoredTasbihState;
+      if (typeof parsed.count === "number" && Number.isFinite(parsed.count)) {
+        return parsed.count;
+      }
     }
 
     const legacyCount = await AsyncStorage.getItem(LEGACY_TASBIH_KEY);
     const parsedLegacy = legacyCount ? Number.parseInt(legacyCount, 10) : 0;
-    return {
-      count: Number.isFinite(parsedLegacy) ? parsedLegacy : 0,
-      selectedDhikr: DEFAULT_STATE.selectedDhikr,
-    };
+    return Number.isFinite(parsedLegacy) ? parsedLegacy : 0;
   } catch {
-    return DEFAULT_STATE;
+    return 0;
   }
 }
 
-async function persistTasbihState(state: TasbihState): Promise<void> {
+async function persistTasbihCount(count: number): Promise<void> {
   await AsyncStorage.multiSet([
-    [TASBIH_STATE_KEY, JSON.stringify(state)],
-    [LEGACY_TASBIH_KEY, String(state.count)],
+    [TASBIH_STATE_KEY, JSON.stringify({ count })],
+    [LEGACY_TASBIH_KEY, String(count)],
   ]);
 }
 
@@ -75,22 +57,24 @@ export default function TasbihScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [count, setCount] = useState(0);
-  const [selectedDhikr, setSelectedDhikr] = useState<DhikrId>(DEFAULT_STATE.selectedDhikr);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isResetArmed, setIsResetArmed] = useState(false);
 
   const pulseScale = useRef(new Animated.Value(1)).current;
+  const ringScale = useRef(new Animated.Value(1)).current;
   const rippleOpacity = useRef(new Animated.Value(0)).current;
-  const rippleScale = useRef(new Animated.Value(0.82)).current;
+  const rippleScale = useRef(new Animated.Value(0.84)).current;
+  const ambientGlow = useRef(new Animated.Value(0)).current;
+  const burstGlowOpacity = useRef(new Animated.Value(0)).current;
+  const burstGlowScale = useRef(new Animated.Value(0.88)).current;
 
   useEffect(() => {
     void trackScreenView("tools_tasbih");
 
     let isActive = true;
-    void loadTasbihState().then((state) => {
+    void loadTasbihCount().then((savedCount) => {
       if (!isActive) return;
-      setCount(state.count);
-      setSelectedDhikr(state.selectedDhikr);
+      setCount(savedCount);
       setIsLoaded(true);
     });
 
@@ -109,13 +93,56 @@ export default function TasbihScreen() {
     return () => clearTimeout(timeout);
   }, [isResetArmed]);
 
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(ambientGlow, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(ambientGlow, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [ambientGlow]);
+
   const ringSize = Math.min(width - spacing.xl * 2, 340);
-  const beadSize = Math.max(8, Math.round(ringSize * 0.032));
-  const beadRadius = ringSize / 2 - beadSize * 1.8;
+  const beadSize = Math.max(10, Math.round(ringSize * 0.034));
+  const beadRadius = ringSize / 2 - beadSize * 1.9;
   const loopProgress = count === 0 ? 0 : ((count - 1) % LOOP_LENGTH) + 1;
   const completedLoops = Math.floor(count / LOOP_LENGTH);
-  const nextMilestone = count === 0 ? LOOP_LENGTH : LOOP_LENGTH - (count % LOOP_LENGTH || LOOP_LENGTH);
-  const selectedDhikrMeta = DHIKR_OPTIONS.find((option) => option.id === selectedDhikr) ?? DHIKR_OPTIONS[0];
+  const formattedCount = NUMBER_FORMATTER.format(count);
+  const formattedLoops = NUMBER_FORMATTER.format(completedLoops);
+  const tapHint = !isLoaded ? "Loading your saved total..." : count === 0 ? "Tap anywhere to begin" : "Tap anywhere to continue";
+  const loopCaption =
+    !isLoaded
+      ? "Loading your saved tasbih."
+      : completedLoops === 0
+        ? "No completed loops yet"
+        : completedLoops === 1
+          ? "1 completed loop"
+          : `${formattedLoops} completed loops`;
+
+  const ambientGlowOpacity = ambientGlow.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.14, 0.28],
+  });
+  const ambientGlowScale = ambientGlow.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.94, 1.08],
+  });
 
   const beadPositions = useMemo(
     () =>
@@ -130,42 +157,80 @@ export default function TasbihScreen() {
     [beadRadius, beadSize, ringSize]
   );
 
-  const animateTap = useCallback(() => {
-    pulseScale.setValue(0.96);
-    rippleOpacity.setValue(0.32);
-    rippleScale.setValue(0.82);
+  const animateTap = useCallback(
+    (didCompleteLoop: boolean) => {
+      pulseScale.setValue(0.97);
+      ringScale.setValue(0.988);
+      rippleOpacity.setValue(didCompleteLoop ? 0.45 : 0.3);
+      rippleScale.setValue(0.84);
+      burstGlowOpacity.setValue(didCompleteLoop ? 0.44 : 0.22);
+      burstGlowScale.setValue(0.88);
 
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(pulseScale, {
-          toValue: 1.06,
-          duration: 130,
-          useNativeDriver: true,
-        }),
-        Animated.spring(pulseScale, {
-          toValue: 1,
-          friction: 5,
-          tension: 90,
-          useNativeDriver: true,
-        }),
-      ]),
       Animated.parallel([
-        Animated.timing(rippleOpacity, {
-          toValue: 0,
-          duration: 320,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rippleScale, {
-          toValue: 1.18,
-          duration: 320,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, [pulseScale, rippleOpacity, rippleScale]);
+        Animated.sequence([
+          Animated.timing(pulseScale, {
+            toValue: didCompleteLoop ? 1.08 : 1.05,
+            duration: 140,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(pulseScale, {
+            toValue: 1,
+            friction: 5,
+            tension: 90,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(ringScale, {
+            toValue: 1.01,
+            duration: 160,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(ringScale, {
+            toValue: 1,
+            friction: 6,
+            tension: 90,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(rippleOpacity, {
+            toValue: 0,
+            duration: didCompleteLoop ? 520 : 360,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(rippleScale, {
+            toValue: didCompleteLoop ? 1.34 : 1.2,
+            duration: didCompleteLoop ? 520 : 360,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(burstGlowOpacity, {
+            toValue: 0,
+            duration: didCompleteLoop ? 760 : 420,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(burstGlowScale, {
+            toValue: didCompleteLoop ? 1.3 : 1.14,
+            duration: didCompleteLoop ? 760 : 420,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    },
+    [burstGlowOpacity, burstGlowScale, pulseScale, ringScale, rippleOpacity, rippleScale]
+  );
 
   const handleTap = useCallback(() => {
     const nextCount = count + 1;
+    const didCompleteLoop = nextCount % LOOP_LENGTH === 0;
 
     if (count === 0) {
       void track(EventName.TOOLS_TASBIH_STARTED, {}, "tools_tasbih");
@@ -173,33 +238,22 @@ export default function TasbihScreen() {
 
     setCount(nextCount);
     setIsResetArmed(false);
-    animateTap();
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void persistTasbihState({ count: nextCount, selectedDhikr });
+    animateTap(didCompleteLoop);
+    void persistTasbihCount(nextCount);
+    void Haptics.impactAsync(didCompleteLoop ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
 
-    if (nextCount % LOOP_LENGTH === 0) {
+    if (didCompleteLoop) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void track(
         EventName.TOOLS_TASBIH_COMPLETED,
         {
           count: nextCount,
-          dhikr_type: selectedDhikr,
+          dhikr_type: "default",
         },
         "tools_tasbih"
       );
     }
-  }, [animateTap, count, selectedDhikr]);
-
-  const handleDhikrChange = useCallback(
-    (nextDhikr: DhikrId) => {
-      setSelectedDhikr(nextDhikr);
-      if (isLoaded) {
-        void persistTasbihState({ count, selectedDhikr: nextDhikr });
-      }
-      void Haptics.selectionAsync();
-    },
-    [count, isLoaded]
-  );
+  }, [animateTap, count]);
 
   const handleResetPress = useCallback(() => {
     if (count === 0) return;
@@ -212,20 +266,10 @@ export default function TasbihScreen() {
 
     setCount(0);
     setIsResetArmed(false);
-    void persistTasbihState({ count: 0, selectedDhikr });
+    void persistTasbihCount(0);
     void track(EventName.TOOLS_TASBIH_RESET, {}, "tools_tasbih");
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  }, [count, isResetArmed, selectedDhikr]);
-
-  const handleShare = useCallback(async () => {
-    if (count === 0) return;
-
-    await Share.share({
-      message: `I just completed ${count} tasbih taps in Path of Nur with ${selectedDhikrMeta.shareLabel}. ${completedLoops > 0 ? `${completedLoops} full 33-bead loops down.` : "Starting a new loop."}`,
-    });
-  }, [completedLoops, count, selectedDhikrMeta.shareLabel]);
-
-  const readinessCopy = isLoaded ? `${nextMilestone} taps to the next 33-bead glow.` : "Loading your saved loop...";
+  }, [count, isResetArmed]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -233,39 +277,43 @@ export default function TasbihScreen() {
       <StatusBar barStyle="light-content" />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerButton} hitSlop={18}>
+        <Pressable accessibilityRole="button" hitSlop={18} onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={22} color={darkColors.text.primary} />
         </Pressable>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerEyebrow}>Tasbih Flow</Text>
-          <Text style={styles.headerTitle}>Keep the loop alive</Text>
+        <Text style={styles.headerTitle}>Tasbih</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <View style={styles.stageMeta}>
+        <View style={styles.loopsPill}>
+          <Text style={styles.loopsPillLabel}>Loops</Text>
+          <Text style={styles.loopsPillValue}>{formattedLoops}</Text>
         </View>
-        <Pressable onPress={() => void handleShare()} style={styles.headerButton} hitSlop={18} disabled={count === 0}>
-          <Ionicons
-            name="share-outline"
-            size={22}
-            color={count === 0 ? darkColors.text.tertiary : darkColors.text.primary}
+      </View>
+
+      <Pressable accessibilityRole="button" onPress={handleTap} style={styles.stage}>
+        <Animated.View
+          style={[
+            styles.ringShell,
+            {
+              width: ringSize,
+              height: ringSize,
+              borderRadius: ringSize / 2,
+              transform: [{ scale: ringScale }],
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.ringGuide,
+              {
+                width: ringSize * 0.84,
+                height: ringSize * 0.84,
+                borderRadius: (ringSize * 0.84) / 2,
+              },
+            ]}
           />
-        </Pressable>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Total</Text>
-          <Text style={styles.statValue}>{count}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Loops</Text>
-          <Text style={styles.statValue}>{completedLoops}</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>Dhikr</Text>
-          <Text style={styles.statValueSmall}>{selectedDhikrMeta.label}</Text>
-        </View>
-      </View>
-
-      <Pressable style={styles.stage} onPress={handleTap}>
-        <View style={[styles.ringShell, { width: ringSize, height: ringSize, borderRadius: ringSize / 2 }]}>
           {beadPositions.map((bead) => {
             const isActive = bead.index < loopProgress;
             return (
@@ -280,7 +328,7 @@ export default function TasbihScreen() {
                     left: bead.left,
                     top: bead.top,
                     backgroundColor: isActive ? darkColors.brand.metallicGold : "rgba(255,255,255,0.08)",
-                    opacity: isActive ? 1 : 0.6,
+                    opacity: isActive ? 1 : 0.56,
                   },
                 ]}
               />
@@ -290,66 +338,73 @@ export default function TasbihScreen() {
           <Animated.View
             pointerEvents="none"
             style={[
+              styles.ambientHalo,
+              {
+                opacity: ambientGlowOpacity,
+                transform: [{ scale: ambientGlowScale }],
+              },
+            ]}
+          />
+
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.burstHalo,
+              {
+                opacity: burstGlowOpacity,
+                transform: [{ scale: burstGlowScale }],
+              },
+            ]}
+          />
+
+          <Animated.View
+            pointerEvents="none"
+            style={[
               styles.ripple,
               {
-                transform: [{ scale: rippleScale }],
                 opacity: rippleOpacity,
+                transform: [{ scale: rippleScale }],
               },
             ]}
           />
 
           <Animated.View style={[styles.coreOrb, { transform: [{ scale: pulseScale }] }]}>
-            <Text style={styles.coreCount}>{count}</Text>
-            <Text style={styles.coreLabel}>Tap anywhere to count</Text>
+            <Text style={styles.coreEyebrow}>Total</Text>
+            <Text style={styles.coreCount}>{formattedCount}</Text>
+            <Text style={styles.coreHint}>{tapHint}</Text>
           </Animated.View>
-        </View>
+        </Animated.View>
       </Pressable>
 
-      <View style={styles.footerPanel}>
-        <Text style={styles.footerLead}>{readinessCopy}</Text>
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${(loopProgress / LOOP_LENGTH) * 100}%`,
-              },
-            ]}
+      <View style={styles.footer}>
+        <Text style={styles.loopCaption}>{loopCaption}</Text>
+
+        <Pressable
+          accessibilityRole="button"
+          disabled={count === 0}
+          onPress={handleResetPress}
+          style={({ pressed }) => [
+            styles.resetButton,
+            isResetArmed && styles.resetButtonArmed,
+            count === 0 && styles.resetButtonDisabled,
+            pressed && count > 0 && styles.resetButtonPressed,
+          ]}
+        >
+          <Ionicons
+            name={isResetArmed ? "alert-circle" : "refresh"}
+            size={18}
+            color={count === 0 ? darkColors.text.tertiary : isResetArmed ? darkColors.brand.metallicGold : darkColors.text.primary}
           />
-        </View>
-
-        <View style={styles.selectorRow}>
-          {DHIKR_OPTIONS.map((option) => {
-            const isSelected = option.id === selectedDhikr;
-            return (
-              <Pressable
-                key={option.id}
-                onPress={() => handleDhikrChange(option.id)}
-                style={[styles.selectorChip, isSelected && styles.selectorChipActive]}
-              >
-                <Text style={[styles.selectorLabel, isSelected && styles.selectorLabelActive]}>{option.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.actionRow}>
-          <Pressable style={[styles.actionButton, styles.secondaryAction]} onPress={handleResetPress} disabled={count === 0}>
-            <Ionicons
-              name={isResetArmed ? "alert-circle" : "refresh"}
-              size={18}
-              color={count === 0 ? darkColors.text.tertiary : darkColors.text.primary}
-            />
-            <Text style={[styles.actionLabel, count === 0 && styles.actionLabelMuted]}>
-              {isResetArmed ? "Tap again to reset" : "Reset to zero"}
-            </Text>
-          </Pressable>
-
-          <Pressable style={[styles.actionButton, styles.primaryAction]} onPress={() => void handleShare()} disabled={count === 0}>
-            <Ionicons name="share-social" size={18} color={darkColors.text.onAccent} />
-            <Text style={[styles.actionLabel, styles.primaryActionLabel]}>Share this run</Text>
-          </Pressable>
-        </View>
+          <Text
+            style={[
+              styles.resetButtonLabel,
+              count === 0 && styles.resetButtonLabelDisabled,
+              isResetArmed && styles.resetButtonLabelArmed,
+            ]}
+          >
+            {isResetArmed ? "Tap again to reset" : "Reset to zero"}
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -376,76 +431,81 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.04)",
   },
-  headerCopy: {
-    alignItems: "center",
-    gap: 2,
-  },
-  headerEyebrow: {
-    color: darkColors.brand.metallicGold,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
   headerTitle: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 20,
   },
-  statsRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
+  headerSpacer: {
+    width: 42,
+    height: 42,
   },
-  statCard: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.lg,
-    backgroundColor: darkColors.surface.card,
-    borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
+  stageMeta: {
     alignItems: "center",
-    gap: 2,
+    paddingBottom: spacing.md,
   },
-  statLabel: {
+  loopsPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  loopsPillLabel: {
     color: darkColors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
   },
-  statValue: {
-    color: darkColors.text.primary,
-    fontFamily: fontFamily.appBold,
-    fontSize: 28,
-    fontVariant: ["tabular-nums"],
-  },
-  statValueSmall: {
+  loopsPillValue: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
-    textAlign: "center",
+    fontVariant: ["tabular-nums"],
   },
   stage: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
   },
   ringShell: {
     alignItems: "center",
     justifyContent: "center",
   },
+  ringGuide: {
+    position: "absolute",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
   bead: {
     position: "absolute",
   },
+  ambientHalo: {
+    position: "absolute",
+    width: "64%",
+    height: "64%",
+    borderRadius: 999,
+    backgroundColor: "rgba(197, 160, 33, 0.34)",
+  },
+  burstHalo: {
+    position: "absolute",
+    width: "68%",
+    height: "68%",
+    borderRadius: 999,
+    backgroundColor: "rgba(197, 160, 33, 0.26)",
+  },
   ripple: {
     position: "absolute",
-    width: "66%",
-    height: "66%",
+    width: "74%",
+    height: "74%",
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: darkColors.brand.metallicGold,
+    borderColor: "rgba(197, 160, 33, 0.55)",
   },
   coreOrb: {
     width: "64%",
@@ -455,104 +515,71 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: darkColors.surface.card,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    shadowColor: "#000",
-    shadowOpacity: 0.28,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 18,
+    borderColor: "rgba(255,255,255,0.1)",
     gap: spacing.xs,
+  },
+  coreEyebrow: {
+    color: darkColors.brand.metallicGold,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 12,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   coreCount: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
-    fontSize: 72,
+    fontSize: 76,
+    lineHeight: 82,
     fontVariant: ["tabular-nums"],
   },
-  coreLabel: {
+  coreHint: {
     color: darkColors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
   },
-  footerPanel: {
+  footer: {
+    alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
     gap: spacing.md,
   },
-  footerLead: {
+  loopCaption: {
     color: darkColors.text.secondary,
     fontFamily: fontFamily.appRegular,
-    fontSize: 15,
-    textAlign: "center",
+    fontSize: 14,
   },
-  progressTrack: {
-    height: 10,
+  resetButton: {
+    minWidth: 180,
+    minHeight: 52,
     borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: darkColors.brand.metallicGold,
-    borderRadius: radii.pill,
-  },
-  selectorRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-  selectorChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
-    backgroundColor: darkColors.surface.card,
-    borderWidth: 1,
-    borderColor: darkColors.surface.border,
-  },
-  selectorChipActive: {
-    borderColor: darkColors.brand.metallicGold,
-    backgroundColor: "rgba(197,160,33,0.14)",
-  },
-  selectorLabel: {
-    color: darkColors.text.secondary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
-  },
-  selectorLabelActive: {
-    color: darkColors.brand.metallicGold,
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 54,
-    borderRadius: radii.pill,
+    paddingHorizontal: spacing.lg,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  secondaryAction: {
     backgroundColor: darkColors.surface.card,
     borderWidth: 1,
     borderColor: darkColors.surface.borderInteractive,
   },
-  primaryAction: {
-    backgroundColor: darkColors.brand.metallicGold,
+  resetButtonArmed: {
+    borderColor: darkColors.brand.metallicGold,
+    backgroundColor: "rgba(197,160,33,0.1)",
   },
-  actionLabel: {
+  resetButtonDisabled: {
+    borderColor: darkColors.surface.border,
+  },
+  resetButtonPressed: {
+    opacity: 0.92,
+  },
+  resetButtonLabel: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 13,
+    fontSize: 14,
   },
-  actionLabelMuted: {
+  resetButtonLabelDisabled: {
     color: darkColors.text.tertiary,
   },
-  primaryActionLabel: {
-    color: darkColors.text.onAccent,
+  resetButtonLabelArmed: {
+    color: darkColors.brand.metallicGold,
   },
 });
