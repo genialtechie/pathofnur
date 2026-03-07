@@ -72,6 +72,7 @@ type ProgressRingProps = {
   trackColor: string;
   textColor: string;
   value: string;
+  size?: number;
 };
 
 function getLoopProgress(count: number): number {
@@ -79,8 +80,7 @@ function getLoopProgress(count: number): number {
   return ((count - 1) % TASBIH_LOOP_LENGTH) + 1;
 }
 
-function ProgressRing({ progress, accentColor, trackColor, textColor, value }: ProgressRingProps) {
-  const size = 66;
+function ProgressRing({ progress, accentColor, trackColor, textColor, value, size = 66 }: ProgressRingProps) {
   const strokeWidth = 4.5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -88,7 +88,7 @@ function ProgressRing({ progress, accentColor, trackColor, textColor, value }: P
   const strokeDashoffset = circumference * (1 - clampedProgress);
 
   return (
-    <View style={styles.ringShell}>
+    <View style={[styles.ringShell, { width: size, height: size }]}>
       <Svg height={size} width={size} viewBox={`0 0 ${size} ${size}`}>
         <Circle
           cx={size / 2}
@@ -112,7 +112,7 @@ function ProgressRing({ progress, accentColor, trackColor, textColor, value }: P
         />
       </Svg>
       <View pointerEvents="none" style={styles.ringCenter}>
-        <Text style={[styles.ringValue, { color: textColor }]}>{value}</Text>
+        <Text style={[styles.ringValue, { color: textColor, fontSize: size <= 58 ? 14 : 16 }]}>{value}</Text>
       </View>
     </View>
   );
@@ -134,12 +134,12 @@ function PracticeDayCard({
   const ringValue = count === 0 ? "0" : NUMBER_FORMATTER.format(loopProgress);
   const footerText =
     count === 0
-      ? "No tasbih yet"
+      ? "None yet"
       : overflowCount > 0
         ? `${NUMBER_FORMATTER.format(loopProgress)} into 33`
         : count === TASBIH_LOOP_LENGTH
           ? "33 complete"
-        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} left in 33`;
+        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} left`;
 
   return (
     <View style={[styles.dayCard, { backgroundColor, borderColor }]}> 
@@ -159,27 +159,28 @@ function PracticeDayCard({
         ) : null}
       </View>
 
-      <View style={styles.dayCardMetricRow}>
-        <View style={styles.dayCardMetricText}>
-          <Text
-            adjustsFontSizeToFit
-            minimumFontScale={0.52}
-            numberOfLines={1}
-            style={[styles.dayCardCount, { color: textColor }]}
-          >
-            {NUMBER_FORMATTER.format(count)}
-          </Text>
-          <Text numberOfLines={1} style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>
-            {footerText}
-          </Text>
-        </View>
+      <View style={styles.dayCardPrimaryRow}>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.62}
+          numberOfLines={1}
+          style={[styles.dayCardCount, { color: textColor }]}
+        >
+          {NUMBER_FORMATTER.format(count)}
+        </Text>
+      </View>
 
+      <View style={styles.dayCardFooterRow}>
+        <Text numberOfLines={1} style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>
+          {footerText}
+        </Text>
         <ProgressRing
           accentColor={accentColor}
           progress={loopProgress / TASBIH_LOOP_LENGTH}
           trackColor={ringTrackColor}
           textColor={textColor}
           value={ringValue}
+          size={58}
         />
       </View>
     </View>
@@ -661,31 +662,30 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     fontVariant: ["tabular-nums"],
   },
-  dayCardMetricRow: {
+  dayCardPrimaryRow: {
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  dayCardFooterRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     gap: spacing.sm,
   },
-  dayCardMetricText: {
-    flex: 1,
-    minWidth: 0,
-    gap: spacing.xs,
-  },
   dayCardCount: {
     fontFamily: fontFamily.appBold,
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: 42,
+    lineHeight: 46,
     fontVariant: ["tabular-nums"],
   },
   dayCardFootnote: {
+    flex: 1,
+    paddingRight: spacing.xs,
     fontFamily: fontFamily.appRegular,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 16,
   },
   ringShell: {
-    width: 66,
-    height: 66,
     alignItems: "center",
     justifyContent: "center",
   },
