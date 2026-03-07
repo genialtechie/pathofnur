@@ -344,9 +344,51 @@ export function LibraryScreen() {
                 <Text style={[styles.kicker, { color: colors.text.tertiary }]}>
                   Library
                 </Text>
-                <Text style={[styles.title, { color: colors.text.primary }]}>
-                  {title}
-                </Text>
+                <View style={styles.titleRow}>
+                  <Text
+                    style={[styles.title, { color: colors.text.primary }]}
+                    numberOfLines={1}
+                  >
+                    {title}
+                  </Text>
+
+                  <Pressable
+                    style={[
+                      styles.translationToggle,
+                      {
+                        borderColor: showTranslation
+                          ? colors.brand.metallicGold
+                          : colors.surface.borderInteractive,
+                        backgroundColor: showTranslation
+                          ? colors.interactive.selectedBackground
+                          : colors.surface.card,
+                      },
+                    ]}
+                    onPress={() => setShowTranslation((current) => !current)}
+                  >
+                    <Ionicons
+                      name="language"
+                      size={13}
+                      color={
+                        showTranslation
+                          ? colors.brand.metallicGold
+                          : colors.text.secondary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.translationToggleText,
+                        {
+                          color: showTranslation
+                            ? colors.brand.metallicGold
+                            : colors.text.secondary,
+                        },
+                      ]}
+                    >
+                      Translate
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
 
               <Pressable
@@ -358,17 +400,13 @@ export function LibraryScreen() {
                   },
                 ]}
                 onPress={() => setIsTimelineVisible(true)}
+                accessibilityLabel="Open timeline"
               >
                 <Ionicons
                   name="calendar-outline"
                   size={14}
                   color={colors.text.secondary}
                 />
-                <Text
-                  style={[styles.timelineButtonText, { color: colors.text.secondary }]}
-                >
-                  Timeline
-                </Text>
               </Pressable>
             </View>
 
@@ -383,38 +421,6 @@ export function LibraryScreen() {
               </View>
             ) : null}
 
-            <Pressable
-              style={[
-                styles.translationToggle,
-                {
-                  borderColor: showTranslation
-                    ? colors.brand.metallicGold
-                    : colors.surface.borderInteractive,
-                  backgroundColor: showTranslation
-                    ? colors.interactive.selectedBackground
-                    : colors.surface.card,
-                },
-              ]}
-              onPress={() => setShowTranslation((current) => !current)}
-            >
-              <Ionicons
-                name="language"
-                size={14}
-                color={showTranslation ? colors.brand.metallicGold : colors.text.secondary}
-              />
-              <Text
-                style={[
-                  styles.translationToggleText,
-                  {
-                    color: showTranslation
-                      ? colors.brand.metallicGold
-                      : colors.text.secondary,
-                  },
-                ]}
-              >
-                Translation
-              </Text>
-            </Pressable>
           </View>
 
           <View
@@ -658,12 +664,18 @@ const styles = StyleSheet.create({
   },
   headerTop: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   titleBlock: {
     flex: 1,
+    minWidth: 0,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   kicker: {
     fontFamily: fontFamily.appSemiBold,
@@ -676,19 +688,15 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.appBold,
     fontSize: 22,
     lineHeight: 26,
+    flex: 1,
   },
   timelineButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    justifyContent: "center",
     borderRadius: radii.pill,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-  },
-  timelineButtonText: {
-    fontFamily: fontFamily.appRegular,
-    fontSize: 12,
+    width: 32,
+    height: 32,
   },
   surahMetaBlock: {
     gap: 1,
@@ -703,18 +711,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   translationToggle: {
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: 4,
     borderRadius: radii.pill,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: 5,
   },
   translationToggleText: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 11,
+    fontSize: 10,
   },
   sessionCard: {
     borderRadius: radii.lg,
