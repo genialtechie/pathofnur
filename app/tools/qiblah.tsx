@@ -12,13 +12,12 @@ import { Stack, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { Magnetometer, type MagnetometerMeasurement } from "expo-sensors";
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
 import { useLocation } from "@/src/lib/location";
 import { useQiblah } from "@/src/lib/prayer";
-import { fontFamily, radii, spacing } from "@/src/theme";
-import { darkColors } from "@/src/theme/tokens";
+import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 
 const ALIGNMENT_THRESHOLD = 8;
 const MAGNETOMETER_INTERVAL_MS = 120;
@@ -62,38 +61,73 @@ function webCompassEventToHeading(event: WebCompassEvent): number | null {
 
 function LockedKaabaMark() {
   return (
-    <View style={styles.lockedMarkShell}>
-      <View style={styles.lockedMarkAura} />
-      <View style={styles.lockedMarkInner}>
-        <Svg width={58} height={58} viewBox="0 0 58 58" fill="none">
+    <View style={lockedMarkStyles.shell}>
+      <View style={lockedMarkStyles.aura} />
+      <View style={lockedMarkStyles.inner}>
+        <Svg width={62} height={62} viewBox="0 0 62 62" fill="none">
           <Defs>
-            <LinearGradient id="kaaba-band" x1="12" y1="14" x2="46" y2="20" gradientUnits="userSpaceOnUse">
+            <LinearGradient id="reward-ring" x1="11" y1="10" x2="51" y2="52" gradientUnits="userSpaceOnUse">
+              <Stop stopColor="#F3DE88" />
+              <Stop offset="0.55" stopColor="#D4AF37" />
+              <Stop offset="1" stopColor="#8C6917" />
+            </LinearGradient>
+            <LinearGradient id="reward-band" x1="17" y1="19" x2="45" y2="23" gradientUnits="userSpaceOnUse">
               <Stop stopColor="#F2D56B" />
               <Stop offset="1" stopColor="#C5A021" />
             </LinearGradient>
-            <LinearGradient id="kaaba-outline" x1="14" y1="20" x2="44" y2="42" gradientUnits="userSpaceOnUse">
-              <Stop stopColor="#D8B645" />
-              <Stop offset="1" stopColor="#8C6A10" />
-            </LinearGradient>
-            <LinearGradient id="kaaba-door" x1="24" y1="25" x2="31" y2="37" gradientUnits="userSpaceOnUse">
+            <LinearGradient id="reward-door" x1="27" y1="27" x2="34" y2="40" gradientUnits="userSpaceOnUse">
               <Stop stopColor="#F7E29A" />
               <Stop offset="1" stopColor="#D2AB34" />
             </LinearGradient>
           </Defs>
-          <Rect x="14" y="16" width="30" height="4.5" rx="1.5" fill="url(#kaaba-band)" />
-          <Rect x="14" y="20" width="30" height="22" rx="4" fill="#0B1220" stroke="url(#kaaba-outline)" strokeWidth="1.4" />
-          <Path d="M14 25.5H44" stroke="url(#kaaba-band)" strokeWidth="1.7" opacity="0.9" />
-          <Rect x="25" y="27" width="8" height="11" rx="1.8" fill="url(#kaaba-door)" />
-          <Path d="M20 42.5H38" stroke="url(#kaaba-band)" strokeWidth="1.6" strokeLinecap="round" opacity="0.75" />
+          <Circle cx="31" cy="31" r="25.5" fill="rgba(197, 160, 33, 0.12)" stroke="url(#reward-ring)" strokeWidth="1.4" />
+          <Circle cx="31" cy="31" r="20.5" fill="#09101C" />
+          <Path
+            d="M44.2 15.4L45.9 18.9L49.8 19.4L46.9 22.1L47.6 25.9L44.2 24.1L40.9 25.9L41.5 22.1L38.6 19.4L42.5 18.9L44.2 15.4Z"
+            fill="#F1D368"
+            opacity="0.95"
+          />
+          <Rect x="19" y="20" width="24" height="4.2" rx="1.5" fill="url(#reward-band)" />
+          <Rect x="19" y="24" width="24" height="18" rx="3.6" fill="#0D1626" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          <Path d="M19 29.5H43" stroke="url(#reward-band)" strokeWidth="1.5" opacity="0.92" />
+          <Rect x="27.2" y="30.5" width="7.6" height="9.6" rx="1.6" fill="url(#reward-door)" />
         </Svg>
       </View>
     </View>
   );
 }
 
+const lockedMarkStyles = StyleSheet.create({
+  shell: {
+    width: 78,
+    height: 78,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  aura: {
+    position: "absolute",
+    width: 78,
+    height: 78,
+    borderRadius: 999,
+    backgroundColor: "rgba(197, 160, 33, 0.14)",
+  },
+  inner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(11, 18, 32, 0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(197, 160, 33, 0.28)",
+  },
+});
+
 export default function QiblahScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const { location, status: locationStatus, refresh } = useLocation();
   const coords = location?.coords;
   const hasLocation = Boolean(coords);
@@ -219,7 +253,7 @@ export default function QiblahScreen() {
 
   const alignmentDelta = signedOffset === null ? null : Math.abs(signedOffset);
   const isLocked = alignmentDelta !== null && alignmentDelta <= ALIGNMENT_THRESHOLD;
-  const dialSize = Math.min(width - spacing.xl * 2, 340);
+  const dialSize = Math.max(240, Math.min(width - spacing.xl * 2, height * 0.42, 340));
   const pointerRotation = signedOffset ?? qiblahBearing ?? 0;
   const centerValue =
     alignmentDelta === null ? (qiblahBearing === null ? "--" : `${Math.round(qiblahBearing)}°`) : `${Math.round(alignmentDelta)}°`;
@@ -331,26 +365,26 @@ export default function QiblahScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <View style={styles.header}>
         <Pressable accessibilityRole="button" hitSlop={18} onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="arrow-back" size={22} color={darkColors.text.primary} />
+          <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
         </Pressable>
         <Text style={styles.headerTitle}>Qiblah</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.metaPillRow}>
-        <View style={[styles.metaPill, styles.locationPill]}>
-          <Ionicons name="location-outline" size={14} color={darkColors.text.tertiary} />
-          <Text numberOfLines={1} style={styles.metaPillText}>
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <Ionicons name="location-outline" size={14} color={colors.text.tertiary} />
+          <Text numberOfLines={1} style={styles.metaText}>
             {hasLocation ? cityLabel : "Needs location"}
           </Text>
         </View>
-        <View style={styles.metaPill}>
-          <Ionicons name="compass-outline" size={14} color={darkColors.text.tertiary} />
-          <Text style={styles.metaPillText}>{sensorStatusLabel}</Text>
+        <View style={styles.metaItem}>
+          <Ionicons name="compass-outline" size={14} color={colors.text.tertiary} />
+          <Text style={styles.metaText}>{sensorStatusLabel}</Text>
         </View>
       </View>
 
@@ -408,7 +442,7 @@ export default function QiblahScreen() {
           </>
         ) : (
           <View style={styles.errorPanel}>
-            <Ionicons name="location-outline" size={54} color={darkColors.text.tertiary} />
+            <Ionicons name="location-outline" size={54} color={colors.text.tertiary} />
             <Text style={styles.errorTitle}>
               {locationStatus === "loading" ? "Loading location" : "Location needed for qiblah"}
             </Text>
@@ -445,10 +479,13 @@ export default function QiblahScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+type ThemeColors = ReturnType<typeof useTheme>["colors"];
+
+const createStyles = (colors: ThemeColors, isDark: boolean) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkColors.surface.background,
+    backgroundColor: colors.surface.background,
   },
   header: {
     flexDirection: "row",
@@ -464,10 +501,10 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(17,24,39,0.04)",
   },
   headerTitle: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 20,
   },
@@ -475,32 +512,24 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
   },
-  metaPillRow: {
+  metaRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: spacing.xl,
-    flexWrap: "wrap",
+    paddingBottom: spacing.xs,
   },
-  metaPill: {
-    minHeight: 38,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  metaItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: darkColors.surface.card,
-    borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
-  },
-  locationPill: {
-    flex: 1,
     minWidth: 0,
+    flexShrink: 1,
   },
-  metaPillText: {
-    color: darkColors.text.primary,
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 14,
+  metaText: {
+    color: colors.text.tertiary,
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
+    lineHeight: 16,
   },
   stage: {
     flex: 1,
@@ -513,9 +542,9 @@ const styles = StyleSheet.create({
   dialShell: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: darkColors.surface.card,
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
+    borderColor: colors.surface.borderInteractive,
     overflow: "hidden",
   },
   dialGlow: {
@@ -540,16 +569,16 @@ const styles = StyleSheet.create({
     width: 2,
     height: 10,
     borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.16)" : "rgba(17,24,39,0.12)",
     marginTop: spacing.sm,
   },
   tickMajor: {
     height: 18,
-    backgroundColor: "rgba(255,255,255,0.36)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.36)" : "rgba(17,24,39,0.24)",
   },
   cardinalLabel: {
     position: "absolute",
-    color: darkColors.text.tertiary,
+    color: colors.text.tertiary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
   },
@@ -571,7 +600,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 999,
-    backgroundColor: darkColors.brand.metallicGold,
+    backgroundColor: colors.brand.metallicGold,
   },
   pointerWrap: {
     position: "absolute",
@@ -584,7 +613,7 @@ const styles = StyleSheet.create({
     width: 4,
     flex: 1,
     borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.24)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.24)" : "rgba(17,24,39,0.2)",
   },
   pointerStemLocked: {
     backgroundColor: "rgba(197, 160, 33, 0.65)",
@@ -597,11 +626,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 34,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderBottomColor: darkColors.text.primary,
+    borderBottomColor: colors.text.primary,
     marginBottom: -2,
   },
   pointerHeadLocked: {
-    borderBottomColor: darkColors.brand.metallicGold,
+    borderBottomColor: colors.brand.metallicGold,
   },
   centerOrb: {
     width: "42%",
@@ -609,72 +638,51 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: darkColors.surface.background,
+    backgroundColor: colors.surface.background,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
+    borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(17,24,39,0.08)",
     gap: 2,
   },
   centerValue: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 34,
     fontVariant: ["tabular-nums"],
   },
   centerLabel: {
-    color: darkColors.text.tertiary,
+    color: colors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
   feedbackPanel: {
-    gap: spacing.xxs,
+    gap: spacing.xs,
     alignItems: "center",
     maxWidth: 316,
+    minHeight: 118,
+    justifyContent: "center",
   },
   feedbackTitle: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 24,
     textAlign: "center",
   },
   feedbackBody: {
-    color: darkColors.text.secondary,
+    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
   },
-  lockedMarkShell: {
-    width: 96,
-    height: 96,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.xxs,
-  },
-  lockedMarkAura: {
-    position: "absolute",
-    width: 96,
-    height: 96,
-    borderRadius: 999,
-    backgroundColor: "rgba(197, 160, 33, 0.14)",
-  },
-  lockedMarkInner: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(11, 18, 32, 0.94)",
-    borderWidth: 1,
-    borderColor: "rgba(197, 160, 33, 0.28)",
-  },
   lockedCaption: {
-    color: darkColors.brand.metallicGold,
+    color: colors.brand.metallicGold,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 13,
     letterSpacing: 0.4,
     textTransform: "uppercase",
+    marginTop: 2,
   },
   errorPanel: {
     alignItems: "center",
@@ -682,13 +690,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   errorTitle: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 24,
     textAlign: "center",
   },
   errorBody: {
-    color: darkColors.text.secondary,
+    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 15,
     lineHeight: 22,
@@ -703,18 +711,18 @@ const styles = StyleSheet.create({
   readoutCard: {
     padding: spacing.md,
     borderRadius: radii.lg,
-    backgroundColor: darkColors.surface.card,
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: darkColors.surface.border,
+    borderColor: colors.surface.border,
     gap: 4,
   },
   readoutLabel: {
-    color: darkColors.brand.metallicGold,
+    color: colors.brand.metallicGold,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
   },
   readoutValue: {
-    color: darkColors.text.secondary,
+    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
     lineHeight: 20,
@@ -729,11 +737,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: darkColors.brand.metallicGold,
+    backgroundColor: colors.brand.metallicGold,
     paddingHorizontal: spacing.lg,
   },
   primaryButtonLabel: {
-    color: darkColors.text.onAccent,
+    color: colors.text.onAccent,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
   },
@@ -743,13 +751,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: darkColors.surface.card,
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
+    borderColor: colors.surface.borderInteractive,
     paddingHorizontal: spacing.lg,
   },
   secondaryButtonLabel: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
   },

@@ -16,8 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
-import { fontFamily, radii, spacing } from "@/src/theme";
-import { darkColors } from "@/src/theme/tokens";
+import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 
 const TASBIH_STATE_KEY = "@pathofnur/tasbih_state_v2";
 const LEGACY_TASBIH_KEY = "tasbih_count";
@@ -56,6 +55,8 @@ async function persistTasbihCount(count: number): Promise<void> {
 export default function TasbihScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const [count, setCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isResetArmed, setIsResetArmed] = useState(false);
@@ -274,11 +275,11 @@ export default function TasbihScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
       <View style={styles.header}>
         <Pressable accessibilityRole="button" hitSlop={18} onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="arrow-back" size={22} color={darkColors.text.primary} />
+          <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
         </Pressable>
         <Text style={styles.headerTitle}>Tasbih</Text>
         <View style={styles.headerSpacer} />
@@ -327,7 +328,7 @@ export default function TasbihScreen() {
                     borderRadius: beadSize / 2,
                     left: bead.left,
                     top: bead.top,
-                    backgroundColor: isActive ? darkColors.brand.metallicGold : "rgba(255,255,255,0.08)",
+                    backgroundColor: isActive ? colors.brand.metallicGold : isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)",
                     opacity: isActive ? 1 : 0.56,
                   },
                 ]}
@@ -395,7 +396,7 @@ export default function TasbihScreen() {
           <Ionicons
             name={isResetArmed ? "alert-circle" : "refresh"}
             size={18}
-            color={count === 0 ? darkColors.text.tertiary : isResetArmed ? darkColors.brand.metallicGold : darkColors.text.primary}
+            color={count === 0 ? colors.text.tertiary : isResetArmed ? colors.brand.metallicGold : colors.text.primary}
           />
           <Text
             style={[
@@ -412,10 +413,13 @@ export default function TasbihScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+type ThemeColors = ReturnType<typeof useTheme>["colors"];
+
+const createStyles = (colors: ThemeColors, isDark: boolean) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkColors.surface.background,
+    backgroundColor: colors.surface.background,
   },
   header: {
     flexDirection: "row",
@@ -431,10 +435,10 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(17,24,39,0.04)",
   },
   headerTitle: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 20,
   },
@@ -453,17 +457,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(17,24,39,0.04)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)",
   },
   loopsPillLabel: {
-    color: darkColors.text.tertiary,
+    color: colors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
   },
   loopsPillValue: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
     fontVariant: ["tabular-nums"],
@@ -482,7 +486,7 @@ const styles = StyleSheet.create({
   ringGuide: {
     position: "absolute",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(17,24,39,0.06)",
   },
   bead: {
     position: "absolute",
@@ -515,27 +519,27 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: darkColors.surface.card,
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(17,24,39,0.08)",
     gap: spacing.xs,
   },
   coreEyebrow: {
-    color: darkColors.brand.metallicGold,
+    color: colors.brand.metallicGold,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
     letterSpacing: 0.4,
     textTransform: "uppercase",
   },
   coreCount: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appBold,
     fontSize: 76,
     lineHeight: 82,
     fontVariant: ["tabular-nums"],
   },
   coreHint: {
-    color: darkColors.text.tertiary,
+    color: colors.text.tertiary,
     fontFamily: fontFamily.appRegular,
     fontSize: 13,
     lineHeight: 17,
@@ -550,7 +554,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   loopCaption: {
-    color: darkColors.text.secondary,
+    color: colors.text.secondary,
     fontFamily: fontFamily.appRegular,
     fontSize: 14,
   },
@@ -563,29 +567,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    backgroundColor: darkColors.surface.card,
+    backgroundColor: colors.surface.card,
     borderWidth: 1,
-    borderColor: darkColors.surface.borderInteractive,
+    borderColor: colors.surface.borderInteractive,
   },
   resetButtonArmed: {
-    borderColor: darkColors.brand.metallicGold,
-    backgroundColor: "rgba(197,160,33,0.1)",
+    borderColor: colors.brand.metallicGold,
+    backgroundColor: isDark ? "rgba(197,160,33,0.1)" : "rgba(197,160,33,0.14)",
   },
   resetButtonDisabled: {
-    borderColor: darkColors.surface.border,
+    borderColor: colors.surface.border,
   },
   resetButtonPressed: {
     opacity: 0.92,
   },
   resetButtonLabel: {
-    color: darkColors.text.primary,
+    color: colors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
   },
   resetButtonLabelDisabled: {
-    color: darkColors.text.tertiary,
+    color: colors.text.tertiary,
   },
   resetButtonLabelArmed: {
-    color: darkColors.brand.metallicGold,
+    color: colors.brand.metallicGold,
   },
 });
