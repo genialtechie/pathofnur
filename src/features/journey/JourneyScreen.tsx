@@ -86,6 +86,12 @@ export default function JourneyScreen() {
     >
       <Stack.Screen options={{ title: "Journey", headerShown: false }} />
 
+      <View style={styles.header}>
+        <Text style={[styles.pageTitle, { color: colors.text.primary }]} selectable>
+          Journey
+        </Text>
+      </View>
+
       <JourneyHeroCard
         strongestPractice={strongestPractice}
         strongestStreak={strongestPractice ? streaks[strongestPractice] : 0}
@@ -114,6 +120,14 @@ const styles = StyleSheet.create({
   container: {
     gap: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  header: {
+    gap: spacing.xs,
+  },
+  pageTitle: {
+    fontFamily: fontFamily.appBold,
+    fontSize: 34,
+    lineHeight: 40,
   },
   loadingState: {
     flex: 1,
