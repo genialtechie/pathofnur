@@ -42,6 +42,10 @@ export interface AudioPlaybackState {
   activeTrackId: string | null;
   isPlaying: boolean;
   isBuffering: boolean;
+  isSeeking: boolean;
+  positionMs: number;
+  durationMs: number;
+  progress: number;
   error: string | null;
 }
 
@@ -49,14 +53,20 @@ export type TogglePlaybackResult = "playing" | "paused" | "error";
 
 type AudioListener = (state: AudioPlaybackState) => void;
 
-let isAudioModeReady = false;
-let quranSound: Audio.Sound | null = null;
-let quranStateSnapshot: AudioPlaybackState = {
+const INITIAL_AUDIO_STATE: AudioPlaybackState = {
   activeTrackId: null,
   isPlaying: false,
   isBuffering: false,
+  isSeeking: false,
+  positionMs: 0,
+  durationMs: 0,
+  progress: 0,
   error: null,
 };
+
+let isAudioModeReady = false;
+let quranSound: Audio.Sound | null = null;
+let quranStateSnapshot: AudioPlaybackState = INITIAL_AUDIO_STATE;
 let quranOperation: Promise<void> = Promise.resolve();
 let quranCommandId = 0;
 
@@ -130,13 +140,25 @@ async function disposeQuranSound(sound: Audio.Sound | null) {
   }
 }
 
+function getProgress(positionMs: number, durationMs: number) {
+  if (durationMs <= 0) return 0;
+  return Math.max(0, Math.min(1, positionMs / durationMs));
+}
+
 function handleQuranStatusUpdate(status: AVPlaybackStatus) {
   if (!status.isLoaded) return;
 
+  const durationMs = status.durationMillis ?? quranStateSnapshot.durationMs;
+  const nextPositionMs = status.didJustFinish ? 0 : status.positionMillis;
+
   setQuranStateSnapshot((previous) => ({
     ...previous,
-    isPlaying: status.isPlaying,
+    isPlaying: status.didJustFinish ? false : status.isPlaying,
     isBuffering: status.isBuffering,
+    isSeeking: false,
+    positionMs: nextPositionMs,
+    durationMs,
+    progress: getProgress(nextPositionMs, durationMs),
     activeTrackId: status.didJustFinish ? null : previous.activeTrackId,
   }));
 }
@@ -193,10 +215,14 @@ async function togglePlaybackShared(
         activeTrackId: trackId,
         isPlaying: false,
         isBuffering: true,
+        isSeeking: false,
+        positionMs: 0,
+        durationMs: 0,
+        progress: 0,
         error: null,
       });
 
-      const { sound } = await Audio.Sound.createAsync(
+      const { sound, status } = await Audio.Sound.createAsync(
         { uri: audioUrl },
         { shouldPlay: true },
         handleQuranStatusUpdate,
@@ -207,11 +233,18 @@ async function togglePlaybackShared(
         return "error";
       }
 
+      const durationMs = status.isLoaded ? status.durationMillis ?? 0 : 0;
+      const positionMs = status.isLoaded ? status.positionMillis : 0;
+
       quranSound = sound;
       setQuranStateSnapshot({
         activeTrackId: trackId,
         isPlaying: true,
         isBuffering: false,
+        isSeeking: false,
+        positionMs,
+        durationMs,
+        progress: getProgress(positionMs, durationMs),
         error: null,
       });
 
@@ -222,9 +255,37 @@ async function togglePlaybackShared(
         ...previous,
         isPlaying: false,
         isBuffering: false,
+        isSeeking: false,
         error: "Playback unavailable. Please try another track.",
       }));
       return "error";
+    }
+  });
+}
+
+async function seekShared(positionMs: number) {
+  return enqueueQuranOperation(async () => {
+    if (!quranSound || quranStateSnapshot.activeTrackId === null) return;
+
+    const nextPositionMs =
+      quranStateSnapshot.durationMs > 0
+        ? Math.max(0, Math.min(positionMs, quranStateSnapshot.durationMs))
+        : Math.max(0, positionMs);
+
+    setQuranStateSnapshot((previous) => ({
+      ...previous,
+      isSeeking: true,
+      positionMs: nextPositionMs,
+      progress: getProgress(nextPositionMs, previous.durationMs),
+    }));
+
+    try {
+      await quranSound.setPositionAsync(nextPositionMs);
+    } finally {
+      setQuranStateSnapshot((previous) => ({
+        ...previous,
+        isSeeking: false,
+      }));
     }
   });
 }
@@ -242,12 +303,7 @@ async function unloadShared() {
       return;
     }
 
-    setQuranStateSnapshot({
-      activeTrackId: null,
-      isPlaying: false,
-      isBuffering: false,
-      error: null,
-    });
+    setQuranStateSnapshot(INITIAL_AUDIO_STATE);
   });
 }
 
@@ -259,6 +315,7 @@ export function useExpoAudioPlayer() {
   return {
     playbackState,
     togglePlayback: togglePlaybackShared,
+    seekPlayback: seekShared,
     unload: unloadShared,
   };
 }

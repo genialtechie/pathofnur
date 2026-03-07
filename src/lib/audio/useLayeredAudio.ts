@@ -8,6 +8,10 @@ export interface LayeredAudioState {
     activeTrackId: string | null;
     isPlaying: boolean;
     isBuffering: boolean;
+    isSeeking: boolean;
+    positionMs: number;
+    durationMs: number;
+    progress: number;
     error: string | null;
   };
   ambient: {
@@ -18,7 +22,12 @@ export interface LayeredAudioState {
 }
 
 export function useLayeredAudio() {
-  const { playbackState, togglePlayback, unload: unloadQuran } = useExpoAudioPlayer();
+  const {
+    playbackState,
+    togglePlayback,
+    seekPlayback,
+    unload: unloadQuran,
+  } = useExpoAudioPlayer();
   const {
     ambientState,
     setAmbient,
@@ -43,6 +52,7 @@ export function useLayeredAudio() {
   return {
     state,
     toggleQuran,
+    seekQuran: seekPlayback,
     setAmbient,
     setAmbientVolume,
     pauseAmbient,
