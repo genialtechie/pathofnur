@@ -15,7 +15,7 @@ import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useLocation } from "@/src/lib/location";
-import { fontFamily, radii, spacing } from "@/src/theme";
+import { fontFamily, radii, spacing, useTheme } from "@/src/theme";
 import { darkColors } from "@/src/theme/tokens";
 
 const TASBIH_COVER = require("@/public/images/_source/tools-tasbih-focus-v01.webp");
@@ -117,6 +117,7 @@ function FeatureCard({
 export default function ToolsScreen() {
   const router = useRouter();
   const { location } = useLocation();
+  const { colors, isDark } = useTheme();
   const [tasbihCount, setTasbihCount] = useState(0);
 
   useFocusEffect(
@@ -143,16 +144,24 @@ export default function ToolsScreen() {
   const qiblahLocation = location?.city ?? "Location needed";
   const practicePrompt =
     tasbihCount === 0
-      ? "Begin with one round of 33."
+      ? "Begin with your first 33."
       : currentRoundProgress === 0
-        ? "A full round is complete. Continue when you are ready."
-        : `${remainingToRound} more to complete this round.`;
+        ? "33 complete."
+        : `${remainingToRound} taps until 33.`;
   const shareMessage =
     tasbihCount === 0
       ? "I am using Path of Nur for tasbih and qiblah."
       : completedRounds > 0
-        ? `I have saved ${formattedCount} dhikr on Path of Nur, including ${completedRounds} completed rounds of tasbih.`
-        : `I have saved ${formattedCount} dhikr on Path of Nur.`;
+        ? `I have logged ${formattedCount} tasbih taps on Path of Nur, including ${completedRounds} completed loops.`
+        : `I have logged ${formattedCount} tasbih taps on Path of Nur.`;
+  const practicePanelColor = colors.surface.card;
+  const practicePanelBorder = colors.surface.borderInteractive;
+  const practiceBadgeBackground = isDark ? "rgba(7, 11, 20, 0.62)" : "rgba(255, 255, 255, 0.82)";
+  const practiceBadgeBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(17,24,39,0.08)";
+  const practiceStatBackground = isDark ? "rgba(7, 11, 20, 0.72)" : "rgba(255, 255, 255, 0.9)";
+  const practiceStatBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(17,24,39,0.08)";
+  const shareButtonBackground = isDark ? "rgba(255,255,255,0.12)" : "rgba(17,24,39,0.06)";
+  const shareButtonDisabledBackground = isDark ? "rgba(255,255,255,0.06)" : "rgba(17,24,39,0.03)";
 
   const handleShareProgress = useCallback(async () => {
     try {
@@ -166,25 +175,25 @@ export default function ToolsScreen() {
   }, [shareMessage]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.pageTitle}>Tools</Text>
+          <Text style={[styles.pageTitle, { color: colors.text.primary }]}>Tools</Text>
         </View>
 
-        <View style={styles.practiceCard}>
+        <View style={[styles.practiceCard, { backgroundColor: practicePanelColor, borderColor: practicePanelBorder }]}>
           <View style={styles.practiceGlowLarge} />
           <View style={styles.practiceGlowSmall} />
 
           <View style={styles.practiceTopRow}>
-            <View style={styles.practiceBadge}>
-              <Ionicons name="sparkles" size={14} color={darkColors.brand.metallicGold} />
-              <Text style={styles.practiceBadgeText}>Your Practice</Text>
+            <View style={[styles.practiceBadge, { backgroundColor: practiceBadgeBackground, borderColor: practiceBadgeBorder }]}>
+              <Ionicons name="sparkles" size={14} color={colors.brand.metallicGold} />
+              <Text style={[styles.practiceBadgeText, { color: colors.text.light }]}>Your Practice</Text>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -194,16 +203,21 @@ export default function ToolsScreen() {
               }}
               style={({ pressed }) => [
                 styles.shareButton,
-                !hasSavedDhikr && styles.shareButtonDisabled,
+                { backgroundColor: hasSavedDhikr ? shareButtonBackground : shareButtonDisabledBackground },
                 pressed && hasSavedDhikr && styles.shareButtonPressed,
               ]}
             >
               <Ionicons
                 name="share-social-outline"
                 size={16}
-                color={hasSavedDhikr ? darkColors.text.primary : darkColors.text.tertiary}
+                color={hasSavedDhikr ? colors.text.primary : colors.text.tertiary}
               />
-              <Text style={[styles.shareButtonText, !hasSavedDhikr && styles.shareButtonTextDisabled]}>
+              <Text
+                style={[
+                  styles.shareButtonText,
+                  { color: hasSavedDhikr ? colors.text.primary : colors.text.tertiary },
+                ]}
+              >
                 Share
               </Text>
             </Pressable>
@@ -211,21 +225,23 @@ export default function ToolsScreen() {
 
           <View style={styles.practiceBody}>
             <View style={styles.practiceLead}>
-              <Text style={styles.practiceCount}>{formattedCount}</Text>
-              <Text style={styles.practiceCountLabel}>saved dhikr</Text>
-              <Text style={styles.practicePrompt}>{practicePrompt}</Text>
+              <Text style={[styles.practiceCount, { color: colors.text.primary }]}>{formattedCount}</Text>
+              <Text style={styles.practiceCountLabel}>total count</Text>
+              <Text style={[styles.practicePrompt, { color: colors.text.secondary }]}>{practicePrompt}</Text>
             </View>
 
             <View style={styles.practiceStatsColumn}>
-              <View style={styles.practiceStatCard}>
-                <Text style={styles.practiceStatValue}>{NUMBER_FORMATTER.format(completedRounds)}</Text>
-                <Text style={styles.practiceStatLabel}>completed rounds</Text>
+              <View style={[styles.practiceStatCard, { backgroundColor: practiceStatBackground, borderColor: practiceStatBorder }]}>
+                <Text style={[styles.practiceStatValue, { color: colors.text.primary }]}>
+                  {NUMBER_FORMATTER.format(completedRounds)}
+                </Text>
+                <Text style={[styles.practiceStatLabel, { color: colors.text.tertiary }]}>completed loops</Text>
               </View>
-              <View style={styles.practiceStatCard}>
-                <Text numberOfLines={1} style={styles.practiceStatLocation}>
+              <View style={[styles.practiceStatCard, { backgroundColor: practiceStatBackground, borderColor: practiceStatBorder }]}>
+                <Text numberOfLines={1} style={[styles.practiceStatLocation, { color: colors.text.primary }]}>
                   {qiblahLocation}
                 </Text>
-                <Text style={styles.practiceStatLabel}>qiblah location</Text>
+                <Text style={[styles.practiceStatLabel, { color: colors.text.tertiary }]}>qiblah location</Text>
               </View>
             </View>
           </View>
@@ -242,17 +258,17 @@ export default function ToolsScreen() {
 
         <FeatureCard
           label="Tasbih"
-          title="Keep count in rhythm."
-          description="Resume where you left off and complete another round."
-          primaryLabel="Saved"
+          title="Return to your tasbih."
+          description="Pick up where you left off and continue your count."
+          primaryLabel="Total"
           primaryValue={hasSavedDhikr ? formattedCount : "0"}
-          secondaryLabel="Next round"
+          secondaryLabel="To 33"
           secondaryValue={
             tasbihCount === 0
-              ? "33 to begin"
+              ? "Start now"
               : currentRoundProgress === 0
-                ? "Round complete"
-                : `${remainingToRound} remaining`
+                ? "33 complete"
+                : `${remainingToRound} left`
           }
           cta="Open"
           imageSource={TASBIH_COVER}
@@ -262,11 +278,11 @@ export default function ToolsScreen() {
 
         <FeatureCard
           label="Qiblah"
-          title="Find the qiblah with clarity."
+          title="Turn toward the qiblah."
           description="Open the compass and align from your current location."
           primaryLabel="Location"
           primaryValue={qiblahLocation}
-          secondaryLabel="Compass"
+          secondaryLabel="Status"
           secondaryValue={location?.coords ? "Ready" : "Needs location"}
           cta="Open"
           imageSource={QIBLAH_COVER}
@@ -281,7 +297,6 @@ export default function ToolsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkColors.surface.background,
   },
   scrollContent: {
     paddingTop: spacing.lg,
@@ -357,19 +372,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     backgroundColor: "rgba(255,255,255,0.12)",
   },
-  shareButtonDisabled: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-  },
   shareButtonPressed: {
     opacity: 0.9,
   },
   shareButtonText: {
-    color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 13,
-  },
-  shareButtonTextDisabled: {
-    color: darkColors.text.tertiary,
   },
   practiceBody: {
     flexDirection: "row",
@@ -453,7 +461,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   featureCard: {
-    height: 240,
+    minHeight: 272,
     marginHorizontal: spacing.xl,
     borderRadius: radii.xl,
     overflow: "hidden",

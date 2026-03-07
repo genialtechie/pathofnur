@@ -125,7 +125,7 @@ export default function TasbihScreen() {
   const completedLoops = Math.floor(count / LOOP_LENGTH);
   const formattedCount = NUMBER_FORMATTER.format(count);
   const formattedLoops = NUMBER_FORMATTER.format(completedLoops);
-  const tapHint = !isLoaded ? "Loading your saved total..." : count === 0 ? "Tap anywhere to begin" : "Tap anywhere to continue";
+  const tapHint = !isLoaded ? "Loading your saved total..." : count === 0 ? "Tap to begin" : "Tap to continue";
   const loopCaption =
     !isLoaded
       ? "Loading your saved tasbih."
@@ -371,7 +371,9 @@ export default function TasbihScreen() {
           <Animated.View style={[styles.coreOrb, { transform: [{ scale: pulseScale }] }]}>
             <Text style={styles.coreEyebrow}>Total</Text>
             <Text style={styles.coreCount}>{formattedCount}</Text>
-            <Text style={styles.coreHint}>{tapHint}</Text>
+            <Text adjustsFontSizeToFit minimumFontScale={0.9} numberOfLines={2} style={styles.coreHint}>
+              {tapHint}
+            </Text>
           </Animated.View>
         </Animated.View>
       </Pressable>
@@ -535,7 +537,11 @@ const styles = StyleSheet.create({
   coreHint: {
     color: darkColors.text.tertiary,
     fontFamily: fontFamily.appRegular,
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 17,
+    maxWidth: "72%",
+    paddingHorizontal: spacing.sm,
+    textAlign: "center",
   },
   footer: {
     alignItems: "center",
