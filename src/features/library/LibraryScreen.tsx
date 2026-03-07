@@ -373,7 +373,7 @@ export function LibraryScreen() {
 
             {surah ? (
               <View style={styles.surahMetaBlock}>
-                <View style={styles.surahTitleRow}>
+                <View style={styles.surahTitleCluster}>
                   <Text
                     style={[styles.surahName, { color: colors.brand.metallicGold }]}
                     numberOfLines={1}
@@ -699,16 +699,18 @@ const styles = StyleSheet.create({
   surahMetaBlock: {
     gap: 1,
   },
-  surahTitleRow: {
+  surahTitleCluster: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    alignSelf: "flex-start",
+    gap: 6,
+    maxWidth: "100%",
   },
   surahName: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 16,
     lineHeight: 20,
-    flex: 1,
+    flexShrink: 1,
   },
   surahMeta: {
     fontFamily: fontFamily.appRegular,
