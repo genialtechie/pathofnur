@@ -21,7 +21,8 @@ export function PrayerTimeline() {
     location?.coords.longitude
   );
   const [showBottomSheet, setShowBottomSheet] = useState(false);
-  const { colors } = useTheme();
+  const { colors, theme } = useTheme();
+  const sheetInstanceKey = `${theme ?? "light"}-${showBottomSheet ? "visible" : "hidden"}`;
 
   const handlePress = useCallback(() => {
     setShowBottomSheet(true);
@@ -58,7 +59,11 @@ export function PrayerTimeline() {
         </View>
       </Pressable>
 
-      <PrayerTimesBottomSheet visible={showBottomSheet} onClose={handleClose} />
+      <PrayerTimesBottomSheet
+        key={sheetInstanceKey}
+        visible={showBottomSheet}
+        onClose={handleClose}
+      />
     </View>
   );
 }
