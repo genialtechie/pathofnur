@@ -9,9 +9,9 @@ import {
   StyleSheet,
   View,
   ScrollView,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  useWindowDimensions,
 } from "react-native";
 import { Asset } from "expo-asset";
 
@@ -19,8 +19,6 @@ import { HeroCard } from "@/src/components/cards/HeroCard";
 import { track, EventName } from "@/src/lib/analytics/track";
 import { spacing, useTheme } from "@/src/theme";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - spacing["4xl"] * 2; // 80px padding total
 const CARD_MARGIN = spacing.md;
 
 interface HeroItem {
@@ -42,6 +40,8 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const hasTrackedView = useRef<Set<number>>(new Set());
   const hasPreloadedImage = useRef<Set<number>>(new Set());
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const cardWidth = width - spacing["4xl"] * 2;
 
   // Track hero view on mount and when index changes
   const trackHeroView = useCallback(
@@ -118,7 +118,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const contentOffset = event.nativeEvent.contentOffset.x;
-      const index = Math.round(contentOffset / (CARD_WIDTH + CARD_MARGIN));
+      const index = Math.round(contentOffset / (cardWidth + CARD_MARGIN));
 
       if (index === activeIndex || index < 0 || index >= items.length) {
         return;
@@ -135,7 +135,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
         "home"
       );
     },
-    [activeIndex, items.length, trackHeroView]
+    [activeIndex, cardWidth, items.length, trackHeroView]
   );
 
   return (
@@ -146,7 +146,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
         onMomentumScrollEnd={handleMomentumScrollEnd}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={CARD_WIDTH + CARD_MARGIN}
+        snapToInterval={cardWidth + CARD_MARGIN}
         snapToAlignment="center"
       >
         {items.map((item, index) => (
@@ -154,7 +154,7 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
             key={item.id}
             style={[
               styles.cardContainer,
-              { width: CARD_WIDTH },
+              { width: cardWidth },
               index < items.length - 1 && { marginRight: CARD_MARGIN },
             ]}
           >
