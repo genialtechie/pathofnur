@@ -12,6 +12,7 @@ import { Stack, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Haptics from "expo-haptics";
 import { Magnetometer, type MagnetometerMeasurement } from "expo-sensors";
+import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
 import { EventName, track, trackScreenView } from "@/src/lib/analytics/track";
 import { useLocation } from "@/src/lib/location";
@@ -57,6 +58,37 @@ function webCompassEventToHeading(event: WebCompassEvent): number | null {
   }
 
   return null;
+}
+
+function LockedKaabaMark() {
+  return (
+    <View style={styles.lockedMarkShell}>
+      <View style={styles.lockedMarkAura} />
+      <View style={styles.lockedMarkInner}>
+        <Svg width={58} height={58} viewBox="0 0 58 58" fill="none">
+          <Defs>
+            <LinearGradient id="kaaba-band" x1="12" y1="14" x2="46" y2="20" gradientUnits="userSpaceOnUse">
+              <Stop stopColor="#F2D56B" />
+              <Stop offset="1" stopColor="#C5A021" />
+            </LinearGradient>
+            <LinearGradient id="kaaba-outline" x1="14" y1="20" x2="44" y2="42" gradientUnits="userSpaceOnUse">
+              <Stop stopColor="#D8B645" />
+              <Stop offset="1" stopColor="#8C6A10" />
+            </LinearGradient>
+            <LinearGradient id="kaaba-door" x1="24" y1="25" x2="31" y2="37" gradientUnits="userSpaceOnUse">
+              <Stop stopColor="#F7E29A" />
+              <Stop offset="1" stopColor="#D2AB34" />
+            </LinearGradient>
+          </Defs>
+          <Rect x="14" y="16" width="30" height="4.5" rx="1.5" fill="url(#kaaba-band)" />
+          <Rect x="14" y="20" width="30" height="22" rx="4" fill="#0B1220" stroke="url(#kaaba-outline)" strokeWidth="1.4" />
+          <Path d="M14 25.5H44" stroke="url(#kaaba-band)" strokeWidth="1.7" opacity="0.9" />
+          <Rect x="25" y="27" width="8" height="11" rx="1.8" fill="url(#kaaba-door)" />
+          <Path d="M20 42.5H38" stroke="url(#kaaba-band)" strokeWidth="1.6" strokeLinecap="round" opacity="0.75" />
+        </Svg>
+      </View>
+    </View>
+  );
 }
 
 export default function QiblahScreen() {
@@ -248,6 +280,7 @@ export default function QiblahScreen() {
               : heading === null
                 ? "Hold the phone flat and move slowly while the compass settles."
                 : `Qiblah bearing ${Math.round(qiblahBearing)}°. Your heading ${Math.round(heading)}°.`;
+  const lockedBody = hasLocation ? `Aligned toward the Kaaba from ${cityLabel}.` : feedbackBody;
 
   const handleEnableCompass = useCallback(async () => {
     if (!IS_WEB || typeof window === "undefined") return;
@@ -308,14 +341,16 @@ export default function QiblahScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.metaRow}>
-        <View style={styles.metaCard}>
-          <Text style={styles.metaLabel}>Location</Text>
-          <Text numberOfLines={1} style={styles.metaValue}>{hasLocation ? cityLabel : "Needs location"}</Text>
+      <View style={styles.metaPillRow}>
+        <View style={[styles.metaPill, styles.locationPill]}>
+          <Ionicons name="location-outline" size={14} color={darkColors.text.tertiary} />
+          <Text numberOfLines={1} style={styles.metaPillText}>
+            {hasLocation ? cityLabel : "Needs location"}
+          </Text>
         </View>
-        <View style={styles.metaCard}>
-          <Text style={styles.metaLabel}>Compass</Text>
-          <Text style={styles.metaValue}>{sensorStatusLabel}</Text>
+        <View style={styles.metaPill}>
+          <Ionicons name="compass-outline" size={14} color={darkColors.text.tertiary} />
+          <Text style={styles.metaPillText}>{sensorStatusLabel}</Text>
         </View>
       </View>
 
@@ -360,8 +395,15 @@ export default function QiblahScreen() {
             </View>
 
             <View style={styles.feedbackPanel}>
-              <Text style={[styles.feedbackTitle, isLocked && styles.feedbackTitleLocked]}>{directionText}</Text>
-              <Text style={styles.feedbackBody}>{feedbackBody}</Text>
+              {isLocked ? (
+                <>
+                  <LockedKaabaMark />
+                  <Text style={styles.lockedCaption}>Qiblah aligned</Text>
+                </>
+              ) : (
+                <Text style={styles.feedbackTitle}>{directionText}</Text>
+              )}
+              <Text style={styles.feedbackBody}>{isLocked ? lockedBody : feedbackBody}</Text>
             </View>
           </>
         ) : (
@@ -377,22 +419,26 @@ export default function QiblahScreen() {
 
       <View style={styles.bottomPanel}>
         <View style={styles.readoutCard}>
-          <Text style={styles.readoutLabel}>Compass note</Text>
+          <Text style={styles.readoutLabel}>Note</Text>
           <Text style={styles.readoutValue}>
             {sensorError ?? "Hold your phone flat and rotate slowly for the steadiest heading."}
           </Text>
         </View>
 
-        {showCompassButton ? (
-          <Pressable accessibilityRole="button" onPress={() => void handleEnableCompass()} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonLabel}>{sensorStatus === "denied" ? "Try again" : "Enable compass"}</Text>
-          </Pressable>
-        ) : null}
+        {showCompassButton || showRefreshLocation ? (
+          <View style={styles.actionRow}>
+            {showCompassButton ? (
+              <Pressable accessibilityRole="button" onPress={() => void handleEnableCompass()} style={styles.primaryButton}>
+                <Text style={styles.primaryButtonLabel}>{sensorStatus === "denied" ? "Try again" : "Enable compass"}</Text>
+              </Pressable>
+            ) : null}
 
-        {showRefreshLocation ? (
-          <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonLabel}>Refresh location</Text>
-          </Pressable>
+            {showRefreshLocation ? (
+              <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonLabel}>Refresh location</Text>
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
       </View>
     </SafeAreaView>
@@ -429,26 +475,29 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
   },
-  metaRow: {
+  metaPillRow: {
     flexDirection: "row",
     gap: spacing.sm,
     paddingHorizontal: spacing.xl,
+    flexWrap: "wrap",
   },
-  metaCard: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: radii.lg,
+  metaPill: {
+    minHeight: 38,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
     backgroundColor: darkColors.surface.card,
     borderWidth: 1,
     borderColor: darkColors.surface.borderInteractive,
-    gap: 2,
   },
-  metaLabel: {
-    color: darkColors.text.tertiary,
-    fontFamily: fontFamily.appRegular,
-    fontSize: 12,
+  locationPill: {
+    flex: 1,
+    minWidth: 0,
   },
-  metaValue: {
+  metaPillText: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
@@ -458,8 +507,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
-    gap: spacing.lg,
+    paddingVertical: spacing.lg,
+    gap: spacing.md,
   },
   dialShell: {
     alignItems: "center",
@@ -579,25 +628,53 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   feedbackPanel: {
-    gap: spacing.xs,
+    gap: spacing.xxs,
     alignItems: "center",
-    maxWidth: 320,
+    maxWidth: 316,
   },
   feedbackTitle: {
     color: darkColors.text.primary,
     fontFamily: fontFamily.appBold,
-    fontSize: 28,
+    fontSize: 24,
     textAlign: "center",
-  },
-  feedbackTitleLocked: {
-    color: darkColors.brand.metallicGold,
   },
   feedbackBody: {
     color: darkColors.text.secondary,
     fontFamily: fontFamily.appRegular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
+  },
+  lockedMarkShell: {
+    width: 96,
+    height: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xxs,
+  },
+  lockedMarkAura: {
+    position: "absolute",
+    width: 96,
+    height: 96,
+    borderRadius: 999,
+    backgroundColor: "rgba(197, 160, 33, 0.14)",
+  },
+  lockedMarkInner: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(11, 18, 32, 0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(197, 160, 33, 0.28)",
+  },
+  lockedCaption: {
+    color: darkColors.brand.metallicGold,
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 13,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   errorPanel: {
     alignItems: "center",
@@ -635,8 +712,6 @@ const styles = StyleSheet.create({
     color: darkColors.brand.metallicGold,
     fontFamily: fontFamily.appSemiBold,
     fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
   },
   readoutValue: {
     color: darkColors.text.secondary,
@@ -644,7 +719,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
   primaryButton: {
+    flex: 1,
     minHeight: 52,
     borderRadius: radii.pill,
     alignItems: "center",
@@ -658,6 +738,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   secondaryButton: {
+    flex: 1,
     minHeight: 52,
     borderRadius: radii.pill,
     alignItems: "center",
