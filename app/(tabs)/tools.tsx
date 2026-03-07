@@ -69,8 +69,8 @@ function getLoopProgress(count: number): number {
 }
 
 function ProgressRing({ progress, accentColor, trackColor, textColor, value }: ProgressRingProps) {
-  const size = 74;
-  const strokeWidth = 5;
+  const size = 66;
+  const strokeWidth = 4.5;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clampedProgress = Math.max(0, Math.min(progress, 1));
@@ -123,12 +123,12 @@ function PracticeDayCard({
   const ringValue = count === 0 ? "0" : NUMBER_FORMATTER.format(loopProgress);
   const footerText =
     count === 0
-      ? "No count yet"
+      ? "None yet"
       : overflowCount > 0
-        ? `${NUMBER_FORMATTER.format(loopProgress)} into the next 33`
+        ? `${NUMBER_FORMATTER.format(loopProgress)} into next`
         : count === TASBIH_LOOP_LENGTH
           ? "33 complete"
-        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} to 33`;
+        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} left`;
 
   return (
     <View style={[styles.dayCard, { backgroundColor, borderColor }]}> 
@@ -147,7 +147,9 @@ function PracticeDayCard({
             <Text style={[styles.dayCardCount, { color: textColor }]}>{NUMBER_FORMATTER.format(count)}</Text>
             <Text style={[styles.dayCardGoal, { color: secondaryTextColor }]}>/{TASBIH_LOOP_LENGTH}</Text>
           </View>
-          <Text style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>{footerText}</Text>
+          <Text numberOfLines={1} style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>
+            {footerText}
+          </Text>
         </View>
 
         <ProgressRing
@@ -347,7 +349,9 @@ export default function ToolsScreen() {
               ]}
             >
               <Text style={[styles.loopsCapsuleValue, { color: colors.text.primary }]}>{formattedLifetimeLoops}</Text>
-              <Text style={[styles.loopsCapsuleLabel, { color: colors.text.tertiary }]}>completed loops</Text>
+              <Text numberOfLines={1} style={[styles.loopsCapsuleLabel, { color: colors.text.tertiary }]}>
+                loops
+              </Text>
             </View>
           </View>
 
@@ -521,7 +525,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   loopsCapsule: {
-    minWidth: 116,
+    minWidth: 104,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.lg,
@@ -536,21 +540,21 @@ const styles = StyleSheet.create({
   },
   loopsCapsuleLabel: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
   },
   practiceComparisonRow: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   dayCard: {
     flex: 1,
-    minHeight: 176,
-    padding: spacing.md,
+    minHeight: 164,
+    padding: spacing.sm,
     borderRadius: radii.xl,
     borderWidth: 1,
     justifyContent: "space-between",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   dayCardTopRow: {
     flexDirection: "row",
@@ -576,13 +580,13 @@ const styles = StyleSheet.create({
   },
   dayCardMetricRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
   },
   dayCardMetricText: {
     flex: 1,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   dayCardCountRow: {
     flexDirection: "row",
@@ -592,25 +596,24 @@ const styles = StyleSheet.create({
   },
   dayCardCount: {
     fontFamily: fontFamily.appBold,
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: 32,
+    lineHeight: 36,
     fontVariant: ["tabular-nums"],
   },
   dayCardGoal: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 20,
-    lineHeight: 28,
+    fontSize: 18,
+    lineHeight: 24,
     fontVariant: ["tabular-nums"],
   },
   dayCardFootnote: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 12,
-    lineHeight: 18,
-    maxWidth: "88%",
+    fontSize: 11,
+    lineHeight: 15,
   },
   ringShell: {
-    width: 74,
-    height: 74,
+    width: 66,
+    height: 66,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -621,8 +624,8 @@ const styles = StyleSheet.create({
   },
   ringValue: {
     fontFamily: fontFamily.appSemiBold,
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 20,
     fontVariant: ["tabular-nums"],
   },
   primaryAction: {
