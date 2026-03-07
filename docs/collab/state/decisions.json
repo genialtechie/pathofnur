@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:24:50Z",
+  "last_updated_utc": "2026-03-07T22:02:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -147,6 +147,19 @@
       "rationale": "The requested change is tightly scoped to a single home feature component and can be completed safely without widening the diff or blocking on lane reassignment.",
       "owner": "lead",
       "timestamp_utc": "2026-03-07T21:24:50Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260307-012",
+      "topic": "Cross-lane exception for Tools and Journey card rebalance",
+      "options_considered": [
+        "Split the redesign by ownership lane and wait for separate implementers",
+        "Allow codex to execute one cohesive redesign pass across the Tools hero and Journey hub surfaces"
+      ],
+      "selected_option": "Allow codex to execute one cohesive redesign pass across the Tools hero and Journey hub surfaces",
+      "rationale": "The requested redesign is intentionally about shared visual language between the Tools and Journey cards, so splitting it across lanes would increase iteration risk and produce a less coherent result.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-07T22:02:00Z",
       "supersedes": null
     }
   ]

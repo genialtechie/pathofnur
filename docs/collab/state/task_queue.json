@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:29:10Z",
+  "last_updated_utc": "2026-03-07T22:02:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -292,6 +292,32 @@
       ],
       "implementation_notes": "Keep the diff contained to src/features/home/HomeHadithCard.tsx. Preserve current share behavior and state labels while making the bottom CTA clearer and easier to notice.",
       "updated_at_utc": "2026-03-07T21:29:10Z"
+    },
+    {
+      "task_id": "T-20260307-027",
+      "title": "Rebalance Tools and Journey card hierarchy",
+      "scope_paths": [
+        "app/(tabs)/tools.tsx",
+        "src/features/journey/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P1",
+      "depends_on": [
+        "T-20260307-024"
+      ],
+      "branch_name": "feat/T-20260307-027-tools-journey-card-rebalance",
+      "worktree_path": ".worktrees/T-20260307-027",
+      "acceptance_criteria": [
+        "Tools hero card keeps its inviting visual identity while reducing dead whitespace through tighter layout and compact motivating copy",
+        "Journey hero card is redesigned with a warmer, more tactile card composition that feels closer in pull to the Tools hero",
+        "Journey My Streaks gateway is redesigned so it no longer reads as a plain stats panel and instead feels premium and inviting",
+        "No route, analytics, or state-model changes are introduced",
+        "npm run typecheck passes",
+        "npm run check:typography passes"
+      ],
+      "implementation_notes": "Keep the redesign contained to the existing Tools tab hero plus Journey hub surfaces. Borrow the warmth and contrast of the Tools card, but do not duplicate it exactly. Preserve current navigation and behavior while improving hierarchy, density, and emotional pull.",
+      "updated_at_utc": "2026-03-07T22:02:00Z"
     }
   ]
 }
