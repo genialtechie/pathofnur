@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Audio,
   InterruptionModeAndroid,
@@ -7,7 +7,6 @@ import {
 } from "expo-av";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// File-based logging for remote debugging
 const LOG_KEY = "audio_debug_logs";
 let debugLogs: string[] = [];
 
@@ -18,7 +17,7 @@ export async function addDebugLog(message: string): Promise<void> {
   if (debugLogs.length > 100) debugLogs.shift();
   try {
     await AsyncStorage.setItem(LOG_KEY, JSON.stringify(debugLogs));
-  } catch (e) {}
+  } catch {}
   console.log(entry);
 }
 
@@ -28,7 +27,7 @@ export async function getDebugLogs(): Promise<string> {
     if (stored) {
       debugLogs = JSON.parse(stored);
     }
-  } catch (e) {}
+  } catch {}
   return debugLogs.join("\n");
 }
 
@@ -36,7 +35,7 @@ export async function clearDebugLogs(): Promise<void> {
   debugLogs = [];
   try {
     await AsyncStorage.removeItem(LOG_KEY);
-  } catch (e) {}
+  } catch {}
 }
 
 export interface AudioPlaybackState {
@@ -48,7 +47,54 @@ export interface AudioPlaybackState {
 
 export type TogglePlaybackResult = "playing" | "paused" | "error";
 
+type AudioListener = (state: AudioPlaybackState) => void;
+
 let isAudioModeReady = false;
+let quranSound: Audio.Sound | null = null;
+let quranStateSnapshot: AudioPlaybackState = {
+  activeTrackId: null,
+  isPlaying: false,
+  isBuffering: false,
+  error: null,
+};
+let quranOperation: Promise<void> = Promise.resolve();
+let quranCommandId = 0;
+
+const audioListeners = new Set<AudioListener>();
+
+function emitQuranState() {
+  for (const listener of audioListeners) {
+    listener(quranStateSnapshot);
+  }
+}
+
+function setQuranStateSnapshot(
+  next:
+    | AudioPlaybackState
+    | ((previous: AudioPlaybackState) => AudioPlaybackState),
+) {
+  quranStateSnapshot =
+    typeof next === "function" ? next(quranStateSnapshot) : next;
+  emitQuranState();
+}
+
+function subscribeQuranState(listener: AudioListener) {
+  audioListeners.add(listener);
+  listener(quranStateSnapshot);
+
+  return () => {
+    audioListeners.delete(listener);
+  };
+}
+
+function enqueueQuranOperation<T>(operation: () => Promise<T>): Promise<T> {
+  const run = quranOperation.catch(() => undefined).then(operation);
+  quranOperation = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
 
 async function ensureAudioMode() {
   if (isAudioModeReady) return;
@@ -66,125 +112,153 @@ async function ensureAudioMode() {
   isAudioModeReady = true;
 }
 
-export function useExpoAudioPlayer() {
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const [playbackState, setPlaybackState] = useState<AudioPlaybackState>({
-    activeTrackId: null,
-    isPlaying: false,
-    isBuffering: false,
-    error: null,
-  });
+async function disposeQuranSound(sound: Audio.Sound | null) {
+  if (!sound) return;
 
-  const togglePlayback = useCallback(
-    async (trackId: string, audioUrl: string): Promise<TogglePlaybackResult> => {
-      // Debug logging disabled - uncomment below for troubleshooting
-      // void addDebugLog(`togglePlayback called: ${trackId}`);
-      try {
-        await ensureAudioMode();
+  sound.setOnPlaybackStatusUpdate(null);
 
-        const activeSound = soundRef.current;
-        const isCurrentTrack = playbackState.activeTrackId === trackId;
+  try {
+    await sound.stopAsync();
+  } catch {
+    // already stopped
+  }
 
-        // If same track is loaded, toggle play/pause
-        if (activeSound && isCurrentTrack) {
-          const status = await activeSound.getStatusAsync();
-          if (!status.isLoaded) {
-            return "error";
-          }
+  try {
+    await sound.unloadAsync();
+  } catch {
+    // already unloaded
+  }
+}
 
-          if (status.isPlaying) {
-            await activeSound.pauseAsync();
-            setPlaybackState((previous) => ({
-              ...previous,
-              isPlaying: false,
-              isBuffering: false,
-              error: null,
-            }));
-            return "paused";
-          }
+function handleQuranStatusUpdate(status: AVPlaybackStatus) {
+  if (!status.isLoaded) return;
 
-          await activeSound.playAsync();
-          setPlaybackState((previous) => ({
+  setQuranStateSnapshot((previous) => ({
+    ...previous,
+    isPlaying: status.isPlaying,
+    isBuffering: status.isBuffering,
+    activeTrackId: status.didJustFinish ? null : previous.activeTrackId,
+  }));
+}
+
+async function togglePlaybackShared(
+  trackId: string,
+  audioUrl: string,
+): Promise<TogglePlaybackResult> {
+  return enqueueQuranOperation(async () => {
+    try {
+      await ensureAudioMode();
+
+      const currentSound = quranSound;
+      const isCurrentTrack = quranStateSnapshot.activeTrackId === trackId;
+
+      if (currentSound && isCurrentTrack) {
+        const status = await currentSound.getStatusAsync();
+        if (!status.isLoaded) {
+          return "error";
+        }
+
+        if (status.isPlaying) {
+          await currentSound.pauseAsync();
+          setQuranStateSnapshot((previous) => ({
             ...previous,
-            isPlaying: true,
+            isPlaying: false,
             isBuffering: false,
             error: null,
           }));
-          return "playing";
+          return "paused";
         }
 
-        // Load new track
-        if (soundRef.current) {
-          await soundRef.current.unloadAsync();
-        }
-
-        setPlaybackState({
-          activeTrackId: trackId,
-          isPlaying: false,
-          isBuffering: true,
-          error: null,
-        });
-
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: audioUrl },
-          { shouldPlay: true },
-          (status: AVPlaybackStatus) => {
-            if (!status.isLoaded) return;
-            setPlaybackState((previous) => ({
-              ...previous,
-              isPlaying: status.isPlaying,
-              isBuffering: status.isBuffering,
-              activeTrackId: status.didJustFinish ? null : previous.activeTrackId,
-            }));
-          }
-        );
-
-        soundRef.current = sound;
-
-        setPlaybackState({
-          activeTrackId: trackId,
+        await currentSound.playAsync();
+        setQuranStateSnapshot((previous) => ({
+          ...previous,
           isPlaying: true,
           isBuffering: false,
           error: null,
-        });
-
-        return "playing";
-      } catch (error) {
-        console.error("Audio playback error:", error);
-        setPlaybackState((previous) => ({
-          ...previous,
-          isPlaying: false,
-          isBuffering: false,
-          error: "Playback unavailable. Please try another track.",
         }));
+        return "playing";
+      }
+
+      const commandId = ++quranCommandId;
+      const previousSound = quranSound;
+      quranSound = null;
+
+      await disposeQuranSound(previousSound);
+
+      if (commandId !== quranCommandId) {
         return "error";
       }
-    },
-    [playbackState.activeTrackId]
-  );
 
-  const unload = useCallback(async () => {
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
+      setQuranStateSnapshot({
+        activeTrackId: trackId,
+        isPlaying: false,
+        isBuffering: true,
+        error: null,
+      });
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        handleQuranStatusUpdate,
+      );
+
+      if (commandId !== quranCommandId) {
+        await disposeQuranSound(sound);
+        return "error";
+      }
+
+      quranSound = sound;
+      setQuranStateSnapshot({
+        activeTrackId: trackId,
+        isPlaying: true,
+        isBuffering: false,
+        error: null,
+      });
+
+      return "playing";
+    } catch (error) {
+      console.error("Audio playback error:", error);
+      setQuranStateSnapshot((previous) => ({
+        ...previous,
+        isPlaying: false,
+        isBuffering: false,
+        error: "Playback unavailable. Please try another track.",
+      }));
+      return "error";
     }
-    setPlaybackState({
+  });
+}
+
+async function unloadShared() {
+  const commandId = ++quranCommandId;
+
+  return enqueueQuranOperation(async () => {
+    const previousSound = quranSound;
+    quranSound = null;
+
+    await disposeQuranSound(previousSound);
+
+    if (commandId !== quranCommandId) {
+      return;
+    }
+
+    setQuranStateSnapshot({
       activeTrackId: null,
       isPlaying: false,
       isBuffering: false,
       error: null,
     });
-  }, []);
+  });
+}
 
-  useEffect(() => {
-    return () => {
-      void unload();
-    };
-  }, [unload]);
+export function useExpoAudioPlayer() {
+  const [playbackState, setPlaybackState] = useState(quranStateSnapshot);
+
+  useEffect(() => subscribeQuranState(setPlaybackState), []);
 
   return {
     playbackState,
-    togglePlayback,
-    unload,
+    togglePlayback: togglePlaybackShared,
+    unload: unloadShared,
   };
 }
