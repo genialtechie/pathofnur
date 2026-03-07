@@ -35,6 +35,10 @@ import { darkColors } from "@/src/theme/tokens";
 const TASBIH_COVER = require("@/public/images/_source/tools-tasbih-focus-v01.webp");
 const QIBLAH_COVER = require("@/public/images/_source/tools-qiblah-backdrop-v01.webp");
 const NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
+const COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
 type FeatureCardProps = {
   label: string;
@@ -130,12 +134,12 @@ function PracticeDayCard({
   const ringValue = count === 0 ? "0" : NUMBER_FORMATTER.format(loopProgress);
   const footerText =
     count === 0
-      ? "None yet"
+      ? "No tasbih yet"
       : overflowCount > 0
-        ? `${NUMBER_FORMATTER.format(loopProgress)} into next`
+        ? `${NUMBER_FORMATTER.format(loopProgress)} into 33`
         : count === TASBIH_LOOP_LENGTH
           ? "33 complete"
-        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} left`;
+        : `${NUMBER_FORMATTER.format(TASBIH_LOOP_LENGTH - count)} left in 33`;
 
   return (
     <View style={[styles.dayCard, { backgroundColor, borderColor }]}> 
@@ -143,17 +147,28 @@ function PracticeDayCard({
         <Text style={[styles.dayCardLabel, { color: titleColor }]}>{label}</Text>
         {overflowCount > 0 ? (
           <View style={[styles.dayOverflowPill, { backgroundColor: `${accentColor}22`, borderColor: `${accentColor}33` }]}> 
-            <Text style={[styles.dayOverflowText, { color: accentColor }]}>+{NUMBER_FORMATTER.format(overflowCount)}</Text>
+            <Text
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              numberOfLines={1}
+              style={[styles.dayOverflowText, { color: accentColor }]}
+            >
+              +{COMPACT_NUMBER_FORMATTER.format(overflowCount)}
+            </Text>
           </View>
         ) : null}
       </View>
 
       <View style={styles.dayCardMetricRow}>
         <View style={styles.dayCardMetricText}>
-          <View style={styles.dayCardCountRow}>
-            <Text style={[styles.dayCardCount, { color: textColor }]}>{NUMBER_FORMATTER.format(count)}</Text>
-            <Text style={[styles.dayCardGoal, { color: secondaryTextColor }]}>/{TASBIH_LOOP_LENGTH}</Text>
-          </View>
+          <Text
+            adjustsFontSizeToFit
+            minimumFontScale={0.52}
+            numberOfLines={1}
+            style={[styles.dayCardCount, { color: textColor }]}
+          >
+            {NUMBER_FORMATTER.format(count)}
+          </Text>
           <Text numberOfLines={1} style={[styles.dayCardFootnote, { color: secondaryTextColor }]}>
             {footerText}
           </Text>
@@ -212,11 +227,15 @@ function FeatureCard({
       <View style={styles.featureStatsRow}>
         <View style={styles.featureStatCard}>
           <Text style={styles.featureStatLabel}>{primaryLabel}</Text>
-          <Text style={styles.featureStatValue}>{primaryValue}</Text>
+          <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={styles.featureStatValue}>
+            {primaryValue}
+          </Text>
         </View>
         <View style={styles.featureStatCard}>
           <Text style={styles.featureStatLabel}>{secondaryLabel}</Text>
-          <Text style={styles.featureStatValue}>{secondaryValue}</Text>
+          <Text adjustsFontSizeToFit minimumFontScale={0.75} numberOfLines={1} style={styles.featureStatValue}>
+            {secondaryValue}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -377,7 +396,14 @@ export default function ToolsScreen() {
 
           <View style={styles.practiceHeroRow}>
             <View style={styles.practiceLead}>
-              <Text style={[styles.practiceCount, { color: colors.text.primary }]}>{formattedLifetimeCount}</Text>
+              <Text
+                adjustsFontSizeToFit
+                minimumFontScale={0.42}
+                numberOfLines={1}
+                style={[styles.practiceCount, { color: colors.text.primary }]}
+              >
+                {formattedLifetimeCount}
+              </Text>
               <Text style={[styles.practiceCountLabel, { color: colors.brand.metallicGold }]}>all-time tasbih</Text>
             </View>
 
@@ -387,7 +413,14 @@ export default function ToolsScreen() {
                 { backgroundColor: loopsCapsuleBackground, borderColor: loopsCapsuleBorder },
               ]}
             >
-              <Text style={[styles.loopsCapsuleValue, { color: colors.text.primary }]}>{formattedLifetimeLoops}</Text>
+              <Text
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                numberOfLines={1}
+                style={[styles.loopsCapsuleValue, { color: colors.text.primary }]}
+              >
+                {formattedLifetimeLoops}
+              </Text>
               <Text numberOfLines={1} style={[styles.loopsCapsuleLabel, { color: colors.text.tertiary }]}>
                 loops
               </Text>
@@ -557,6 +590,7 @@ const styles = StyleSheet.create({
   practiceLead: {
     flex: 1,
     gap: spacing.xxs,
+    minWidth: 0,
   },
   practiceCount: {
     color: darkColors.text.primary,
@@ -573,6 +607,7 @@ const styles = StyleSheet.create({
   },
   loopsCapsule: {
     minWidth: 104,
+    maxWidth: 116,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.lg,
@@ -614,6 +649,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dayOverflowPill: {
+    maxWidth: 72,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     borderRadius: radii.pill,
@@ -633,24 +669,13 @@ const styles = StyleSheet.create({
   },
   dayCardMetricText: {
     flex: 1,
+    minWidth: 0,
     gap: spacing.xs,
-  },
-  dayCardCountRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 2,
-    flexWrap: "wrap",
   },
   dayCardCount: {
     fontFamily: fontFamily.appBold,
-    fontSize: 32,
-    lineHeight: 36,
-    fontVariant: ["tabular-nums"],
-  },
-  dayCardGoal: {
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 34,
+    lineHeight: 38,
     fontVariant: ["tabular-nums"],
   },
   dayCardFootnote: {
@@ -776,6 +801,7 @@ const styles = StyleSheet.create({
   },
   featureStatCard: {
     flex: 1,
+    minWidth: 0,
     padding: spacing.md,
     borderRadius: radii.lg,
     backgroundColor: "rgba(7, 11, 20, 0.72)",
