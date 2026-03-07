@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:24:50Z",
+  "last_updated_utc": "2026-03-07T21:25:29Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -253,7 +253,7 @@
         "src/features/journey/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P1",
       "depends_on": [
         "T-20260307-022"
@@ -268,7 +268,7 @@
         "npm run check:typography passes"
       ],
       "implementation_notes": "Keep the diff UI-only and limited to the existing tools tab screen plus journey feature components. Preserve current layout behavior and only remove redundant secondary labels while tightening the page hierarchy.",
-      "updated_at_utc": "2026-03-07T21:22:00Z"
+      "updated_at_utc": "2026-03-07T21:25:29Z"
     },
     {
       "task_id": "T-20260307-025",

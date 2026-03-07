@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T20:56:36Z",
+  "last_updated_utc": "2026-03-07T21:25:29Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -438,6 +438,41 @@
         "Merge feat/T-20260307-022-journey-streaks-polish",
         "Smoke-test Journey and My Streaks from the root checkout while the main Expo server is running",
         "Create a cleanup task for unused journey reminder infrastructure after Settings design lands"
+      ]
+    },
+    {
+      "handoff_id": "H-20260307-024",
+      "task_id": "T-20260307-024",
+      "branch_name": "fix/T-20260307-024-tools-journey-title-pass",
+      "worktree_path": ".worktrees/T-20260307-024",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-07T21:25:29Z",
+      "summary": {
+        "completed": [
+          "Added a Journey page title block that matches the Tools page header rhythm",
+          "Removed the redundant Practice label from the Tools hero card and the redundant Journey label from the Journey hero card",
+          "Updated the My Streaks gateway pills with emoji-led labels for Salah, Quran, Fasting, and Dhikr"
+        ],
+        "remaining": []
+      },
+      "changed_files": [
+        "app/(tabs)/tools.tsx",
+        "src/features/journey/JourneyScreen.tsx",
+        "src/features/journey/journey-hub-sections.tsx"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm run check:typography"
+        ],
+        "result": "pass",
+        "notes": "Typecheck passed. Typography policy script returned OK."
+      },
+      "risks": [],
+      "follow_ups": [],
+      "next_recommended_actions": [
+        "Smoke-test the Tools and Journey tabs on device to confirm the removed hero labels improve hierarchy as intended"
       ]
     }
   ]
