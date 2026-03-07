@@ -17,7 +17,7 @@ import { Asset } from "expo-asset";
 
 import { HeroCard } from "@/src/components/cards/HeroCard";
 import { track, EventName } from "@/src/lib/analytics/track";
-import { radii, spacing, useTheme } from "@/src/theme";
+import { spacing, useTheme } from "@/src/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - spacing["4xl"] * 2; // 80px padding total
@@ -158,22 +158,13 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
               index < items.length - 1 && { marginRight: CARD_MARGIN },
             ]}
           >
-            {Math.abs(index - activeIndex) <= 1 ? (
-              <HeroCard
-                imageSource={item.imageSource}
-                title={item.title}
-                subtitle={item.subtitle}
-                onPress={() => handlePress(item, index)}
-                ratio="portrait"
-              />
-            ) : (
-              <View
-                style={[
-                  styles.placeholderCard,
-                  { backgroundColor: colors.surface.card },
-                ]}
-              />
-            )}
+            <HeroCard
+              imageSource={item.imageSource}
+              title={item.title}
+              subtitle={item.subtitle}
+              onPress={() => handlePress(item, index)}
+              ratio="portrait"
+            />
           </View>
         ))}
       </ScrollView>
@@ -204,10 +195,6 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     // Width is set dynamically
-  },
-  placeholderCard: {
-    aspectRatio: 4 / 5,
-    borderRadius: radii.xl,
   },
   pagination: {
     flexDirection: "row",
