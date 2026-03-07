@@ -25,7 +25,6 @@ import { useLocation } from "@/src/lib/location/location-provider";
 import {
   useTheme,
   fontFamily,
-  radii,
   spacing,
 } from "@/src/theme";
 import { useFocusEffect } from "expo-router";
@@ -118,48 +117,16 @@ export function HomeScreen() {
           <Text style={[styles.greeting, { color: colors.text.primary }]}>
             As-salamu alaykum
           </Text>
-          <View style={styles.metaRow}>
-            <View
-              style={[
-                styles.metaPill,
-                {
-                  backgroundColor: colors.surface.card,
-                  borderColor: colors.surface.borderInteractive,
-                },
-              ]}
-            >
-              <Text style={[styles.metaLabel, { color: colors.text.tertiary }]}>
-                Today
-              </Text>
-              <Text style={[styles.metaValue, { color: colors.brand.metallicGold }]}>
-                {gregorianDate}
-              </Text>
-            </View>
-
-            {hijriDateLabel ? (
-              <View
-                style={[
-                  styles.metaPill,
-                  {
-                    backgroundColor: colors.surface.card,
-                    borderColor: colors.surface.borderInteractive,
-                  },
-                ]}
-              >
-                <Text style={[styles.metaLabel, { color: colors.text.tertiary }]}>
-                  Hijri
-                </Text>
-                <Text style={[styles.metaValue, { color: colors.text.secondary }]}>
-                  {hijriDateLabel}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.sectionGap}>
           <Text style={[styles.date, { color: colors.text.tertiary }]}>
-            Step into your sanctuary for today.
+            <Text style={[styles.dateLabel, { color: colors.brand.metallicGold }]}>
+              Today
+            </Text>
+            {`  ${gregorianDate}`}
+            {hijriDateLabel ? (
+              <Text style={[styles.dateSecondary, { color: colors.text.muted }]}>
+                {`  •  ${hijriDateLabel}`}
+              </Text>
+            ) : null}
           </Text>
         </View>
 
@@ -200,7 +167,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.xl,
-    gap: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   greeting: {
     fontFamily: fontFamily.appBold,
@@ -209,34 +177,16 @@ const styles = StyleSheet.create({
   },
   date: {
     fontFamily: fontFamily.appRegular,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 20,
   },
-  metaRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  metaPill: {
-    borderWidth: 1,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: 2,
-  },
-  metaLabel: {
-    fontFamily: fontFamily.appSemiBold,
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  metaValue: {
+  dateLabel: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 14,
   },
-  sectionGap: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
+  dateSecondary: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 13,
   },
 
   bottomSpacer: {
