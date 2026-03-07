@@ -95,11 +95,11 @@ export function ToolsSharePreviewSheet({
   const bottomSafePadding = Math.max(insets.bottom, spacing.lg);
   const captureOptions = useMemo<CaptureOptions>(
     () => ({
-      format: "png",
-      quality: 1,
+      format: Platform.OS === "web" ? "jpg" : "png",
+      quality: Platform.OS === "web" ? 0.92 : 1,
       result: Platform.OS === "web" ? "data-uri" : "tmpfile",
-      width: 1080,
-      height: 1920,
+      width: Platform.OS === "web" ? 720 : 1080,
+      height: Platform.OS === "web" ? 1280 : 1920,
     }),
     []
   );

@@ -12,45 +12,116 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && (error.name === "AbortError" || /cancel/i.test(error.message));
 }
 
-function createShareFile(dataUrl: string, fileName: string): File {
-  const [header, content] = dataUrl.split(",");
-  const mimeType = header.match(/data:(.*?);base64/)?.[1] ?? "image/png";
+function extractMimeType(dataUrl: string): string {
+  const [header] = dataUrl.split(",");
+  return header?.match(/data:(.*?);base64/)?.[1] ?? "image/png";
+}
+
+function extractFileExtension(mimeType: string): string {
+  if (mimeType === "image/jpeg") return "jpg";
+  return mimeType.split("/")[1] ?? "png";
+}
+
+function extractShareUrl(message: string): string | undefined {
+  return message.match(/https?:\/\/\S+/)?.[0];
+}
+
+function createFallbackShareData(artifact: ToolsShareArtifact): ShareData {
+  const shareUrl = extractShareUrl(artifact.shareMessage);
+  const shareText = shareUrl
+    ? artifact.shareMessage.replace(shareUrl, "").replace(/\n{3,}/g, "\n\n").trim()
+    : artifact.shareMessage;
+
+  return {
+    title: "Path of Nur",
+    text: shareText,
+    ...(shareUrl ? { url: shareUrl } : {}),
+  };
+}
+
+async function createShareFile(dataUrl: string, fileName: string): Promise<File> {
+  const mimeType = extractMimeType(dataUrl);
+  const extension = extractFileExtension(mimeType);
+
+  if (typeof File !== "function") {
+    throw new Error("File API is unavailable");
+  }
+
+  if (typeof fetch === "function") {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    return new File([blob], `${fileName}.${extension}`, { type: blob.type || mimeType });
+  }
+
+  const [, content = ""] = dataUrl.split(",");
   const binary = atob(content);
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new File([bytes], `${fileName}.png`, { type: mimeType });
+  return new File([bytes], `${fileName}.${extension}`, { type: mimeType });
 }
 
 function triggerDownload(dataUrl: string, fileName: string): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const mimeType = extractMimeType(dataUrl);
+  const extension = extractFileExtension(mimeType);
   const anchor = document.createElement("a");
   anchor.href = dataUrl;
-  anchor.download = `${fileName}.png`;
-  anchor.rel = "noopener";
+  anchor.download = `${fileName}.${extension}`;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
 }
 
 async function shareOnWeb(uri: string, artifact: ToolsShareArtifact): Promise<ToolsShareResult> {
-  if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
+  if (typeof navigator === "undefined") {
     triggerDownload(uri, artifact.fileName);
     return "exported";
   }
 
-  const shareData: ShareData = {
-    title: "Path of Nur",
-    text: artifact.shareMessage,
-  };
+  const shareData = createFallbackShareData(artifact);
 
-  if (uri.startsWith("data:")) {
-    const file = createShareFile(uri, artifact.fileName);
-    if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-      await navigator.share({ ...shareData, files: [file] });
+  if (typeof navigator.share === "function" && globalThis.isSecureContext) {
+    if (uri.startsWith("data:")) {
+      try {
+        const file = await createShareFile(uri, artifact.fileName);
+        const canShareFile =
+          typeof navigator.canShare === "function"
+            ? (() => {
+                try {
+                  return navigator.canShare({ files: [file] });
+                } catch {
+                  return false;
+                }
+              })()
+            : false;
+
+        if (canShareFile) {
+          await navigator.share({ ...shareData, files: [file] });
+          return "shared";
+        }
+      } catch (error) {
+        console.warn("Tools web file share unavailable, falling back to text share.", error);
+      }
+    }
+
+    try {
+      await navigator.share(shareData);
       return "shared";
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+
+      console.warn("Tools web share failed, falling back to image export.", error);
     }
   }
 
-  await navigator.share(shareData);
-  return "shared";
+  triggerDownload(uri, artifact.fileName);
+  return "exported";
 }
 
 export async function shareToolsArtifact(
