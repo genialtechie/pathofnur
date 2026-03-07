@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 
 import { trackJourneyStreakMilestone } from "./journey-analytics";
-import type { JourneyHabit } from "./journey-types";
+import type { JourneyPractice } from "./journey-types";
 
 const MILESTONES = [3, 7, 14, 30] as const;
 
 type JourneyStreakMap = {
-  prayer: number;
+  salah: number;
+  quran: number;
   fasting: number;
-  reading: number;
+  dhikr: number;
 };
 
 export function useJourneyMilestones(streaks: JourneyStreakMap) {
@@ -17,7 +18,7 @@ export function useJourneyMilestones(streaks: JourneyStreakMap) {
   useEffect(() => {
     const previous = streakRef.current;
 
-    (Object.keys(streaks) as JourneyHabit[]).forEach((habit) => {
+    (Object.keys(streaks) as JourneyPractice[]).forEach((habit) => {
       const nextValue = streaks[habit];
       const previousValue = previous[habit];
 

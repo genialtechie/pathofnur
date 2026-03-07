@@ -15,11 +15,9 @@ const STEP = 8;
 
 const GOALS = [
   { label: "Daily Salah", emoji: "🕌", value: "salah" },
-  { label: "Fasting", emoji: "🌙", value: "fasting" },
-  { label: "Quran & Recitation", emoji: "📖", value: "quran" },
-  { label: "Duas & Dhikr", emoji: "📿", value: "duas" },
-  { label: "Sleep & Calm", emoji: "🌊", value: "calm" },
-  { label: "Ramadan Journey", emoji: "⭐", value: "ramadan" }
+  { label: "Quran", emoji: "📖", value: "quran" },
+  { label: "Dhikr", emoji: "📿", value: "dhikr" },
+  { label: "Fasting", emoji: "🌙", value: "fasting" }
 ] as const;
 
 export default function PlanBuilderScreen() {
@@ -50,8 +48,8 @@ export default function PlanBuilderScreen() {
     <OnboardingFrame
       step={STEP}
       totalSteps={TOTAL_ONBOARDING_STEPS}
-      title="What do you want to focus on?"
-      subtitle="Select all that apply — you can change these anytime."
+      title="What should your daily practice hold?"
+      subtitle="Pick the practices you want Path of Nur to support. You can refine this later."
       primaryLabel="Continue"
       onPrimaryPress={onContinue}
       primaryDisabled={selected.size === 0}

@@ -193,21 +193,22 @@ export const JourneyDayCompletedSchema = BaseEventPropertiesSchema.extend({
 export const JourneyStreakMilestoneSchema = BaseEventPropertiesSchema.extend({
   streak_days: z.number().int(),
   milestone_type: z.enum(['3', '7', '14', '30']),
-  habit: z.enum(['prayer', 'fasting', 'reading']).optional(),
+  habit: z.enum(['salah', 'quran', 'fasting', 'dhikr']).optional(),
 });
 
 export const JourneyHabitToggledSchema = BaseEventPropertiesSchema.extend({
-  habit: z.enum(['prayer', 'fasting', 'reading']),
+  habit: z.enum(['salah', 'quran', 'fasting', 'dhikr']),
   is_complete: z.boolean(),
   day_key: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
 export const JourneyRoutineSavedSchema = BaseEventPropertiesSchema.extend({
-  selected_prayer_count: z.number().int().min(0).max(5),
-  includes_reading: z.boolean(),
+  active_practice_count: z.number().int().min(0).max(4),
+  includes_salah: z.boolean(),
+  includes_quran: z.boolean(),
   includes_fasting: z.boolean(),
-  reminder_lead_minutes: z.number().int().min(0),
-  follow_up_delay_minutes: z.number().int().min(0),
+  includes_dhikr: z.boolean(),
+  prayer_reminders_enabled: z.boolean(),
 });
 
 export const JourneyReminderPermissionGrantedSchema = BaseEventPropertiesSchema.extend({
@@ -216,8 +217,8 @@ export const JourneyReminderPermissionGrantedSchema = BaseEventPropertiesSchema.
 
 export const JourneyReminderScheduledSchema = BaseEventPropertiesSchema.extend({
   reminder_count: z.number().int().min(0),
-  selected_prayer_count: z.number().int().min(0).max(5),
   window_days: z.number().int().min(1).max(14),
+  prayer_reminders_enabled: z.boolean(),
 });
 
 export const JourneyPrayerCheckinCompletedSchema = BaseEventPropertiesSchema.extend({

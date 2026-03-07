@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   View
 } from "react-native";
+import * as Notifications from "expo-notifications";
 
 import {
   TOTAL_ONBOARDING_STEPS,
@@ -31,13 +31,24 @@ export default function NotificationsScreen() {
   const requestNotificationPermission = async () => {
     let granted = false;
 
-    if (Platform.OS === "web") {
+    if (process.env.EXPO_OS === "web") {
       if ("Notification" in window) {
         const result = await Notification.requestPermission();
         granted = result === "granted";
       }
     } else {
-      granted = true;
+      const current = await Notifications.getPermissionsAsync();
+      if (
+        current.granted ||
+        current.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+      ) {
+        granted = true;
+      } else {
+        const requested = await Notifications.requestPermissionsAsync();
+        granted =
+          requested.granted ||
+          requested.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
+      }
     }
 
     await updatePreferences({ notificationsEnabled: granted });
@@ -61,11 +72,10 @@ export default function NotificationsScreen() {
         <View style={styles.spacer} />
 
         <Text style={styles.title} selectable>
-          Never miss a prayer again
+          Let Path of Nur bring you back gently
         </Text>
         <Text style={styles.subtitle} selectable>
-          Get a gentle reminder before each prayer time, and start your day with
-          Fajr.
+          We'll remind you before each prayer and follow up softly after, so your daily salah can stay visible.
         </Text>
 
         <View style={styles.footer}>
@@ -79,7 +89,7 @@ export default function NotificationsScreen() {
             <Text style={styles.secondaryLabel}>Not now</Text>
           </Pressable>
           <Text style={styles.note}>
-            We'll only send prayer reminders — never spam.
+            Only prayer reminders and check-ins. Nothing noisy.
           </Text>
         </View>
       </View>
@@ -147,6 +157,7 @@ const styles = StyleSheet.create({
     color: "#5d6d84",
     fontFamily: fontFamily.appRegular,
     fontSize: 13,
+    lineHeight: 18,
     textAlign: "center"
   }
 });

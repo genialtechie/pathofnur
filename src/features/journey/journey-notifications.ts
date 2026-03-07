@@ -61,7 +61,9 @@ async function readStoredNotificationIds(): Promise<string[]> {
 
   try {
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
   } catch {
     return [];
   }
@@ -145,7 +147,7 @@ async function scheduleReminder(
       sound: false,
       data: {
         href: "/(tabs)/journey",
-        focus: "today",
+        focus: "streaks",
         prayerName: prayer,
         notificationType,
         dateKey,
@@ -168,8 +170,13 @@ export async function scheduleRoutineReminders({
   scheduledCount: number;
   windowDays: number;
 }> {
-  if (process.env.EXPO_OS === "web" || routine.selectedPrayers.length === 0) {
-    await writeStoredNotificationIds([]);
+  const shouldSchedule =
+    process.env.EXPO_OS !== "web" &&
+    routine.practices.salah &&
+    routine.reminders.wantsPrayerReminders;
+
+  if (!shouldSchedule) {
+    await cancelRoutineReminders();
     return {
       notificationIds: [],
       scheduledCount: 0,
@@ -197,19 +204,15 @@ export async function scheduleRoutineReminders({
 
       const dateKey = toDateKey(date);
 
-      for (const prayer of routine.selectedPrayers) {
-        if (!JOURNEY_PRAYERS.includes(prayer)) {
-          continue;
-        }
-
+      for (const prayer of JOURNEY_PRAYERS) {
         const prayerKey = getJourneyPrayerLabel(prayer) as keyof typeof times;
         const prayerDate = parsePrayerDate(date, times[prayerKey]);
 
         const reminderDate = new Date(
-          prayerDate.getTime() - routine.reminderLeadMinutes * 60 * 1000
+          prayerDate.getTime() - routine.reminders.leadMinutes * 60 * 1000
         );
         const followUpDate = new Date(
-          prayerDate.getTime() + routine.followUpDelayMinutes * 60 * 1000
+          prayerDate.getTime() + routine.reminders.followUpDelayMinutes * 60 * 1000
         );
 
         if (reminderDate.getTime() > now) {
@@ -227,7 +230,7 @@ export async function scheduleRoutineReminders({
           const identifier = await scheduleReminder(
             prayer,
             followUpDate,
-            `Did you pray ${getJourneyPrayerLabel(prayer)}? Mark it in Path of Nur.`,
+            `Did you complete your salah today? Open Path of Nur and mark your return.`,
             "prayer_checkin",
             dateKey
           );
