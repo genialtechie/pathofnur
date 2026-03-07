@@ -344,12 +344,41 @@ export function LibraryScreen() {
                 <Text style={[styles.kicker, { color: colors.text.tertiary }]}>
                   Library
                 </Text>
-                <View style={styles.titleRow}>
+                <Text
+                  style={[styles.title, { color: colors.text.primary }]}
+                  numberOfLines={1}
+                >
+                  {title}
+                </Text>
+              </View>
+
+              <Pressable
+                style={[
+                  styles.timelineButton,
+                  {
+                    borderColor: colors.surface.borderInteractive,
+                    backgroundColor: colors.surface.card,
+                  },
+                ]}
+                onPress={() => setIsTimelineVisible(true)}
+                accessibilityLabel="Open timeline"
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={14}
+                  color={colors.text.secondary}
+                />
+              </Pressable>
+            </View>
+
+            {surah ? (
+              <View style={styles.surahMetaBlock}>
+                <View style={styles.surahTitleRow}>
                   <Text
-                    style={[styles.title, { color: colors.text.primary }]}
+                    style={[styles.surahName, { color: colors.brand.metallicGold }]}
                     numberOfLines={1}
                   >
-                    {title}
+                    {surah.englishName}
                   </Text>
 
                   <Pressable
@@ -389,32 +418,6 @@ export function LibraryScreen() {
                     </Text>
                   </Pressable>
                 </View>
-              </View>
-
-              <Pressable
-                style={[
-                  styles.timelineButton,
-                  {
-                    borderColor: colors.surface.borderInteractive,
-                    backgroundColor: colors.surface.card,
-                  },
-                ]}
-                onPress={() => setIsTimelineVisible(true)}
-                accessibilityLabel="Open timeline"
-              >
-                <Ionicons
-                  name="calendar-outline"
-                  size={14}
-                  color={colors.text.secondary}
-                />
-              </Pressable>
-            </View>
-
-            {surah ? (
-              <View style={styles.surahMetaBlock}>
-                <Text style={[styles.surahName, { color: colors.brand.metallicGold }]}>
-                  {surah.englishName}
-                </Text>
                 <Text style={[styles.surahMeta, { color: colors.text.tertiary }]}>
                   Surah {surah.number} · {surah.revelationType}
                 </Text>
@@ -672,11 +675,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
   kicker: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 11,
@@ -701,10 +699,16 @@ const styles = StyleSheet.create({
   surahMetaBlock: {
     gap: 1,
   },
+  surahTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   surahName: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 16,
     lineHeight: 20,
+    flex: 1,
   },
   surahMeta: {
     fontFamily: fontFamily.appRegular,
