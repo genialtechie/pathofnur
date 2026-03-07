@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T20:56:36Z",
+  "last_updated_utc": "2026-03-07T21:24:50Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -244,6 +244,54 @@
       ],
       "implementation_notes": "Keep changes within src/features/journey/** only. Remove routine from active Journey UX for now without designing future Settings. Rework visuals toward a more tactile, rewarding feel inspired by the Tasbih tool surface.",
       "updated_at_utc": "2026-03-07T20:56:36Z"
+    },
+    {
+      "task_id": "T-20260307-024",
+      "title": "Polish Tools and Journey page titles and streak tags",
+      "scope_paths": [
+        "app/(tabs)/tools.tsx",
+        "src/features/journey/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P1",
+      "depends_on": [
+        "T-20260307-022"
+      ],
+      "branch_name": "fix/T-20260307-024-tools-journey-title-pass",
+      "worktree_path": ".worktrees/T-20260307-024",
+      "acceptance_criteria": [
+        "Journey hub gets a top page title treatment aligned with the Tools page header rhythm",
+        "The redundant 'Practice' label is removed from the main Tools hero card",
+        "The redundant 'Journey' label is removed from the Journey hero card",
+        "Journey streak gateway pills use appropriate emojis for Salah, Quran, Fasting, and Dhikr",
+        "npm run check:typography passes"
+      ],
+      "implementation_notes": "Keep the diff UI-only and limited to the existing tools tab screen plus journey feature components. Preserve current layout behavior and only remove redundant secondary labels while tightening the page hierarchy.",
+      "updated_at_utc": "2026-03-07T21:22:00Z"
+    },
+    {
+      "task_id": "T-20260307-025",
+      "title": "Center home hadith quote and strengthen share CTA",
+      "scope_paths": [
+        "src/features/home/HomeHadithCard.tsx"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P1",
+      "depends_on": [],
+      "branch_name": "fix/T-20260307-025-home-hadith-share-cta",
+      "worktree_path": ".worktrees/T-20260307-025",
+      "acceptance_criteria": [
+        "The home hadith quote is centered visually and text-aligned to feel more intentional",
+        "The share control is moved below the quote/source block",
+        "The share affordance is more obvious than the current subtle top-row text button",
+        "Only the hadith card surface changes",
+        "npm run typecheck passes",
+        "npm run check:typography passes"
+      ],
+      "implementation_notes": "Keep the diff contained to src/features/home/HomeHadithCard.tsx. Preserve current share behavior and state labels while making the bottom CTA clearer and easier to notice.",
+      "updated_at_utc": "2026-03-07T21:24:50Z"
     }
   ]
 }

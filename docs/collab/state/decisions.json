@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T20:56:36Z",
+  "last_updated_utc": "2026-03-07T21:24:50Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -121,6 +121,32 @@
       "rationale": "The user requested a full Journey/Streaks restructuring, and splitting the storage migration from the UI rewrite would have prolonged an incoherent intermediate state.",
       "owner": "lead",
       "timestamp_utc": "2026-03-07T20:56:36Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260307-010",
+      "topic": "Cross-lane exception for Tools and Journey UI title polish",
+      "options_considered": [
+        "Leave the task to the default owning lanes and wait for reassignment",
+        "Allow codex to execute a narrow cross-surface polish pass after explicit human approval"
+      ],
+      "selected_option": "Allow codex to execute a narrow cross-surface polish pass after explicit human approval",
+      "rationale": "The requested change is a small, tightly scoped UI pass across the tools tab screen and journey feature components, and the human explicitly authorized reassignment to keep momentum.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-07T21:22:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260307-011",
+      "topic": "Cross-lane exception for Home hadith card polish",
+      "options_considered": [
+        "Wait for an opencode-lane implementer to adjust the Home quote surface",
+        "Allow codex to execute a one-file Home hadith polish pass"
+      ],
+      "selected_option": "Allow codex to execute a one-file Home hadith polish pass",
+      "rationale": "The requested change is tightly scoped to a single home feature component and can be completed safely without widening the diff or blocking on lane reassignment.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-07T21:24:50Z",
       "supersedes": null
     }
   ]

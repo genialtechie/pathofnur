@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:03:15Z",
+  "last_updated_utc": "2026-03-07T21:24:50Z",
   "reservations": [
     {
       "task_id": "T-20260211-009",
@@ -11,6 +11,25 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-02-12T10:00:00Z"
+    },
+    {
+      "task_id": "T-20260307-024",
+      "worktree_path": ".worktrees/T-20260307-024",
+      "reserved_paths": [
+        "app/(tabs)/tools.tsx",
+        "src/features/journey/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-08T01:22:00Z"
+    },
+    {
+      "task_id": "T-20260307-025",
+      "worktree_path": ".worktrees/T-20260307-025",
+      "reserved_paths": [
+        "src/features/home/HomeHadithCard.tsx"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-08T01:24:50Z"
     }
   ]
 }
