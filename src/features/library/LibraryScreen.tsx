@@ -1,4 +1,9 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from "react-native";
 import {
   Pressable,
   StatusBar,
@@ -18,32 +23,104 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDailyRecommendation } from "@/src/lib/quran";
 import { useLayeredAudio, type AmbientType } from "@/src/lib/audio";
 import { DayTimeline } from "./DayTimeline";
+import {
+  createLibrarySessionKey,
+  useLibrarySessionProgress,
+} from "./useLibrarySessionProgress";
 import { useTheme, fontFamily, radii, spacing } from "@/src/theme";
 import { trackScreenView, track, EventName } from "@/src/lib/analytics/track";
 
 const AMBIENT_OPTIONS: { type: AmbientType; label: string; icon: string }[] = [
-  { type: "silence", label: "Off", icon: "volume-mute-outline" },
+  { type: "silence", label: "Ambient Off", icon: "volume-mute-outline" },
   { type: "rain", label: "Rain", icon: "rain-outline" },
   { type: "medina_wind", label: "Wind", icon: "leaf-outline" },
 ];
+
+const MIN_AUDIO_RESUME_MS = 5_000;
+const MIN_SCROLL_RESUME = 0.03;
+
+type VerseLayout = {
+  y: number;
+  height: number;
+};
+
+function formatTime(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function getTopVerseNumber(
+  verseLayouts: Record<number, VerseLayout>,
+  anchorY: number,
+) {
+  let resolvedVerseNumber: number | null = null;
+  let resolvedTop = -Infinity;
+
+  for (const [key, layout] of Object.entries(verseLayouts)) {
+    if (layout.y <= anchorY && layout.y >= resolvedTop) {
+      resolvedVerseNumber = Number(key);
+      resolvedTop = layout.y;
+    }
+  }
+
+  return resolvedVerseNumber;
+}
 
 export function LibraryScreen() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isTimelineVisible, setIsTimelineVisible] = useState(false);
-  
-  const { surah, translation, audioUrl, isLoading, error, surahNumber } = 
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [verseLayoutVersion, setVerseLayoutVersion] = useState(0);
+  const [scrubberWidth, setScrubberWidth] = useState(0);
+
+  const { surah, translation, audioUrl, isLoading, error, surahNumber } =
     useDailyRecommendation(selectedDate);
-  const { state, toggleQuran, setAmbient } = useLayeredAudio();
+  const {
+    state,
+    toggleQuran,
+    seekQuran,
+    setAmbient,
+  } = useLayeredAudio();
   const { colors, isDark } = useTheme();
 
-  const scrollViewRef = useRef(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const verseLayoutsRef = useRef<Record<number, VerseLayout>>({});
+  const restoredSessionKeyRef = useRef<string | null>(null);
+  const lastSavedProgressRef = useRef(0);
+  const lastSavedVerseRef = useRef<number | null>(null);
+  const lastSavedAudioPositionRef = useRef(0);
 
+  const sessionKey = useMemo(
+    () => createLibrarySessionKey(selectedDate, surahNumber),
+    [selectedDate, surahNumber],
+  );
+  const sessionProgress = useLibrarySessionProgress(sessionKey);
 
+  const trackId = `quran-${surahNumber}`;
+  const isCurrentTrack = state.quran.activeTrackId === trackId;
+  const isPlaying = isCurrentTrack && state.quran.isPlaying;
+  const hasAudioResume = sessionProgress.progress.audioPositionMs >= MIN_AUDIO_RESUME_MS;
+  const hasReadingResume = sessionProgress.progress.scrollProgress >= MIN_SCROLL_RESUME;
+  const activeAmbient =
+    AMBIENT_OPTIONS.find((option) => option.type === state.ambient.activeType) ??
+    AMBIENT_OPTIONS[0];
+
+  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+  const title = isToday ? "Today's Recommendation" : formattedDate;
+  const resumeLabel = hasReadingResume
+    ? `Resume verse ${sessionProgress.progress.topVerseNumber ?? 1}`
+    : hasAudioResume
+      ? `Resume ${formatTime(sessionProgress.progress.audioPositionMs)}`
+      : "Begin gently";
 
   const openGesture = Gesture.Pan()
-    // Activate only on left swipe (translationX < -20)
-    // Positive max value (1000) prevents activation on right swipe
     .activeOffsetX([-20, 1000])
     .failOffsetY([-20, 20])
     .simultaneousWithExternalGesture(scrollViewRef)
@@ -54,179 +131,517 @@ export function LibraryScreen() {
   useFocusEffect(
     useCallback(() => {
       void trackScreenView("library");
-    }, [])
+    }, []),
   );
 
-  const handlePlay = useCallback(async () => {
-    if (!audioUrl) return;
-    
-    try {
-      await toggleQuran(`quran-${surahNumber}`, audioUrl);
-    } catch (err) {
-      console.error("Playback error:", err);
-    }
-    
-    void track(EventName.LIBRARY_TRACK_PLAYED, {
-      track_id: `quran-${surahNumber}`,
-      track_name: surah?.englishName || "Quran",
-      collection_name: "daily_recommendation",
-      has_ambient: state.ambient.activeType !== "silence",
-      ambient_type: state.ambient.activeType !== "silence" ? state.ambient.activeType : undefined,
-    }, "library");
-  }, [audioUrl, surahNumber, surah, toggleQuran, state.ambient.activeType]);
+  useEffect(() => {
+    verseLayoutsRef.current = {};
+    restoredSessionKeyRef.current = null;
+    setVerseLayoutVersion(0);
+  }, [sessionKey]);
 
-  const handleAmbientToggle = useCallback(async (type: AmbientType) => {
-    await setAmbient(type);
-    void track(EventName.LIBRARY_AMBIENT_TOGGLED, {
-      ambient_type: type,
-      is_enabled: type !== "silence",
-    }, "library");
-  }, [setAmbient]);
+  useEffect(() => {
+    if (!sessionProgress.isLoaded) return;
+
+    setReadingProgress(sessionProgress.progress.scrollProgress);
+    lastSavedProgressRef.current = sessionProgress.progress.scrollProgress;
+    lastSavedVerseRef.current = sessionProgress.progress.topVerseNumber;
+    lastSavedAudioPositionRef.current = sessionProgress.progress.audioPositionMs;
+  }, [
+    sessionKey,
+    sessionProgress.isLoaded,
+    sessionProgress.progress.audioPositionMs,
+    sessionProgress.progress.scrollProgress,
+    sessionProgress.progress.topVerseNumber,
+  ]);
+
+  useEffect(() => {
+    if (!surah || !sessionProgress.isLoaded) return;
+    if (restoredSessionKeyRef.current === sessionKey) return;
+
+    if (!hasReadingResume) {
+      restoredSessionKeyRef.current = sessionKey;
+      return;
+    }
+
+    const targetVerseNumber = sessionProgress.progress.topVerseNumber;
+    if (!targetVerseNumber) return;
+
+    const targetLayout = verseLayoutsRef.current[targetVerseNumber];
+    if (!targetLayout || !scrollViewRef.current) return;
+
+    scrollViewRef.current.scrollTo({
+      y: Math.max(0, targetLayout.y - spacing.sm),
+      animated: false,
+    });
+    setReadingProgress(sessionProgress.progress.scrollProgress);
+    restoredSessionKeyRef.current = sessionKey;
+  }, [
+    hasReadingResume,
+    sessionKey,
+    sessionProgress.isLoaded,
+    sessionProgress.progress.scrollProgress,
+    sessionProgress.progress.topVerseNumber,
+    surah,
+    verseLayoutVersion,
+  ]);
+
+  useEffect(() => {
+    if (!isCurrentTrack) return;
+
+    const nextPositionMs = state.quran.positionMs;
+    if (Math.abs(nextPositionMs - lastSavedAudioPositionRef.current) < 1_500) {
+      return;
+    }
+
+    lastSavedAudioPositionRef.current = nextPositionMs;
+    sessionProgress.queueSave({
+      audioPositionMs: nextPositionMs,
+    });
+  }, [isCurrentTrack, sessionProgress, state.quran.positionMs]);
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
   }, []);
 
-  const isPlaying = state.quran.isPlaying && state.quran.activeTrackId === `quran-${surahNumber}`;
+  const handlePlay = useCallback(async () => {
+    if (!audioUrl) return;
 
-  const formattedDate = selectedDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+    try {
+      const result = await toggleQuran(trackId, audioUrl);
+      if (
+        result === "playing" &&
+        !isCurrentTrack &&
+        sessionProgress.progress.audioPositionMs >= MIN_AUDIO_RESUME_MS
+      ) {
+        await seekQuran(sessionProgress.progress.audioPositionMs);
+      }
+    } catch (playbackError) {
+      console.error("Playback error:", playbackError);
+    }
 
-  const isToday = selectedDate.toDateString() === new Date().toDateString();
-  const title = isToday ? "Today's Recommendation" : formattedDate;
+    void track(
+      EventName.LIBRARY_TRACK_PLAYED,
+      {
+        track_id: trackId,
+        track_name: surah?.englishName || "Quran",
+        collection_name: "daily_recommendation",
+        has_ambient: state.ambient.activeType !== "silence",
+        ambient_type:
+          state.ambient.activeType !== "silence"
+            ? state.ambient.activeType
+            : undefined,
+      },
+      "library",
+    );
+  }, [
+    audioUrl,
+    isCurrentTrack,
+    seekQuran,
+    sessionProgress.progress.audioPositionMs,
+    state.ambient.activeType,
+    surah,
+    toggleQuran,
+    trackId,
+  ]);
 
+  const handleAmbientCycle = useCallback(async () => {
+    const activeIndex = AMBIENT_OPTIONS.findIndex(
+      (option) => option.type === state.ambient.activeType,
+    );
+    const nextAmbient =
+      AMBIENT_OPTIONS[(activeIndex + 1) % AMBIENT_OPTIONS.length] ??
+      AMBIENT_OPTIONS[0];
 
+    await setAmbient(nextAmbient.type);
+    void track(
+      EventName.LIBRARY_AMBIENT_TOGGLED,
+      {
+        ambient_type: nextAmbient.type,
+        is_enabled: nextAmbient.type !== "silence",
+      },
+      "library",
+    );
+  }, [setAmbient, state.ambient.activeType]);
+
+  const handleSeekPress = useCallback(
+    async (locationX: number) => {
+      if (!scrubberWidth || !state.quran.durationMs) return;
+
+      const ratio = Math.max(0, Math.min(1, locationX / scrubberWidth));
+      await seekQuran(state.quran.durationMs * ratio);
+    },
+    [scrubberWidth, seekQuran, state.quran.durationMs],
+  );
+
+  const handleVerseLayout = useCallback(
+    (verseNumber: number, event: LayoutChangeEvent) => {
+      const { y, height } = event.nativeEvent.layout;
+      const existingLayout = verseLayoutsRef.current[verseNumber];
+
+      if (
+        existingLayout &&
+        existingLayout.y === y &&
+        existingLayout.height === height
+      ) {
+        return;
+      }
+
+      verseLayoutsRef.current[verseNumber] = { y, height };
+      setVerseLayoutVersion((current) => current + 1);
+    },
+    [],
+  );
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+      const totalScrollable = Math.max(
+        1,
+        contentSize.height - layoutMeasurement.height,
+      );
+      const nextProgress = Math.max(
+        0,
+        Math.min(1, contentOffset.y / totalScrollable),
+      );
+
+      setReadingProgress(nextProgress);
+
+      const anchorVerseNumber = getTopVerseNumber(
+        verseLayoutsRef.current,
+        contentOffset.y + spacing.lg,
+      );
+
+      const progressChanged =
+        Math.abs(nextProgress - lastSavedProgressRef.current) >= 0.03;
+      const verseChanged = anchorVerseNumber !== lastSavedVerseRef.current;
+
+      if (!progressChanged && !verseChanged) {
+        return;
+      }
+
+      lastSavedProgressRef.current = nextProgress;
+      lastSavedVerseRef.current = anchorVerseNumber;
+      sessionProgress.queueSave({
+        scrollProgress: nextProgress,
+        topVerseNumber: anchorVerseNumber,
+      });
+    },
+    [sessionProgress],
+  );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surface.background }]}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
-      {/* Main Content with swipe-to-open */}
-      {/* Main Content with swipe-to-open */}
       <View style={styles.content}>
-        {/* @ts-ignore - touchAction is web-only prop */}
-        <GestureDetector gesture={openGesture} touchAction="pan-y">
-          <ScrollView
-            ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerTop}>
-                <View style={styles.titleRow}>
-                  <View>
-                    <Text style={[styles.kicker, { color: colors.text.tertiary }]}>Library</Text>
-                    <Text style={[styles.title, { color: colors.text.primary }]}>{title}</Text>
-                  </View>
-                </View>
+        <View style={styles.chrome}>
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <View style={styles.titleBlock}>
+                <Text style={[styles.kicker, { color: colors.text.tertiary }]}>
+                  Library
+                </Text>
+                <Text style={[styles.title, { color: colors.text.primary }]}>
+                  {title}
+                </Text>
               </View>
-              
-              {surah && (
-                <View style={styles.surahInfo}>
-                  <View style={styles.surahTitleRow}>
-                    <Text style={[styles.surahName, { color: colors.brand.metallicGold }]}>{surah.englishName}</Text>
-                    <Pressable
-                      style={[styles.playButtonMini, isPlaying && styles.playButtonMiniActive]}
-                      onPress={handlePlay}
-                      disabled={!audioUrl}
-                    >
-                      <Ionicons
-                        name={isPlaying ? "pause" : "play"}
-                        size={16}
-                        color={colors.text.primary}
-                      />
-                    </Pressable>
-                  </View>
-                  <Text style={[styles.surahMeta, { color: colors.text.tertiary }]}>
-                    Surah {surah.number} · {surah.revelationType}
-                  </Text>
-                </View>
-              )}
 
-              {/* Controls */}
-              <View style={styles.controlsRow}>
-                <Pressable
-                  style={[styles.togglePill, { borderColor: colors.surface.borderInteractive, backgroundColor: colors.surface.card }, showTranslation && { borderColor: colors.brand.metallicGold, backgroundColor: colors.interactive.selectedBackground }]}
-                  onPress={() => setShowTranslation(!showTranslation)}
+              <Pressable
+                style={[
+                  styles.timelineButton,
+                  {
+                    borderColor: colors.surface.borderInteractive,
+                    backgroundColor: colors.surface.card,
+                  },
+                ]}
+                onPress={() => setIsTimelineVisible(true)}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={14}
+                  color={colors.text.secondary}
+                />
+                <Text
+                  style={[styles.timelineButtonText, { color: colors.text.secondary }]}
                 >
-                  <Ionicons
-                    name="language"
-                    size={14}
-                    color={showTranslation ? colors.brand.metallicGold : colors.text.secondary}
-                  />
-                  <Text style={[styles.toggleLabel, { color: showTranslation ? colors.brand.metallicGold : colors.text.secondary }]}>
-                    Translate
-                  </Text>
+                  Timeline
+                </Text>
+              </Pressable>
+            </View>
+
+            {surah ? (
+              <View style={styles.surahMetaBlock}>
+                <Text style={[styles.surahName, { color: colors.brand.metallicGold }]}>
+                  {surah.englishName}
+                </Text>
+                <Text style={[styles.surahMeta, { color: colors.text.tertiary }]}>
+                  Surah {surah.number} · {surah.revelationType}
+                </Text>
+              </View>
+            ) : null}
+
+            <Pressable
+              style={[
+                styles.translationToggle,
+                {
+                  borderColor: showTranslation
+                    ? colors.brand.metallicGold
+                    : colors.surface.borderInteractive,
+                  backgroundColor: showTranslation
+                    ? colors.interactive.selectedBackground
+                    : colors.surface.card,
+                },
+              ]}
+              onPress={() => setShowTranslation((current) => !current)}
+            >
+              <Ionicons
+                name="language"
+                size={14}
+                color={showTranslation ? colors.brand.metallicGold : colors.text.secondary}
+              />
+              <Text
+                style={[
+                  styles.translationToggleText,
+                  {
+                    color: showTranslation
+                      ? colors.brand.metallicGold
+                      : colors.text.secondary,
+                  },
+                ]}
+              >
+                Translation
+              </Text>
+            </Pressable>
+          </View>
+
+          <View
+            style={[
+              styles.sessionCard,
+              {
+                backgroundColor: colors.surface.card,
+                borderColor: colors.surface.borderElevated,
+              },
+            ]}
+          >
+            <View style={styles.sessionHeaderRow}>
+              <View style={styles.sessionTextBlock}>
+                <Text style={[styles.sessionTitle, { color: colors.text.primary }]}>
+                  {surah?.englishName ?? "Daily Quran"}
+                </Text>
+                <Text
+                  style={[styles.sessionCaption, { color: colors.text.tertiary }]}
+                >
+                  {resumeLabel}
+                </Text>
+              </View>
+
+              <Pressable
+                style={[
+                  styles.ambientButton,
+                  {
+                    borderColor: colors.surface.borderInteractive,
+                    backgroundColor: colors.surface.background,
+                  },
+                ]}
+                onPress={handleAmbientCycle}
+              >
+                <Ionicons
+                  name={activeAmbient.icon as never}
+                  size={13}
+                  color={
+                    activeAmbient.type === "silence"
+                      ? colors.text.tertiary
+                      : colors.brand.metallicGold
+                  }
+                />
+                <Text
+                  style={[
+                    styles.ambientButtonText,
+                    {
+                      color:
+                        activeAmbient.type === "silence"
+                          ? colors.text.tertiary
+                          : colors.brand.metallicGold,
+                    },
+                  ]}
+                >
+                  {activeAmbient.label}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.sessionControlsRow}>
+              <Pressable
+                style={[
+                  styles.playButton,
+                  {
+                    backgroundColor: isPlaying
+                      ? colors.brand.metallicGold
+                      : colors.interactive.selectedBackground,
+                  },
+                ]}
+                onPress={handlePlay}
+                disabled={!audioUrl || isLoading}
+              >
+                <Ionicons
+                  name={isPlaying ? "pause" : "play"}
+                  size={18}
+                  color={isPlaying ? colors.text.onAccent : colors.text.primary}
+                />
+              </Pressable>
+
+              <View style={styles.scrubberColumn}>
+                <Pressable
+                  style={styles.scrubberHitArea}
+                  onLayout={(event) => {
+                    setScrubberWidth(event.nativeEvent.layout.width);
+                  }}
+                  onPress={(event) => {
+                    void handleSeekPress(event.nativeEvent.locationX);
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.scrubberTrack,
+                      { backgroundColor: colors.surface.borderInteractive },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.scrubberFill,
+                        {
+                          width: `${Math.max(0, state.quran.progress * 100)}%`,
+                          backgroundColor: colors.brand.metallicGold,
+                        },
+                      ]}
+                    />
+                  </View>
                 </Pressable>
 
-                <View style={styles.ambientChips}>
-                  {AMBIENT_OPTIONS.map((option) => {
-                    const isActive = state.ambient.activeType === option.type;
-                    return (
-                      <Pressable
-                        key={option.type}
-                        style={[styles.ambientChip, { borderColor: colors.surface.borderInteractive }, isActive && { borderColor: colors.brand.metallicGold, backgroundColor: colors.interactive.selectedBackground }]}
-                        onPress={() => handleAmbientToggle(option.type)}
-                      >
-                        <Ionicons
-                          name={option.icon as any}
-                          size={12}
-                          color={isActive ? colors.brand.metallicGold : colors.text.tertiary}
-                        />
-                        <Text style={[styles.ambientChipText, { color: isActive ? colors.brand.metallicGold : colors.text.tertiary }]}>
-                          {option.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                <View style={styles.timeRow}>
+                  <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
+                    {formatTime(state.quran.positionMs)}
+                  </Text>
+                  <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
+                    -{formatTime(Math.max(0, state.quran.durationMs - state.quran.positionMs))}
+                  </Text>
                 </View>
               </View>
             </View>
+          </View>
 
-            {/* Content */}
-            {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={[styles.errorText, { color: colors.text.error }]}>Unable to load surah</Text>
-                <Text style={[styles.errorDetail, { color: colors.text.secondary }]}>{error}</Text>
-              </View>
-            ) : isLoading ? (
-              <View style={styles.loadingContainer}>
-                <Text style={[styles.loadingText, { color: colors.text.tertiary }]}>Loading surah...</Text>
-              </View>
-            ) : (
-              <View style={styles.versesContainer}>
-                {surah?.verses.map((verse) => {
-                  const englishVerse = translation?.verses.find((v) => v.number === verse.number);
-                  return (
-                    <View key={verse.number} style={styles.verseBlock}>
-                      <View style={styles.verseRow}>
-                        <View style={styles.verseNumber}>
-                          <Text style={[styles.verseNumberText, { color: colors.text.tertiary }]}>{verse.number}</Text>
+          <View
+            style={[
+              styles.readingProgressTrack,
+              { backgroundColor: colors.surface.borderInteractive },
+            ]}
+          >
+            <View
+              style={[
+                styles.readingProgressFill,
+                {
+                  width: `${Math.max(0, readingProgress * 100)}%`,
+                  backgroundColor: colors.brand.metallicGold,
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        <View style={styles.reader}>
+          <GestureDetector gesture={openGesture} touchAction="pan-y">
+            <ScrollView
+              ref={scrollViewRef}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              onScroll={handleScroll}
+              scrollEventThrottle={48}
+            >
+              {error ? (
+                <View style={styles.errorContainer}>
+                  <Text style={[styles.errorText, { color: colors.text.error }]}>
+                    Unable to load surah
+                  </Text>
+                  <Text
+                    style={[styles.errorDetail, { color: colors.text.secondary }]}
+                  >
+                    {error}
+                  </Text>
+                </View>
+              ) : isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text
+                    style={[styles.loadingText, { color: colors.text.tertiary }]}
+                  >
+                    Loading surah...
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.versesContainer}>
+                  {surah?.verses.map((verse) => {
+                    const englishVerse = translation?.verses.find(
+                      (item) => item.number === verse.number,
+                    );
+
+                    return (
+                      <View
+                        key={verse.number}
+                        style={styles.verseBlock}
+                        onLayout={(event) => {
+                          handleVerseLayout(verse.number, event);
+                        }}
+                      >
+                        <View style={styles.verseRow}>
+                          <View style={styles.verseNumber}>
+                            <Text
+                              style={[
+                                styles.verseNumberText,
+                                { color: colors.text.tertiary },
+                              ]}
+                            >
+                              {verse.number}
+                            </Text>
+                          </View>
+
+                          <View style={styles.arabicContainer}>
+                            <Text
+                              style={[
+                                styles.arabicText,
+                                { color: colors.text.primary },
+                              ]}
+                            >
+                              {verse.text}
+                            </Text>
+                          </View>
                         </View>
-                        <View style={styles.arabicContainer}>
-                          <Text style={[styles.arabicText, { color: colors.text.primary }]}>{verse.text}</Text>
-                        </View>
+
+                        {showTranslation && englishVerse ? (
+                          <View style={styles.translationContainer}>
+                            <Text
+                              style={[
+                                styles.translationText,
+                                { color: colors.text.secondary },
+                              ]}
+                            >
+                              {englishVerse.text}
+                            </Text>
+                          </View>
+                        ) : null}
                       </View>
-                      {showTranslation && englishVerse && (
-                        <View style={styles.translationContainer}>
-                          <Text style={[styles.translationText, { color: colors.text.secondary }]}>{englishVerse.text}</Text>
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+                    );
+                  })}
+                </View>
+              )}
 
-            <View style={styles.bottomSpacer} />
-          </ScrollView>
-        </GestureDetector>
+              <View style={styles.bottomSpacer} />
+            </ScrollView>
+          </GestureDetector>
+        </View>
       </View>
 
-      {/* Day Timeline */}
       <DayTimeline
         selectedDate={selectedDate}
         onSelectDate={handleDateSelect}
@@ -244,32 +659,28 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  scrollContent: {
+  chrome: {
     paddingTop: spacing.lg,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    gap: spacing.md,
   },
   header: {
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   headerTop: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.md,
   },
-  titleRow: {
+  titleBlock: {
     flex: 1,
-  },
-  surahTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
   },
   kicker: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 11,
-    textTransform: "uppercase",
     letterSpacing: 1,
+    textTransform: "uppercase",
     marginBottom: spacing.xxs,
   },
   title: {
@@ -277,79 +688,134 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
   },
-  playButtonMini: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  timelineButton: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: spacing.xs,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
   },
-  playButtonMiniActive: {
-    // handled inline
+  timelineButtonText: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
   },
-  playButtonMiniText: {
-    fontSize: 18,
-  },
-  surahInfo: {
-    marginTop: spacing.sm,
+  surahMetaBlock: {
+    gap: spacing.xxs,
   },
   surahName: {
     fontFamily: fontFamily.appSemiBold,
     fontSize: 18,
+    lineHeight: 22,
   },
   surahMeta: {
     fontFamily: fontFamily.appRegular,
     fontSize: 13,
-    marginTop: 2,
   },
-  controlsRow: {
+  translationToggle: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    flexWrap: "wrap",
-  },
-  togglePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 1,
+    gap: spacing.xs,
     borderRadius: radii.pill,
     borderWidth: 1,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
   },
-  togglePillActive: {
-    // handled inline
-  },
-  toggleLabel: {
+  translationToggleText: {
     fontFamily: fontFamily.appRegular,
     fontSize: 12,
   },
-  toggleLabelActive: {
-    // handled inline
+  sessionCard: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
-  ambientChips: {
+  sessionHeaderRow: {
     flexDirection: "row",
-    gap: spacing.xs,
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  ambientChip: {
+  sessionTextBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  sessionTitle: {
+    fontFamily: fontFamily.appSemiBold,
+    fontSize: 15,
+  },
+  sessionCaption: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 12,
+  },
+  ambientButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    gap: spacing.xs,
     borderRadius: radii.pill,
     borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  ambientChipActive: {
-    // handled inline
-  },
-  ambientChipText: {
+  ambientButtonText: {
     fontFamily: fontFamily.appRegular,
     fontSize: 11,
   },
-  ambientChipTextActive: {
-    // inline
+  sessionControlsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  playButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scrubberColumn: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  scrubberHitArea: {
+    paddingVertical: spacing.xs,
+  },
+  scrubberTrack: {
+    height: 4,
+    borderRadius: radii.pill,
+    overflow: "hidden",
+  },
+  scrubberFill: {
+    height: "100%",
+    borderRadius: radii.pill,
+  },
+  timeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  timeText: {
+    fontFamily: fontFamily.appRegular,
+    fontSize: 11,
+  },
+  readingProgressTrack: {
+    height: 3,
+    borderRadius: radii.pill,
+    overflow: "hidden",
+  },
+  readingProgressFill: {
+    height: "100%",
+    borderRadius: radii.pill,
+  },
+  reader: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   versesContainer: {
     gap: spacing.md,
