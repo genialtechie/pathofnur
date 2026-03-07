@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Pressable,
   Share,
@@ -19,14 +19,50 @@ const DAILY_HADITH = {
 
 export function HomeHadithCard() {
   const { colors, isDark } = useTheme();
+  const [shareState, setShareState] = useState<"idle" | "copied" | "unavailable">("idle");
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleShare = useCallback(async () => {
+    const message = `"${DAILY_HADITH.quote}"\n\n${DAILY_HADITH.source}\n\nShared from Path of Nur`;
+
     try {
+      if (
+        process.env.EXPO_OS === "web" &&
+        typeof navigator !== "undefined" &&
+        typeof navigator.share !== "function"
+      ) {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(message);
+          setShareState("copied");
+          if (resetTimerRef.current) {
+            clearTimeout(resetTimerRef.current);
+          }
+          resetTimerRef.current = setTimeout(() => {
+            setShareState("idle");
+            resetTimerRef.current = null;
+          }, 2_000);
+          return;
+        }
+
+        setShareState("unavailable");
+        return;
+      }
+
       await Share.share({
-        message: `"${DAILY_HADITH.quote}"\n\n${DAILY_HADITH.source}\n\nShared from Path of Nur`,
+        message,
       });
+      setShareState("idle");
     } catch (error) {
       console.error("Failed to share hadith:", error);
+      setShareState("unavailable");
     }
   }, []);
 
@@ -94,7 +130,11 @@ export function HomeHadithCard() {
             color={colors.brand.metallicGold}
           />
           <Text style={[styles.shareLabel, { color: colors.brand.metallicGold }]}>
-            Share
+            {shareState === "copied"
+              ? "Copied"
+              : shareState === "unavailable"
+                ? "Unavailable"
+                : "Share"}
           </Text>
         </Pressable>
       </View>

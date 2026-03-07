@@ -58,8 +58,15 @@ const HOME_HERO_IMAGE_MODULES = HERO_ITEMS
   .map((item) => item.imageSource)
   .filter((source): source is number => typeof source === "number");
 
+function getDelayUntilNextDay(date = new Date()) {
+  const nextDay = new Date(date);
+  nextDay.setHours(24, 0, 0, 0);
+  return Math.max(1_000, nextDay.getTime() - date.getTime());
+}
+
 export function HomeScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const { colors, isDark } = useTheme();
   const { location } = useLocation();
   const { date: islamicDate } = useIslamicDate(
@@ -69,12 +76,12 @@ export function HomeScreen() {
 
   const gregorianDate = useMemo(
     () =>
-      new Date().toLocaleDateString("en-US", {
+      currentDate.toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
       }),
-    [],
+    [currentDate],
   );
 
   const hijriDateLabel = islamicDate
@@ -85,9 +92,20 @@ export function HomeScreen() {
     void Asset.loadAsync(HOME_HERO_IMAGE_MODULES);
   }, []);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentDate(new Date());
+    }, getDelayUntilNextDay(currentDate));
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [currentDate]);
+
   // Track screen view when focused
   useFocusEffect(
     useCallback(() => {
+      setCurrentDate(new Date());
       trackScreenView("home");
     }, [])
   );

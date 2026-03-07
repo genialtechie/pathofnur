@@ -14,6 +14,20 @@ interface UseIslamicDateReturn {
   error: string | null;
 }
 
+function getTodayKey(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function getDelayUntilNextDay(date = new Date()) {
+  const nextDay = new Date(date);
+  nextDay.setHours(24, 0, 0, 0);
+  return Math.max(1_000, nextDay.getTime() - date.getTime());
+}
+
 export function useIslamicDate(
   latitude: number | undefined,
   longitude: number | undefined
@@ -21,6 +35,17 @@ export function useIslamicDate(
   const [date, setDate] = useState<IslamicDate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [todayKey, setTodayKey] = useState(() => getTodayKey());
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setTodayKey(getTodayKey());
+    }, getDelayUntilNextDay());
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [todayKey]);
 
   useEffect(() => {
     async function fetchDate() {
@@ -47,7 +72,7 @@ export function useIslamicDate(
     }
 
     fetchDate();
-  }, [latitude, longitude]);
+  }, [latitude, longitude, todayKey]);
 
   return { date, isLoading, error };
 }

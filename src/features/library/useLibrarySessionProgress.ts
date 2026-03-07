@@ -33,6 +33,7 @@ export function useLibrarySessionProgress(sessionKey: string | null) {
   const [isLoaded, setIsLoaded] = useState(false);
   const progressRef = useRef(EMPTY_PROGRESS);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSaveRef = useRef<LibrarySessionProgress | null>(null);
 
   const storageKey = useMemo(
     () => (sessionKey ? getStorageKey(sessionKey) : null),
@@ -91,6 +92,16 @@ export function useLibrarySessionProgress(sessionKey: string | null) {
       isMounted = false;
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      if (storageKey && pendingSaveRef.current) {
+        void AsyncStorage.setItem(
+          storageKey,
+          JSON.stringify(pendingSaveRef.current),
+        ).catch((error) => {
+          console.error("Failed to flush library session progress:", error);
+        });
+        pendingSaveRef.current = null;
       }
     };
   }, [storageKey]);
@@ -106,6 +117,7 @@ export function useLibrarySessionProgress(sessionKey: string | null) {
       };
 
       progressRef.current = nextProgress;
+      pendingSaveRef.current = nextProgress;
       setProgress(nextProgress);
 
       if (saveTimeoutRef.current) {
@@ -121,6 +133,8 @@ export function useLibrarySessionProgress(sessionKey: string | null) {
             console.error("Failed to save library session progress:", error);
           },
         );
+        pendingSaveRef.current = null;
+        saveTimeoutRef.current = null;
       }, 250);
     },
     [storageKey],
