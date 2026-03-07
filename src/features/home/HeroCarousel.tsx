@@ -4,21 +4,22 @@
  * Swipeable hero cards with analytics tracking
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
   ScrollView,
+  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  useWindowDimensions,
 } from "react-native";
-import { Asset } from "expo-asset";
 
 import { HeroCard } from "@/src/components/cards/HeroCard";
 import { track, EventName } from "@/src/lib/analytics/track";
-import { spacing, useTheme } from "@/src/theme";
+import { colors, spacing } from "@/src/theme/tokens";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = SCREEN_WIDTH - spacing["4xl"] * 2;
 const CARD_MARGIN = spacing.md;
 
 interface HeroItem {
@@ -37,14 +38,9 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
   const hasTrackedView = useRef<Set<number>>(new Set());
-  const hasPreloadedImage = useRef<Set<number>>(new Set());
-  const { colors } = useTheme();
-  const { width } = useWindowDimensions();
-  const pageWidth = width;
-  const cardWidth = Math.max(1, width - spacing["4xl"] * 2);
 
-  // Track hero view on mount and when index changes
   const trackHeroView = useCallback(
     async (index: number) => {
       if (hasTrackedView.current.has(index)) return;
@@ -59,16 +55,36 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
           hero_type: item.id,
           hero_index: index,
         },
-        "home"
+        "home",
       );
     },
-    [items]
+    [items],
   );
 
-  // Handle hero card press
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const contentOffset = event.nativeEvent.contentOffset.x;
+      const index = Math.round(contentOffset / (CARD_WIDTH + CARD_MARGIN * 2));
+
+      if (index !== activeIndex && index >= 0 && index < items.length) {
+        setActiveIndex(index);
+        void trackHeroView(index);
+
+        void track(
+          EventName.HOME_HERO_SWIPED,
+          {
+            hero_index: index,
+            previous_index: activeIndex,
+          },
+          "home",
+        );
+      }
+    },
+    [activeIndex, items.length, trackHeroView],
+  );
+
   const handlePress = useCallback(
     async (item: HeroItem, index: number) => {
-      // Track interaction
       await track(
         EventName.HOME_HERO_OPENED,
         {
@@ -76,86 +92,35 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
           hero_index: index,
           action: "pressed",
         },
-        "home"
+        "home",
       );
 
       onHeroPress?.(item, index);
     },
-    [onHeroPress]
-  );
-
-  const preloadImagesAroundIndex = useCallback(
-    (index: number) => {
-      const modules = items
-        .slice(index, index + 2)
-        .map((item) => item?.imageSource)
-        .filter(
-          (source): source is number =>
-            typeof source === "number" && !hasPreloadedImage.current.has(source)
-        );
-
-      if (modules.length === 0) {
-        return;
-      }
-
-      modules.forEach((source) => {
-        hasPreloadedImage.current.add(source);
-      });
-
-      void Asset.loadAsync(modules);
-    },
-    [items]
-  );
-
-  useEffect(() => {
-    void trackHeroView(0);
-    preloadImagesAroundIndex(0);
-  }, [preloadImagesAroundIndex, trackHeroView]);
-
-  useEffect(() => {
-    preloadImagesAroundIndex(activeIndex);
-  }, [activeIndex, preloadImagesAroundIndex]);
-
-  const handleMomentumScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const contentOffset = event.nativeEvent.contentOffset.x;
-      const index = Math.round(contentOffset / pageWidth);
-
-      if (index === activeIndex || index < 0 || index >= items.length) {
-        return;
-      }
-
-      setActiveIndex(index);
-      void trackHeroView(index);
-      void track(
-        EventName.HOME_HERO_SWIPED,
-        {
-          hero_index: index,
-          previous_index: activeIndex,
-        },
-        "home"
-      );
-    },
-    [activeIndex, items.length, pageWidth, trackHeroView]
+    [onHeroPress],
   );
 
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={pageWidth}
+        snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+        snapToAlignment="center"
       >
         {items.map((item, index) => (
           <View
             key={item.id}
             style={[
               styles.cardContainer,
-              { width: pageWidth },
+              { width: CARD_WIDTH },
+              index < items.length - 1 && { marginRight: CARD_MARGIN },
             ]}
           >
             <HeroCard
@@ -164,22 +129,16 @@ export function HeroCarousel({ items, onHeroPress }: HeroCarouselProps) {
               subtitle={item.subtitle}
               onPress={() => handlePress(item, index)}
               ratio="portrait"
-              style={[styles.heroCard, { width: cardWidth }]}
             />
           </View>
         ))}
       </ScrollView>
 
-      {/* Pagination dots */}
       <View style={styles.pagination}>
         {items.map((_, index) => (
           <View
             key={index}
-            style={[
-              styles.dot,
-              { backgroundColor: index === activeIndex ? colors.interactive.active : colors.interactive.inactive },
-              index === activeIndex && styles.activeDot,
-            ]}
+            style={[styles.dot, index === activeIndex && styles.activeDot]}
           />
         ))}
       </View>
@@ -192,14 +151,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   scrollContent: {
-    // Each item owns its own horizontal centering.
+    paddingHorizontal: spacing["4xl"],
   },
-  cardContainer: {
-    alignItems: "center",
-  },
-  heroCard: {
-    maxWidth: 420,
-  },
+  cardContainer: {},
   pagination: {
     flexDirection: "row",
     justifyContent: "center",
@@ -211,8 +165,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+    backgroundColor: colors.interactive.inactive,
   },
   activeDot: {
+    backgroundColor: colors.interactive.active,
     width: 20,
     borderRadius: 3,
   },
