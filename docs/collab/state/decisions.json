@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T19:20:51Z",
+  "last_updated_utc": "2026-03-07T20:56:36Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -95,6 +95,32 @@
       "rationale": "Prevents recurring font misuse by making Zalando default UI mandatory and enforcing restricted use of Lora/Playfair/Amiri via script.",
       "owner": "human",
       "timestamp_utc": "2026-02-11T19:20:51Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260307-008",
+      "topic": "Cross-lane exception for Journey streak redesign",
+      "options_considered": [
+        "Wait for a claude-lane implementer to take Journey changes",
+        "Allow codex to execute the Journey rework in an isolated task worktree"
+      ],
+      "selected_option": "Allow codex to execute the Journey rework in an isolated task worktree",
+      "rationale": "The user requested immediate implementation and the work can remain fully isolated to src/features/journey/** without expanding into shared navigation or settings files.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-07T20:37:39Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260307-009",
+      "topic": "Allow larger diff for T-20260307-022 Journey state and UI rewrite",
+      "options_considered": [
+        "Split Journey rework into separate storage and UI tasks",
+        "Allow one larger isolated task because the old routine-first model had to be replaced coherently"
+      ],
+      "selected_option": "Allow one larger isolated task because the old routine-first model had to be replaced coherently",
+      "rationale": "The user requested a full Journey/Streaks restructuring, and splitting the storage migration from the UI rewrite would have prolonged an incoherent intermediate state.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-07T20:56:36Z",
       "supersedes": null
     }
   ]

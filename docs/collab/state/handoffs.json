@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-11T21:05:00Z",
+  "last_updated_utc": "2026-03-07T20:56:36Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -384,6 +384,60 @@
       "next_recommended_actions": [
         "Merge T-011 to replace mock location hook",
         "Test on physical device for haptics/interactions"
+      ]
+    },
+    {
+      "handoff_id": "H-20260307-022",
+      "task_id": "T-20260307-022",
+      "branch_name": "feat/T-20260307-022-journey-streaks-polish",
+      "worktree_path": ".worktrees/T-20260307-022",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-07T20:56:36Z",
+      "summary": {
+        "completed": [
+          "Rebuilt Journey into a premium hub with a stronger hero, clean My Streaks gateway, and share-focused surface",
+          "Redesigned the dedicated streak page around per-prayer Salah checkoff plus improved Quran, Fasting, and Dhikr cards",
+          "Replaced the Journey data model with v4 history that stores individual prayers and derives Salah streaks from all five prayers",
+          "Removed routine/reminder setup from the active Journey flow and replaced the old routine route content with a temporary settings placeholder"
+        ],
+        "remaining": [
+          "Merge branch to main and test the updated Journey flow from the root checkout",
+          "Decide whether to remove the unused reminder helper files in a follow-up cleanup task once Settings is designed"
+        ]
+      },
+      "changed_files": [
+        "src/features/journey/JourneyScreen.tsx",
+        "src/features/journey/journey-analytics.ts",
+        "src/features/journey/journey-hub-sections.tsx",
+        "src/features/journey/journey-practice-meta.ts",
+        "src/features/journey/journey-progress-utils.ts",
+        "src/features/journey/journey-routine-screen.tsx",
+        "src/features/journey/journey-streaks-screen.tsx",
+        "src/features/journey/journey-types.ts",
+        "src/features/journey/useJourneyProgress.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm run check:typography",
+          "CI=1 npx expo start --web --port 8082"
+        ],
+        "result": "pass_with_note",
+        "notes": "Typecheck passed. Typography policy reported OK but still scanned 0 files, so touched Journey files were manually checked for typography-token compliance. Expo dev server started successfully in the task worktree. `npx expo export --platform web` passed from the root checkout but failed from the git worktree with `No routes found`, which appears to be a worktree-specific Expo static export issue rather than a Journey route regression."
+      },
+      "risks": [
+        "The temporary /journey/routine route now shows a placeholder until the future Settings flow is designed",
+        "Unused reminder helper files remain in the Journey feature and should be cleaned up once the reminder/settings direction is finalized"
+      ],
+      "follow_ups": [
+        "Run a native interaction pass on iOS/Android for the Salah checkoff feel and haptic cadence",
+        "Merge to main and validate web export from the root checkout after integration"
+      ],
+      "next_recommended_actions": [
+        "Merge feat/T-20260307-022-journey-streaks-polish",
+        "Smoke-test Journey and My Streaks from the root checkout while the main Expo server is running",
+        "Create a cleanup task for unused journey reminder infrastructure after Settings design lands"
       ]
     }
   ]

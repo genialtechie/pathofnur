@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-02-12T06:00:00Z",
+  "last_updated_utc": "2026-03-07T20:56:36Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -221,6 +221,29 @@
       ],
       "implementation_notes": "Raw Magnetometer data is noisy and points to Magnetic North. Location.watchHeadingAsync provides True North which is required for accurate Qiblah direction. The current implementation is functionally correct for magnetic north but geographically inaccurate.",
       "updated_at_utc": "2026-02-12T17:40:00Z"
+    },
+    {
+      "task_id": "T-20260307-022",
+      "title": "Rework Journey hub and My Streaks interaction flow",
+      "scope_paths": ["src/features/journey/**"],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260307-022-journey-streaks-polish",
+      "worktree_path": ".worktrees/T-20260307-022",
+      "acceptance_criteria": [
+        "Journey hub removes routine/reminder setup UI and focuses on a premium progress hero, strong My Streaks entrypoint, and share surface",
+        "Dedicated streak page title becomes 'My Streaks' with calm user-facing copy only",
+        "Users can mark Fajr, Dhuhr, Asr, Maghrib, and Isha individually on the streak page",
+        "Daily Salah completion is derived from all five prayers, and Salah streaks update from that derived state",
+        "Quran, Fasting, and Dhikr remain available as daily streaks with improved interaction design",
+        "Existing Journey state migrates safely to the new per-prayer Salah data shape",
+        "npm run typecheck passes",
+        "npm run check:typography passes"
+      ],
+      "implementation_notes": "Keep changes within src/features/journey/** only. Remove routine from active Journey UX for now without designing future Settings. Rework visuals toward a more tactile, rewarding feel inspired by the Tasbih tool surface.",
+      "updated_at_utc": "2026-03-07T20:56:36Z"
     }
   ]
 }
