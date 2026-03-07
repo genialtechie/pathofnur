@@ -1,10 +1,18 @@
+import { useEffect } from "react";
 import { Stack } from "expo-router";
+import { Asset } from "expo-asset";
+
+import { onboardingImageModules } from "@/src/features/donate/onboarding-images";
 
 export const unstable_settings = {
   initialRouteName: "welcome"
 };
 
 export default function OnboardingLayout() {
+  useEffect(() => {
+    void Asset.loadAsync(onboardingImageModules);
+  }, []);
+
   return (
     <Stack
       screenOptions={{
