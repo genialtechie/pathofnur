@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T22:02:00Z",
+  "last_updated_utc": "2026-03-10T22:51:00Z",
   "reservations": [
     {
       "task_id": "T-20260211-009",
@@ -31,6 +31,23 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-08T02:02:00Z"
+    },
+    {
+      "task_id": "T-20260310-001",
+      "worktree_path": ".worktrees/T-20260310-001",
+      "reserved_paths": [
+        "AGENTS.md",
+        "imaan_prd.md",
+        "docs/collab/**",
+        "shared/**",
+        "src/lib/backend/**",
+        "src/lib/auth/**",
+        "src/lib/session/**",
+        "server/**",
+        "tsconfig.json"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T02:51:00Z"
     }
   ]
 }

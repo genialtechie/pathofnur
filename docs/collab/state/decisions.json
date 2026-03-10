@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T22:02:00Z",
+  "last_updated_utc": "2026-03-10T22:51:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -160,6 +160,46 @@
       "rationale": "The requested redesign is intentionally about shared visual language between the Tools and Journey cards, so splitting it across lanes would increase iteration risk and produce a less coherent result.",
       "owner": "lead",
       "timestamp_utc": "2026-03-07T22:02:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260310-013",
+      "topic": "Product direction reset to imaan.app native intervention product",
+      "options_considered": [
+        "Continue extending the Path of Nur PWA roadmap",
+        "Re-baseline the repo around the imaan.app PRD and native-first architecture"
+      ],
+      "selected_option": "Re-baseline the repo around the imaan.app PRD and native-first architecture",
+      "rationale": "The product primitive, app IA, and backend needs have changed materially. Continuing to extend the old roadmap would create compounding architectural debt.",
+      "owner": "human",
+      "timestamp_utc": "2026-03-10T22:51:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260310-014",
+      "topic": "Backend platform baseline for imaan.app",
+      "options_considered": [
+        "Firebase-centered stack",
+        "Supabase with Azure-hosted app server",
+        "VM-only custom backend"
+      ],
+      "selected_option": "Supabase with Azure-hosted app server",
+      "rationale": "Supabase is the system of record for auth, relational data, storage, and vectors, while Azure Container Apps hosts the orchestration API and workers using existing credits. OpenRouter is server-side only.",
+      "owner": "human",
+      "timestamp_utc": "2026-03-10T22:51:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260310-015",
+      "topic": "Cross-boundary exception for repo re-baseline and backend foundation",
+      "options_considered": [
+        "Split the repo reset across multiple owners before any implementation",
+        "Allow codex to execute one coordinated reset task across AGENTS, collab state, shared contracts, and backend scaffold"
+      ],
+      "selected_option": "Allow codex to execute one coordinated reset task across AGENTS, collab state, shared contracts, and backend scaffold",
+      "rationale": "The repo instructions, task queue, and code architecture all encode the old product. A single coordinated reset is the fastest way to stop new work from landing on stale assumptions.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-10T22:51:00Z",
       "supersedes": null
     }
   ]

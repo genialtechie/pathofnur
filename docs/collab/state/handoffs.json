@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:46:05Z",
+  "last_updated_utc": "2026-03-10T23:04:38Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -542,6 +542,77 @@
       "follow_ups": [],
       "next_recommended_actions": [
         "Visually review the new Journey card density on device and trim copy if the top stack still feels heavier than the Tools page"
+      ]
+    },
+    {
+      "handoff_id": "H-20260310-001",
+      "task_id": "T-20260310-001",
+      "branch_name": "chore/T-20260310-001-imaan-rebaseline",
+      "worktree_path": ".worktrees/T-20260310-001",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-10T23:04:38Z",
+      "summary": {
+        "completed": [
+          "Rewrote AGENTS.md around the imaan.app native intervention product and added the in-repo imaan_prd.md source document",
+          "Updated collaboration state with the product reset, backend platform decisions, new refactor tasks, and a repo-reset handoff",
+          "Expanded ownership guidance to cover auth/session, backend client code, shared contracts, and the new server package",
+          "Scaffolded shared backend contracts, a mobile backend client boundary, a session cache, and an Azure Container Apps server package with Supabase/OpenRouter seams"
+        ],
+        "remaining": [
+          "Integrate Supabase Auth into onboarding and root app session handling",
+          "Implement real backend handlers and persistence instead of scaffolded 501 routes",
+          "Build corpus ingestion and embedding jobs against reviewed source material"
+        ]
+      },
+      "changed_files": [
+        "AGENTS.md",
+        "imaan_prd.md",
+        "docs/collab/OWNERSHIP_MAP.md",
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json",
+        "tsconfig.json",
+        "shared/imaan-contracts.ts",
+        "src/lib/backend/config.ts",
+        "src/lib/backend/client.ts",
+        "src/lib/backend/index.ts",
+        "src/lib/auth/types.ts",
+        "src/lib/session/session-cache.ts",
+        "server/package.json",
+        "server/tsconfig.json",
+        "server/README.md",
+        "server/src/config.ts",
+        "server/src/index.ts",
+        "server/src/lib/openrouter.ts",
+        "server/src/lib/supabase.ts",
+        "server/src/routes/v1.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm run check:typography",
+          "npm --prefix server install",
+          "npm --prefix server run typecheck"
+        ],
+        "result": "pass",
+        "notes": "Root typecheck passed after excluding server from the Expo tsconfig. Typography validator returned OK but still reported `Files scanned: 0`, so the non-UI nature of this task was also verified manually. Server typecheck passed after aligning the scaffold to NodeNext ESM import rules."
+      },
+      "risks": [
+        "The Azure server package currently exposes scaffolded 501 handlers, so app integration tasks must implement real auth and persistence before relying on these routes",
+        "Existing analytics, onboarding, and legacy UI copy still reference the old product and need follow-up task-specific replacement"
+      ],
+      "follow_ups": [
+        "T-20260310-002 onboarding auth",
+        "T-20260310-003 home intervention flow",
+        "T-20260310-004 ledger and journey memory surface",
+        "T-20260310-006 corpus ingestion and embeddings"
+      ],
+      "next_recommended_actions": [
+        "Start T-20260310-002 to wire Supabase Auth into onboarding and session hydration",
+        "Start T-20260310-006 to ingest reviewed sources and generate embeddings in Supabase",
+        "Keep legacy UI flows untouched until each replacement task lands to avoid half-migrated product copy"
       ]
     }
   ]
