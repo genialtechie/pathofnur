@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-07T21:46:05Z",
+  "last_updated_utc": "2026-03-10T23:04:38Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -318,6 +318,133 @@
       ],
       "implementation_notes": "Keep the redesign contained to the existing Tools tab hero plus Journey hub surfaces. Borrow the warmth and contrast of the Tools card, but do not duplicate it exactly. Preserve current navigation and behavior while improving hierarchy, density, and emotional pull.",
       "updated_at_utc": "2026-03-07T21:46:05Z"
+    },
+    {
+      "task_id": "T-20260310-001",
+      "title": "Re-baseline repo docs and scaffold imaan backend foundation",
+      "scope_paths": [
+        "AGENTS.md",
+        "imaan_prd.md",
+        "docs/collab/**",
+        "shared/**",
+        "src/lib/backend/**",
+        "src/lib/auth/**",
+        "src/lib/session/**",
+        "server/**",
+        "tsconfig.json"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "chore/T-20260310-001-imaan-rebaseline",
+      "worktree_path": ".worktrees/T-20260310-001",
+      "acceptance_criteria": [
+        "Root product docs reflect the imaan.app refactor rather than the legacy Path of Nur PWA roadmap",
+        "Collaboration state includes the new product direction, backend/platform decisions, and a fresh task queue for the refactor",
+        "A root PRD file exists in-repo for agents and humans to reference",
+        "Shared backend contracts are scaffolded for intervention, ledger, follow-up, and profile flows",
+        "Native app code has typed backend/auth client seams without wiring the old UI into them yet",
+        "A server package exists for Azure Container Apps with Supabase/OpenRouter configuration and initial route scaffolding",
+        "npm run typecheck passes",
+        "npm --prefix server run typecheck passes"
+      ],
+      "implementation_notes": "This is a repo and architecture reset task. Do not attempt the full UI refactor here. Establish the operating docs, shared contracts, app-side API boundaries, and server scaffold only.",
+      "updated_at_utc": "2026-03-10T23:04:38Z"
+    },
+    {
+      "task_id": "T-20260310-002",
+      "title": "Implement native onboarding account creation flow",
+      "scope_paths": [
+        "app/(onboarding)/**",
+        "src/features/onboarding/**",
+        "src/lib/auth/**",
+        "src/lib/session/**"
+      ],
+      "owner_role": "codex",
+      "status": "pending",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-002-onboarding-auth",
+      "worktree_path": ".worktrees/T-20260310-002",
+      "updated_at_utc": "2026-03-10T22:51:00Z"
+    },
+    {
+      "task_id": "T-20260310-003",
+      "title": "Build Home intervention transaction flow",
+      "scope_paths": [
+        "app/(tabs)/home.tsx",
+        "src/features/home/**",
+        "src/lib/backend/**",
+        "shared/**"
+      ],
+      "owner_role": "opencode",
+      "status": "pending",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-003-home-intervention-flow",
+      "worktree_path": ".worktrees/T-20260310-003",
+      "updated_at_utc": "2026-03-10T22:51:00Z"
+    },
+    {
+      "task_id": "T-20260310-004",
+      "title": "Build Ledger and Journey memory surface",
+      "scope_paths": [
+        "app/(tabs)/journey.tsx",
+        "src/features/journey/**",
+        "src/lib/backend/**",
+        "shared/**"
+      ],
+      "owner_role": "claude",
+      "status": "pending",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-004-ledger-journey-memory",
+      "worktree_path": ".worktrees/T-20260310-004",
+      "updated_at_utc": "2026-03-10T22:51:00Z"
+    },
+    {
+      "task_id": "T-20260310-005",
+      "title": "Build Profile utility surface and settings shell",
+      "scope_paths": [
+        "app/(tabs)/**",
+        "src/features/onboarding/**",
+        "src/lib/auth/**",
+        "src/lib/session/**"
+      ],
+      "owner_role": "codex",
+      "status": "pending",
+      "priority": "P1",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-005-profile-utilities",
+      "worktree_path": ".worktrees/T-20260310-005",
+      "updated_at_utc": "2026-03-10T22:51:00Z"
+    },
+    {
+      "task_id": "T-20260310-006",
+      "title": "Build corpus ingestion and embedding pipeline",
+      "scope_paths": [
+        "server/**",
+        "shared/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "opencode",
+      "status": "pending",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-006-corpus-embedding-pipeline",
+      "worktree_path": ".worktrees/T-20260310-006",
+      "updated_at_utc": "2026-03-10T23:04:38Z"
     }
   ]
 }
