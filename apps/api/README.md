@@ -38,6 +38,9 @@ For local development, the api package loads the nearest repo `.env` files autom
 `IMAAN_PREFER_PROCESS_ENV=1` if you need exported shell variables to win over repo-local `.env`
 values.
 
+The default live retrieval path assumes `EMBEDDING_PROVIDER=openai_compatible` and falls back to
+`https://openrouter.ai/api/v1` when no explicit `EMBEDDING_BASE_URL` is set.
+
 ## Run locally
 
 ```bash
@@ -78,5 +81,21 @@ For a controlled first pass, `corpus:prepare` also accepts:
 
 The provided SQL migration uses `vector(768)`. If you change `EMBEDDING_DIMENSIONS`, update
 `apps/api/sql/retrieval_passages.sql` to match before seeding.
+
+## Retrieval route
+
+`POST /v1/retrieve`
+
+Request shape:
+
+```json
+{
+  "inputText": "fear before a difficult conversation",
+  "matchCount": 5,
+  "sourceTypes": ["quran", "hadith"]
+}
+```
+
+The route embeds the query, calls `match_retrieval_passages`, and returns citation-ready matches.
 
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

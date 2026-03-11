@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:32:00Z",
+  "last_updated_utc": "2026-03-11T16:25:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -279,6 +279,19 @@
       "rationale": "The user wants the first real seed path wired now. The work is tightly scoped to the api package plus collab state and is a direct continuation of the corpus pipeline already implemented by codex.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T14:25:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-022",
+      "topic": "Cross-lane exception for stable retrieval API slice",
+      "options_considered": [
+        "Wait for the default api lane owner to implement request-time retrieval",
+        "Allow codex to extend the freshly landed corpus work with one narrow retrieval route slice"
+      ],
+      "selected_option": "Allow codex to extend the freshly landed corpus work with one narrow retrieval route slice",
+      "rationale": "The user wants the next backend loop now, and the work is a direct continuation of the seeded corpus path. Keeping it scoped to apps/api, contracts, and collab state minimizes coordination risk.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T16:05:00Z",
       "supersedes": null
     }
   ]

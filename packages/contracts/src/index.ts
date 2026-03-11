@@ -108,6 +108,29 @@ export const RegisterPushTokenRequestSchema = z.object({
   pushToken: z.string().min(1),
 })
 
+export const RetrievePassagesRequestSchema = z.object({
+  inputText: z.string().min(1),
+  matchCount: z.number().int().min(1).max(10).optional(),
+  sourceTypes: z.array(RetrievalSourceTypeSchema).min(1).optional(),
+})
+
+export const RetrievedPassageSchema = z.object({
+  id: z.string().min(1),
+  sourceType: RetrievalSourceTypeSchema,
+  title: z.string().min(1),
+  reference: z.string().min(1),
+  excerpt: z.string().min(1),
+  arabicText: z.string().min(1),
+  englishTranslation: z.string().min(1),
+  contextSummary: z.string().min(1),
+  emotionalTags: z.array(z.string().min(1)),
+  similarity: z.number(),
+})
+
+export const RetrievePassagesResponseSchema = z.object({
+  matches: z.array(RetrievedPassageSchema),
+})
+
 export const MutationSuccessSchema = z.object({
   ok: z.literal(true),
 })
@@ -139,6 +162,13 @@ export type ResolutionState = z.infer<typeof ResolutionStateSchema>
 export type Citation = z.infer<typeof CitationSchema>
 export type Dua = z.infer<typeof DuaSchema>
 export type RetrievalSourceType = z.infer<typeof RetrievalSourceTypeSchema>
+export type RetrievePassagesRequest = z.infer<
+  typeof RetrievePassagesRequestSchema
+>
+export type RetrievedPassage = z.infer<typeof RetrievedPassageSchema>
+export type RetrievePassagesResponse = z.infer<
+  typeof RetrievePassagesResponseSchema
+>
 export type InterventionPayload = z.infer<typeof InterventionPayloadSchema>
 export type AppUserProfile = z.infer<typeof AppUserProfileSchema>
 export type LedgerEntry = z.infer<typeof LedgerEntrySchema>

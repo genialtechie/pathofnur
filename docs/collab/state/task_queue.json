@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:32:00Z",
+  "last_updated_utc": "2026-03-11T16:25:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -576,6 +576,32 @@
       ],
       "implementation_notes": "Keep this slice focused on making the real seed path work in the current monorepo layout. Prefer env alias support over forcing .env churn. Do not widen into request-time retrieval yet.",
       "updated_at_utc": "2026-03-11T15:10:00Z"
+    },
+    {
+      "task_id": "T-20260311-003",
+      "title": "Implement stable retrieval API route against seeded corpus",
+      "scope_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-002"
+      ],
+      "branch_name": "feat/T-20260311-003-retrieval-api",
+      "worktree_path": ".worktrees/T-20260311-003",
+      "acceptance_criteria": [
+        "packages/contracts defines typed request and response schemas for passage retrieval",
+        "apps/api exposes POST /v1/retrieve and validates payloads with shared contracts",
+        "The route embeds the query, calls the match_retrieval_passages RPC, and returns citation-ready matches",
+        "Zero-match results return a valid empty response shape with 200 status",
+        "apps/api typecheck passes and the route works against the currently seeded Supabase table"
+      ],
+      "implementation_notes": "Keep this slice stable and reusable. Do not widen into full intervention generation yet. Prefer OpenRouter-compatible embeddings as the practical default because the Google free-tier embedding path hit quota limits during live seeding.",
+      "updated_at_utc": "2026-03-11T16:25:00Z"
     }
   ]
 }

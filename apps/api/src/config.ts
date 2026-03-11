@@ -29,9 +29,9 @@ function readEnv(...names: string[]): string | null {
 export function getServerConfig(): ServerConfig {
   const portValue = Number(process.env.PORT || 3001)
   const embeddingProvider =
-    readEnv("EMBEDDING_PROVIDER") === "openai_compatible"
-      ? "openai_compatible"
-      : "google"
+    readEnv("EMBEDDING_PROVIDER") === "google"
+      ? "google"
+      : "openai_compatible"
 
   return {
     port: Number.isFinite(portValue) ? portValue : 3001,
@@ -64,7 +64,7 @@ export function getServerConfig(): ServerConfig {
     embeddingBaseUrl:
       readEnv("EMBEDDING_BASE_URL") ||
       (embeddingProvider === "openai_compatible"
-        ? readEnv("OPENROUTER_BASE_URL") || "https://api.openai.com/v1"
+        ? readEnv("OPENROUTER_BASE_URL") || "https://openrouter.ai/api/v1"
         : "https://generativelanguage.googleapis.com/v1beta"),
     embeddingDimensions: Number(readEnv("EMBEDDING_DIMENSIONS") || "768"),
   }
