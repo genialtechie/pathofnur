@@ -18,6 +18,7 @@ Role: implementation agent
 - Avoid shared hotspots unless lead-gated.
 - Keep branch tied to one task only.
 - Never code from root checkout.
+- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, or placeholder logic.
 - Typography is non-negotiable:
   - Zalando Sans for app UI by default
   - Lora only for Quran/Hadith/long-form scripture

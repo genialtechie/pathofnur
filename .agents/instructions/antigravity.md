@@ -35,6 +35,7 @@ Role: lead orchestrator
 - Do not allow out-of-scope edits without decision record.
 - Do not allow implementers to code in root checkout.
 - Merge continuously; avoid large integration piles.
+- Enforce the repo quality bar: production-standard by default, no unapproved "MVP" shortcuts or fake fallback behavior.
 - Enforce typography policy in reviews:
   - Zalando Sans default UI font
   - Lora only for Quran/Hadith/long-form scripture

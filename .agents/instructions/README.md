@@ -18,6 +18,12 @@ Runtime files are deltas over core protocol.
 
 Implementers must execute coding tasks only from task worktrees under `.worktrees/`.
 
+## Quality Bar (Hard)
+
+- Default to production-standard implementations.
+- Do not introduce "MVP" shortcuts, fake fallback behavior, or placeholder logic unless the human explicitly approves that tradeoff.
+- When a dependency failure should make a feature unavailable, fail clearly instead of fabricating behavior.
+
 ## Typography Rule (Hard)
 
 - `Zalando Sans` is the default app font for UI.

@@ -18,6 +18,7 @@ Role: implementation agent
 - Preserve card-first visual system and product tone from `AGENTS.md`.
 - Avoid opportunistic refactors outside the task.
 - Never implement from root checkout.
+- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, or placeholder logic.
 - Typography is non-negotiable:
   - Zalando Sans for app UI by default
   - Lora only for Quran/Hadith/long-form scripture

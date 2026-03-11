@@ -18,6 +18,7 @@ Role: implementation agent
 - Keep diffs small and task-focused.
 - If blocked by scope boundary, request lead update (no silent expansion).
 - Never implement from root checkout.
+- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, or placeholder logic.
 - Add handoff record when done.
 - Typography is non-negotiable:
   - Zalando Sans for app UI by default

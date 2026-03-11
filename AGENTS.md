@@ -123,6 +123,19 @@ The app should optimize for:
 4. fast resolution
 5. memory continuity
 
+## 5.2) Quality Bar (Hard)
+
+Default assumption for all work in this repo:
+
+- build to production standard unless the human explicitly approves a temporary shortcut
+- do not ship placeholder logic, fake fallback behavior, or "MVP" scaffolding that weakens trust, correctness, or long-term maintainability
+- if a dependency failure should make a feature unavailable, fail clearly instead of fabricating degraded behavior
+- temporary code is only acceptable when it is explicitly labeled, isolated, and approved as transitional
+
+Rule of thumb:
+
+- if you would be uncomfortable defending the implementation six months from now, do not land it without explicit approval
+
 ## 5.1) Typography Policy (Non-Negotiable)
 
 App font system:
