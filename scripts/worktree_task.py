@@ -16,6 +16,10 @@ def run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=cwd or ROOT, check=True, text=True, capture_output=True)
 
 
+def run_stream(cmd: list[str], cwd: Path | None = None) -> None:
+    subprocess.run(cmd, cwd=cwd or ROOT, check=True, text=True)
+
+
 def git_branch_exists(branch: str) -> bool:
     proc = subprocess.run(
         ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
@@ -68,6 +72,10 @@ def setup(task_id: str) -> None:
         run(["git", "worktree", "add", str(path), branch])
     else:
         run(["git", "worktree", "add", "-b", branch, str(path), "main"])
+
+    if (path / "package.json").exists() and not (path / "node_modules").exists():
+        print("Installing workspace dependencies in worktree...")
+        run_stream(["npm", "install"], cwd=path)
 
     print(f"Created worktree: {path}")
     print(f"Branch: {branch}")

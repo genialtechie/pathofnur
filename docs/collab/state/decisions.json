@@ -293,6 +293,19 @@
       "owner": "lead",
       "timestamp_utc": "2026-03-11T16:05:00Z",
       "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-023",
+      "topic": "Cross-boundary exception for contracts package normalization and intervention endpoint",
+      "options_considered": [
+        "Leave the temporary contracts bridge in place and build the intervention route on top of it",
+        "Allow codex to normalize shared package resolution and continue directly into the first intervention endpoint"
+      ],
+      "selected_option": "Allow codex to normalize shared package resolution and continue directly into the first intervention endpoint",
+      "rationale": "The worktree-specific import bridge is technical debt in a shared contracts package. Fixing resolution requires touching the worktree setup path as well as the package itself, and then landing the first non-501 intervention route is the shortest path to a stable backend surface.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T17:15:00Z",
+      "supersedes": null
     }
   ]
 }

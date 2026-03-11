@@ -3,7 +3,7 @@ import {
   type RetrievalSourceType,
   RetrievePassagesResponseSchema,
   RetrievedPassageSchema,
-} from "./contracts.js"
+} from "@imaan/contracts"
 import { z } from "zod"
 
 import { embedTexts } from "./embeddings.js"

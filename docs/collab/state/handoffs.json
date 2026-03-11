@@ -896,6 +896,65 @@
         "Normalize workspace package resolution so apps/api can import @imaan/contracts directly in isolated worktrees",
         "Run a larger corpus seed before evaluating retrieval relevance seriously"
       ]
+    },
+    {
+      "handoff_id": "H-20260311-004",
+      "task_id": "T-20260311-004",
+      "branch_name": "feat/T-20260311-004-intervention-endpoint",
+      "worktree_path": ".worktrees/T-20260311-004",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T17:45:00Z",
+      "summary": {
+        "completed": [
+          "Updated worktree setup to install local workspace dependencies so isolated task worktrees stop resolving shared packages through the root checkout",
+          "Removed the temporary apps/api contracts bridge and switched retrieval and route code back to direct @imaan/contracts imports",
+          "Implemented a retrieval-backed POST /v1/interventions endpoint that returns a structured cited payload instead of 501",
+          "Added an OpenRouter-backed intervention formatter that fails closed when generation is unavailable or returns invalid structured output"
+        ],
+        "remaining": [
+          "Persist interventions and ledger entries instead of returning transient payloads only",
+          "Seed a larger reviewed corpus before relying on retrieval quality beyond the current sample rows"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/lib/interventions.ts",
+        "apps/api/src/lib/retrieve-passages.ts",
+        "apps/api/src/routes/v1.ts",
+        "scripts/worktree_task.py",
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm --workspace @imaan/contracts run typecheck",
+          "npm --workspace @imaan/api run typecheck",
+          "npx tsx <createIntervention smoke script>",
+          "npm --workspace @imaan/api run start",
+          "curl -s http://127.0.0.1:3001/health",
+          "curl -s -X POST http://127.0.0.1:3001/v1/interventions -H 'content-type: application/json' -d '{\"inputText\":\"I am terrified of failing my interview tomorrow\"}'",
+          "curl -s -X POST http://127.0.0.1:3001/v1/interventions -H 'content-type: application/json' -d '{\"inputText\":\"\"}'"
+        ],
+        "result": "pass",
+        "notes": "The direct service smoke test and live HTTP route both returned structured cited intervention payloads against the seeded Supabase corpus. Invalid payloads still return 400. The route uses OpenRouter formatting successfully, fails closed on generation errors, and no longer depends on a worktree-local contracts bridge."
+      },
+      "risks": [
+        "Intervention creation is still transient and does not persist records into Supabase yet",
+        "Retrieval quality is still constrained by the currently seeded 20-row sample corpus"
+      ],
+      "follow_ups": [
+        "Persist interventions and ledger summaries to Supabase",
+        "Add a real classification layer instead of the current heuristic first pass",
+        "Seed a larger reviewed Quran and hadith corpus slice"
+      ],
+      "next_recommended_actions": [
+        "Implement Supabase-backed intervention persistence and start populating the ledger",
+        "Increase the seeded corpus before evaluating the quality of intervention retrieval and model formatting",
+        "If needed later, harden OpenRouter response parsing with a stricter structured-output contract"
+      ]
     }
   ]
 }

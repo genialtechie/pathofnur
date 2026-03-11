@@ -22,6 +22,21 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-11T20:05:00Z"
+    },
+    {
+      "task_id": "T-20260311-004",
+      "worktree_path": ".worktrees/T-20260311-004",
+      "reserved_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "scripts/worktree_task.py",
+        "docs/collab/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T21:15:00Z"
     }
   ]
 }
