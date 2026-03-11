@@ -356,10 +356,10 @@
       "task_id": "T-20260310-002",
       "title": "Implement native onboarding account creation flow",
       "scope_paths": [
-        "app/(onboarding)/**",
-        "src/features/onboarding/**",
-        "src/lib/auth/**",
-        "src/lib/session/**"
+        "apps/mobile/app/(onboarding)/**",
+        "apps/mobile/src/features/onboarding/**",
+        "apps/mobile/src/lib/auth/**",
+        "apps/mobile/src/lib/session/**"
       ],
       "owner_role": "codex",
       "status": "pending",
@@ -375,10 +375,10 @@
       "task_id": "T-20260310-003",
       "title": "Build Home intervention transaction flow",
       "scope_paths": [
-        "app/(tabs)/home.tsx",
-        "src/features/home/**",
-        "src/lib/backend/**",
-        "shared/**"
+        "apps/mobile/app/(tabs)/home.tsx",
+        "apps/mobile/src/features/home/**",
+        "apps/mobile/src/lib/backend/**",
+        "packages/contracts/**"
       ],
       "owner_role": "opencode",
       "status": "pending",
@@ -394,10 +394,10 @@
       "task_id": "T-20260310-004",
       "title": "Build Ledger and Journey memory surface",
       "scope_paths": [
-        "app/(tabs)/journey.tsx",
-        "src/features/journey/**",
-        "src/lib/backend/**",
-        "shared/**"
+        "apps/mobile/app/(tabs)/journey.tsx",
+        "apps/mobile/src/features/journey/**",
+        "apps/mobile/src/lib/backend/**",
+        "packages/contracts/**"
       ],
       "owner_role": "claude",
       "status": "pending",
@@ -413,10 +413,10 @@
       "task_id": "T-20260310-005",
       "title": "Build Profile utility surface and settings shell",
       "scope_paths": [
-        "app/(tabs)/**",
-        "src/features/onboarding/**",
-        "src/lib/auth/**",
-        "src/lib/session/**"
+        "apps/mobile/app/(tabs)/**",
+        "apps/mobile/src/features/onboarding/**",
+        "apps/mobile/src/lib/auth/**",
+        "apps/mobile/src/lib/session/**"
       ],
       "owner_role": "codex",
       "status": "pending",
@@ -432,8 +432,8 @@
       "task_id": "T-20260310-006",
       "title": "Build corpus ingestion and embedding pipeline",
       "scope_paths": [
-        "server/**",
-        "shared/**",
+        "apps/api/**",
+        "packages/contracts/**",
         "docs/collab/**"
       ],
       "owner_role": "codex",
@@ -510,7 +510,7 @@
         ".gitignore"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "blocked",
       "priority": "P1",
       "depends_on": [
         "T-20260310-001"
@@ -524,8 +524,8 @@
         "Root package scripts expose landing dev/build commands",
         "npm run landing:build passes"
       ],
-      "implementation_notes": "Keep the monorepo setup minimal and git-safe. Do not move the Expo app out of root. Introduce a new apps/landing workspace and keep all landing assets self-contained inside that folder.",
-      "updated_at_utc": "2026-03-11T00:32:00Z"
+      "implementation_notes": "Superseded by T-20260310-008, which performs the full monorepo cleanup and landing-page setup together.",
+      "updated_at_utc": "2026-03-11T04:08:00Z"
     }
   ]
 }

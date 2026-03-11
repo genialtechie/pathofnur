@@ -11,52 +11,54 @@ record + reservation update by lead.
 - `docs/collab/**`
 - `.agents/instructions/**`
 - `.github/**`
-- shared config roots (`package.json`, `app.json`, `tsconfig*`, root lockfiles)
-- shared navigation roots (`app/_layout.*`, `app/(tabs)/_layout.*`)
-- `shared/**`
+- workspace config roots (`package.json`, `package-lock.json`, `.gitignore`, `tsconfig.json`)
+- app/package config manifests (`apps/*/package.json`, `apps/*/tsconfig*`, `apps/mobile/app.json`, `apps/mobile/babel.config.js`, `packages/*/package.json`, `packages/*/tsconfig*`)
+- shared navigation roots (`apps/mobile/app/_layout.*`, `apps/mobile/app/(tabs)/_layout.*`)
+- `packages/contracts/**`
 - root checkout orchestration + merges
 
 ## Codex Lane
 
-- `app/(tabs)/**`
-- `src/components/navigation/**`
-- `src/features/onboarding/**`
-- `src/lib/auth/**`
-- `src/lib/session/**`
+- `apps/mobile/app/(tabs)/**`
+- `apps/mobile/src/components/navigation/**`
+- `apps/mobile/src/features/onboarding/**`
+- `apps/mobile/src/lib/auth/**`
+- `apps/mobile/src/lib/session/**`
 
 ## OpenCode Lane
 
-- `src/lib/analytics/**`
-- `src/types/analytics/**`
-- `src/features/home/**`
-- `src/features/library/**`
-- `src/lib/backend/**`
-- `server/**`
+- `apps/mobile/src/lib/analytics/**`
+- `apps/mobile/src/types/analytics/**`
+- `apps/mobile/src/features/home/**`
+- `apps/mobile/src/features/library/**`
+- `apps/mobile/src/lib/backend/**`
+- `apps/api/**`
 
 ## Claude Lane
 
-- `app/(onboarding)/**`
-- `app/donate/**`
-- `src/features/donate/**`
-- `src/features/tools/**`
-- `src/features/journey/**`
+- `apps/mobile/app/(onboarding)/**`
+- `apps/mobile/app/donate/**`
+- `apps/mobile/src/features/donate/**`
+- `apps/mobile/src/features/tools/**`
+- `apps/mobile/src/features/journey/**`
 
 ## Cursor Lane
 
-- `src/components/cards/**`
-- `src/components/hero/**`
-- `src/components/ui/**`
-- `src/theme/**`
-- `public/images/**` (only when explicitly assigned)
+- `apps/mobile/src/components/cards/**`
+- `apps/mobile/src/components/hero/**`
+- `apps/mobile/src/components/ui/**`
+- `apps/mobile/src/theme/**`
+- `apps/mobile/public/images/**` (only when explicitly assigned)
+- `apps/landing/**`
 
 ## Shared/Hotspot Files (Lead Gated)
 
-- `app/_layout.*`
-- `app/(tabs)/_layout.*`
-- `src/types/**`
-- `src/lib/analytics/events.ts` (schema changes)
-- `shared/**` (cross-runtime contracts and schemas)
-- `public/asset-manifest*.json`
+- `apps/mobile/app/_layout.*`
+- `apps/mobile/app/(tabs)/_layout.*`
+- `apps/mobile/src/types/**`
+- `apps/mobile/src/lib/analytics/events.ts` (schema changes)
+- `packages/contracts/**` (cross-runtime contracts and schemas)
+- `apps/mobile/public/asset-manifest*.json`
 
 ## Rule
 
