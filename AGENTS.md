@@ -196,7 +196,7 @@ Preferred runtime behavior:
 
 ## 9) Agent Rule of Thumb
 
-When uncertain, optimize for:
+When uncertain, escalate to the product owner. optimize for:
 
 1. user trust
 2. theological grounding

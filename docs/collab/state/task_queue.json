@@ -457,6 +457,50 @@
       "updated_at_utc": "2026-03-11T03:55:00Z"
     },
     {
+      "task_id": "T-20260310-008",
+      "title": "Reorganize repo into apps/packages monorepo",
+      "scope_paths": [
+        "app/**",
+        "src/**",
+        "assets/**",
+        "public/**",
+        "server/**",
+        "shared/**",
+        "apps/**",
+        "packages/**",
+        "package.json",
+        "package-lock.json",
+        ".gitignore",
+        "app.json",
+        "babel.config.js",
+        "expo-env.d.ts",
+        "tsconfig.json",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "chore/T-20260310-008-monorepo-cleanup",
+      "worktree_path": ".worktrees/T-20260310-008",
+      "acceptance_criteria": [
+        "Expo app moves into apps/mobile with working scripts and intact asset resolution",
+        "Fastify server moves into apps/api",
+        "Shared runtime contracts move into packages/contracts",
+        "A Vite landing page exists in apps/landing",
+        "Root becomes workspace orchestration only with workspace-aware scripts",
+        "Pending collab tasks and ownership rules are updated to the new paths",
+        "npm run typecheck passes from root",
+        "npm run check:typography passes from root",
+        "npm run landing:build passes",
+        "npm run api:typecheck passes"
+      ],
+      "implementation_notes": "This is a structural cleanup task. Rehome the mobile app, api, landing page, and shared contracts without mixing in new product feature work. Preserve current behavior and retarget future tasks to the new layout immediately.",
+      "updated_at_utc": "2026-03-10T23:40:00Z"
+    },
+    {
       "task_id": "T-20260310-007",
       "title": "Set up monorepo-safe Vite landing page app",
       "scope_paths": [

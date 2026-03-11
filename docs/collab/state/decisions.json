@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T03:55:00Z",
+  "last_updated_utc": "2026-03-11T04:08:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -240,6 +240,19 @@
       "rationale": "The chosen hadith-json dataset does not expose per-hadith grade metadata. The safe MVP path is to seed only explicitly whitelisted collections by default and keep grade inference out of the pipeline.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T03:55:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-019",
+      "topic": "Cross-boundary exception for full monorepo cleanup",
+      "options_considered": [
+        "Leave the mixed root layout in place while continuing feature work",
+        "Allow codex to execute a single structural cleanup moving mobile, api, landing, and contracts into apps/packages"
+      ],
+      "selected_option": "Allow codex to execute a single structural cleanup moving mobile, api, landing, and contracts into apps/packages",
+      "rationale": "The user wants the repo cleaned before it grows further. A one-pass structural move is safer now than allowing more feature branches to land on a mixed root layout that will immediately be invalidated.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T04:08:00Z",
       "supersedes": null
     }
   ]
