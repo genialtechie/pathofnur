@@ -672,7 +672,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-005"
@@ -687,7 +687,34 @@
         "apps/api, packages/contracts, and touched mobile auth/session files typecheck"
       ],
       "implementation_notes": "Replace session-only actor scope with authenticated user linkage cleanly. Do not widen into full onboarding UI yet, but align the backend and mobile seams so the identity model is consistent.",
-      "updated_at_utc": "2026-03-11T19:10:00Z"
+      "updated_at_utc": "2026-03-11T17:05:00Z"
+    },
+    {
+      "task_id": "T-20260311-007",
+      "title": "Remove legacy session ownership schema and codify no-fallback rule",
+      "scope_paths": [
+        "apps/api/**",
+        "AGENTS.md",
+        ".agents/instructions/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-006"
+      ],
+      "branch_name": "fix/T-20260311-007-drop-session-ownership",
+      "worktree_path": ".worktrees/T-20260311-007",
+      "acceptance_criteria": [
+        "The Supabase schema no longer keeps actor_session_id on interventions or ledger entries",
+        "Fresh and already-migrated environments converge on actor_user_id-only ownership without session fallback behavior",
+        "API/server docs no longer frame session ownership as a deprecated or retained path",
+        "Repo-wide agent instructions explicitly prohibit unapproved fallback, deprecation, or legacy bridge logic by default",
+        "Touched backend and docs surfaces validate cleanly"
+      ],
+      "implementation_notes": "Remove the session ownership column outright rather than preserving it as a nullable legacy path. Also tighten the repo instruction surface so agents stop adding defensive fallback/deprecation scaffolding unless explicitly approved.",
+      "updated_at_utc": "2026-03-11T17:23:11Z"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T16:25:00Z",
+  "last_updated_utc": "2026-03-11T17:23:11Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -331,6 +331,19 @@
       "rationale": "Session-only ownership is not a production endpoint model for durable memory. This slice needs narrow cross-boundary access to api, contracts, and the existing mobile auth/session seams so identity becomes consistent before more backend behavior lands.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T19:10:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-026",
+      "topic": "Remove legacy session ownership and prevent control-plane drift",
+      "options_considered": [
+        "Keep actor_session_id as a deprecated nullable legacy column",
+        "Remove session ownership from the schema entirely and tighten repo rules so fallback/deprecation scaffolding and stale control-plane validators are not allowed to drift"
+      ],
+      "selected_option": "Remove session ownership from the schema entirely and tighten repo rules so fallback/deprecation scaffolding and stale control-plane validators are not allowed to drift",
+      "rationale": "The app has no live users depending on the earlier session-only schema. Keeping the legacy ownership column and allowing stale validation logic to persist would create avoidable technical debt and contradictory repo behavior.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T17:23:11Z",
       "supersedes": null
     }
   ]

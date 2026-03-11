@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T16:25:00Z",
+  "last_updated_utc": "2026-03-11T17:23:11Z",
   "reservations": [
     {
       "task_id": "T-20260311-002",
@@ -61,6 +61,18 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-11T23:10:00Z"
+    },
+    {
+      "task_id": "T-20260311-007",
+      "worktree_path": ".worktrees/T-20260311-007",
+      "reserved_paths": [
+        "apps/api/**",
+        "AGENTS.md",
+        ".agents/instructions/**",
+        "docs/collab/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T21:23:11Z"
     }
   ]
 }
