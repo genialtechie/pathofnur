@@ -98,4 +98,25 @@ Request shape:
 
 The route embeds the query, calls `match_retrieval_passages`, and returns citation-ready matches.
 
+## Intervention route
+
+`POST /v1/interventions`
+
+Request shape:
+
+```json
+{
+  "inputText": "I am terrified of failing my interview tomorrow"
+}
+```
+
+Behavior:
+
+- classifies the request into a first-pass intervention type
+- retrieves the top supporting passages from Supabase
+- uses OpenRouter to format a structured response
+- fails with an upstream generation error if OpenRouter is unavailable or returns invalid structured output
+
+The route is retrieval-backed and citation-safe, but it does not persist interventions yet.
+
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

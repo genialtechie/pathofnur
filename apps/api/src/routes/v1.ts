@@ -5,11 +5,14 @@ import {
   BackendErrorResponseSchema,
   CreateInterventionRequestSchema,
   FollowupResponseRequestSchema,
+  InterventionPayloadSchema,
   RetrievePassagesRequestSchema,
   RegisterPushTokenRequestSchema,
   ResolveInterventionRequestSchema,
-} from "../lib/contracts.js"
+} from "@imaan/contracts"
 
+import { createIntervention } from "../lib/interventions.js"
+import { InterventionGenerationError } from "../lib/interventions.js"
 import { retrievePassages } from "../lib/retrieve-passages.js"
 
 function sendNotImplemented(reply: FastifyReply, feature: string) {
@@ -76,7 +79,25 @@ export async function registerV1Routes(app: FastifyInstance) {
       })
     }
 
-    return sendNotImplemented(reply, "Intervention creation")
+    try {
+      const payload = await createIntervention(parsed.data)
+      return reply.code(200).send(InterventionPayloadSchema.parse(payload))
+    } catch (error) {
+      if (error instanceof InterventionGenerationError) {
+        return reply.code(502).send({
+          error: "generation_failed",
+          message: error.message,
+        })
+      }
+
+      return reply.code(500).send({
+        error: "intervention_failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Intervention creation failed.",
+      })
+    }
   })
 
   app.post("/v1/interventions/:id/resolve", async (request, reply) => {

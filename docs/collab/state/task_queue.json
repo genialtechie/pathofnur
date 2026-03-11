@@ -602,6 +602,37 @@
       ],
       "implementation_notes": "Keep this slice stable and reusable. Do not widen into full intervention generation yet. Prefer OpenRouter-compatible embeddings as the practical default because the Google free-tier embedding path hit quota limits during live seeding.",
       "updated_at_utc": "2026-03-11T16:25:00Z"
+    },
+    {
+      "task_id": "T-20260311-004",
+      "title": "Normalize contracts package resolution and implement first intervention endpoint",
+      "scope_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "scripts/worktree_task.py",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-003"
+      ],
+      "branch_name": "feat/T-20260311-004-intervention-endpoint",
+      "worktree_path": ".worktrees/T-20260311-004",
+      "acceptance_criteria": [
+        "packages/contracts resolves cleanly from apps/api without a local bridge file in task worktrees",
+        "The contracts package exports a stable built/runtime-safe surface for workspace consumers",
+        "apps/api removes the temporary local contracts bridge and imports shared contracts directly",
+        "apps/api exposes a non-501 POST /v1/interventions route with typed request and response validation",
+        "The intervention route performs retrieval against the live Supabase corpus and returns a structured cited payload",
+        "Root and workspace typecheck pass for contracts and api"
+      ],
+      "implementation_notes": "Start by fixing package resolution correctly so the backend can keep building without worktree-specific import hacks. Keep the intervention endpoint lean: retrieval-backed, structured, and cited. Do not widen into full auth/session gating yet.",
+      "updated_at_utc": "2026-03-11T17:45:00Z"
     }
   ]
 }
