@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T17:23:11Z",
+  "last_updated_utc": "2026-03-11T20:05:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -344,6 +344,19 @@
       "rationale": "The app has no live users depending on the earlier session-only schema. Keeping the legacy ownership column and allowing stale validation logic to persist would create avoidable technical debt and contradictory repo behavior.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T17:23:11Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-027",
+      "topic": "Cross-lane exception for Home intervention entry rebuild",
+      "options_considered": [
+        "Wait for the default home lane owner to replace the legacy dashboard surface",
+        "Allow codex to execute a narrow Home-only rebuild so the intervention-first mobile flow can start immediately"
+      ],
+      "selected_option": "Allow codex to execute a narrow Home-only rebuild so the intervention-first mobile flow can start immediately",
+      "rationale": "The user explicitly wants the Home transaction rebuilt now. Keeping the task scoped to apps/mobile/src/features/home only avoids collision with the active auth/session and backend tasks while unblocking the core product surface.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T20:05:00Z",
       "supersedes": null
     }
   ]
