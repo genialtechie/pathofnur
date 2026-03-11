@@ -1,0 +1,24 @@
+{
+  "name": "@imaan/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "corpus:prepare": "tsx scripts/prepare-retrieval-passages.ts",
+    "corpus:seed": "tsx scripts/seed-retrieval-passages.ts"
+  },
+  "dependencies": {
+    "@imaan/contracts": "0.0.0",
+    "@fastify/cors": "^11.1.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "fastify": "^5.6.1",
+    "zod": "^3.25.42"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-CODE_DIRS = [ROOT / "app", ROOT / "src"]
+CODE_DIRS = [ROOT / "apps" / "mobile" / "app", ROOT / "apps" / "mobile" / "src"]
 IGNORE_SEGMENTS = {"node_modules", "dist", ".expo", ".worktrees"}
 
 DIRECT_FONT_LITERAL_RE = re.compile(
@@ -44,7 +44,8 @@ def collect_code_files() -> list[Path]:
         for path in base.rglob("*"):
             if path.suffix not in {".ts", ".tsx"}:
                 continue
-            if is_ignored(path):
+            rel = path.relative_to(ROOT)
+            if is_ignored(rel):
                 continue
             files.append(path)
     return files
@@ -59,7 +60,7 @@ def main() -> int:
         text = path.read_text(encoding="utf-8")
 
         # Allow literal font family declarations only in centralized token file.
-        if rel != Path("src/components/navigation/typography.ts"):
+        if rel != Path("apps/mobile/src/components/navigation/typography.ts"):
             if DIRECT_FONT_LITERAL_RE.search(text):
                 errors.append(
                     f"{rel}: direct font family literal found; use typography tokens instead"

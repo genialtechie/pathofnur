@@ -173,9 +173,9 @@ Platform:
 
 Backend packages in this repo:
 
-- mobile app in the root project
-- app server in `server/`
-- shared cross-runtime contracts in `shared/`
+- mobile app in `apps/mobile`
+- app server in `apps/api`
+- shared cross-runtime contracts in `packages/contracts`
 
 Preferred runtime behavior:
 
