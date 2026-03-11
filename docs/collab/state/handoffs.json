@@ -1,7 +1,57 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T03:55:00Z",
+  "last_updated_utc": "2026-03-11T04:36:30Z",
   "handoffs": [
+    {
+      "handoff_id": "H-20260311-008",
+      "task_id": "T-20260310-008",
+      "branch_name": "chore/T-20260310-008-monorepo-cleanup",
+      "worktree_path": ".worktrees/T-20260310-008",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T04:36:30Z",
+      "summary": {
+        "completed": [
+          "Moved the Expo app from the repo root into apps/mobile and rewired root scripts to use workspaces",
+          "Moved the Fastify server into apps/api and promoted shared contracts into packages/contracts",
+          "Added a standalone Vite landing site in apps/landing using the existing logo, favicon, and brand art",
+          "Retargeted ownership rules, task scopes, and typography validation to the new monorepo layout"
+        ],
+        "remaining": [
+          "Begin new product work against apps/mobile, apps/api, and packages/contracts instead of the old root paths"
+        ]
+      },
+      "changed_files": [
+        "package.json",
+        "package-lock.json",
+        "apps/mobile/package.json",
+        "apps/mobile/tsconfig.json",
+        "apps/api/package.json",
+        "apps/api/tsconfig.json",
+        "packages/contracts/package.json",
+        "packages/contracts/src/index.ts",
+        "apps/landing/index.html",
+        "apps/landing/src/main.js",
+        "apps/landing/src/styles.css",
+        "docs/collab/OWNERSHIP_MAP.md",
+        "docs/collab/state/task_queue.json",
+        "scripts/validate_typography_policy.py"
+      ],
+      "validation": {
+        "commands": [
+          "npm run landing:build",
+          "npm run api:typecheck",
+          "npm run typecheck",
+          "npm run check:typography"
+        ],
+        "result": "pass"
+      },
+      "next_recommended_actions": [
+        "Point Vercel at apps/landing when deploying the landing site",
+        "Start future mobile feature tasks from apps/mobile paths",
+        "Move any remaining shared runtime contracts into packages/contracts before adding more server-mobile integrations"
+      ]
+    },
     {
       "handoff_id": "H-20260211-001",
       "task_id": "T-20260211-001",
