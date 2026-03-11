@@ -48,6 +48,19 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-11T22:15:00Z"
+    },
+    {
+      "task_id": "T-20260311-006",
+      "worktree_path": ".worktrees/T-20260311-006",
+      "reserved_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "apps/mobile/src/lib/auth/**",
+        "apps/mobile/src/lib/session/**",
+        "docs/collab/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T23:10:00Z"
     }
   ]
 }

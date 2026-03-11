@@ -319,6 +319,19 @@
       "owner": "lead",
       "timestamp_utc": "2026-03-11T18:15:00Z",
       "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-025",
+      "topic": "Cross-lane exception for authenticated actor linkage on intervention records",
+      "options_considered": [
+        "Keep session-only ownership until a later auth phase and avoid touching mobile auth/session code",
+        "Allow codex to align backend persistence with the existing auth/session seams now so durable records stop depending on transient session ids"
+      ],
+      "selected_option": "Allow codex to align backend persistence with the existing auth/session seams now so durable records stop depending on transient session ids",
+      "rationale": "Session-only ownership is not a production endpoint model for durable memory. This slice needs narrow cross-boundary access to api, contracts, and the existing mobile auth/session seams so identity becomes consistent before more backend behavior lands.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T19:10:00Z",
+      "supersedes": null
     }
   ]
 }

@@ -660,6 +660,34 @@
       ],
       "implementation_notes": "Build persistence on top of the merged intervention route. Keep the schema lean but durable. Do not widen into auth enforcement yet, but structure the data model so user linkage can be added cleanly.",
       "updated_at_utc": "2026-03-11T18:40:00Z"
+    },
+    {
+      "task_id": "T-20260311-006",
+      "title": "Link interventions and ledger records to authenticated user ids",
+      "scope_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "apps/mobile/src/lib/auth/**",
+        "apps/mobile/src/lib/session/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-005"
+      ],
+      "branch_name": "feat/T-20260311-006-auth-linked-interventions",
+      "worktree_path": ".worktrees/T-20260311-006",
+      "acceptance_criteria": [
+        "The backend uses a real authenticated actor id for intervention and ledger persistence instead of session-only ownership",
+        "Shared contracts and request handling define a stable authenticated context for backend writes and reads",
+        "GET /v1/ledger scopes records by authenticated actor id",
+        "The mobile auth/session scaffolding exposes the actor identity needed to call the backend consistently",
+        "apps/api, packages/contracts, and touched mobile auth/session files typecheck"
+      ],
+      "implementation_notes": "Replace session-only actor scope with authenticated user linkage cleanly. Do not widen into full onboarding UI yet, but align the backend and mobile seams so the identity model is consistent.",
+      "updated_at_utc": "2026-03-11T19:10:00Z"
     }
   ]
 }
