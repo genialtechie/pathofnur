@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T16:25:00Z",
+  "last_updated_utc": "2026-03-11T09:54:54Z",
   "handoffs": [
     {
       "handoff_id": "H-20260311-008",
@@ -1019,6 +1019,69 @@
         "Wire Supabase auth through onboarding and replace session-only actor scope with authenticated user ids",
         "Implement POST /v1/interventions/:id/resolve as a real persisted state update",
         "Add a dedicated classification step so intervention type selection is not heuristic"
+      ]
+    },
+    {
+      "handoff_id": "H-20260311-006",
+      "task_id": "T-20260311-006",
+      "branch_name": "feat/T-20260311-006-auth-linked-interventions",
+      "worktree_path": ".worktrees/T-20260311-006",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T09:54:54Z",
+      "summary": {
+        "completed": [
+          "Linked intervention persistence and ledger reads to authenticated Supabase user ids instead of session-only ownership",
+          "Added bearer-token authentication in the API and scoped POST /v1/interventions plus GET /v1/ledger to the authenticated actor",
+          "Updated the contracts so intervention creation and ledger reads no longer require sessionId payload fields",
+          "Added a mobile session helper that exposes the authenticated backend actor as user id plus access token",
+          "Fixed the schema linkage by making legacy actor_session_id columns nullable and promoting actor_user_id as the durable ownership column"
+        ],
+        "remaining": [
+          "Implement persisted intervention resolution updates for POST /v1/interventions/:id/resolve",
+          "Replace heuristic intervention type selection with a dedicated classified request path"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/lib/auth.ts",
+        "apps/api/src/lib/intervention-store.ts",
+        "apps/api/src/lib/interventions.ts",
+        "apps/api/src/routes/v1.ts",
+        "apps/api/supabase/migrations/20260311193000_actor_user_id_linkage.sql",
+        "apps/api/supabase/migrations/20260311200500_actor_session_id_nullable.sql",
+        "apps/mobile/src/lib/session/session-cache.ts",
+        "packages/contracts/src/index.ts",
+        "docs/collab/state/handoffs.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm --workspace @imaan/contracts run typecheck",
+          "npm --workspace @imaan/api run typecheck",
+          "npm run typecheck",
+          "supabase link --workdir apps/api --project-ref <derived-from-supabase-url> --password <env-db-password>",
+          "supabase db push --workdir apps/api --include-all",
+          "PORT=3005 npm --workspace @imaan/api run start",
+          "curl -X POST http://127.0.0.1:3005/v1/interventions -H 'Authorization: Bearer <temp-user-token>' -H 'Content-Type: application/json' --data-binary '{\"inputText\":\"...\"}'",
+          "curl http://127.0.0.1:3005/v1/ledger -H 'Authorization: Bearer <temp-user-token>'",
+          "curl http://127.0.0.1:3005/v1/ledger without Authorization header"
+        ],
+        "result": "pass",
+        "notes": "Authenticated intervention creation persisted successfully, ledger reads returned only the authenticated user's entries, a second user saw an empty ledger, and unauthenticated ledger access returned 401."
+      },
+      "risks": [
+        "Older session-scoped records remain in the database but are no longer returned by the authenticated ledger path because they lack actor_user_id linkage",
+        "API routes still authenticate each request by calling Supabase auth.getUser on the bearer token; this is correct but adds an upstream dependency to request authentication"
+      ],
+      "follow_ups": [
+        "Persist intervention resolution updates against authenticated user scope",
+        "Backfill or retire legacy session-scoped intervention rows if those early records matter",
+        "Introduce a stronger classifier before widening intervention coverage"
+      ],
+      "next_recommended_actions": [
+        "Implement POST /v1/interventions/:id/resolve as an authenticated persisted update",
+        "Add user-scoped follow-up persistence and retrieval on top of the same actor model",
+        "Replace heuristic intervention classification with a dedicated structured classification step"
       ]
     }
   ]

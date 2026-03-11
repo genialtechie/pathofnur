@@ -9,6 +9,7 @@ import {
 } from "@imaan/contracts"
 import { z } from "zod"
 
+import type { AuthenticatedActor } from "./auth.js"
 import { getServerConfig } from "../config.js"
 import { persistInterventionRecord } from "./intervention-store.js"
 import { createOpenRouterChatCompletion } from "./openrouter.js"
@@ -236,6 +237,7 @@ async function generateDraftWithOpenRouter(
 }
 
 export async function createIntervention(
+  actor: AuthenticatedActor,
   input: CreateInterventionRequest
 ): Promise<InterventionPayload> {
   assertGenerationConfigured()
@@ -291,7 +293,13 @@ export async function createIntervention(
     createdAtUtc: new Date().toISOString(),
   })
 
-  await persistInterventionRecord(input, payload)
+  await persistInterventionRecord(
+    {
+      userId: actor.userId,
+      request: input,
+    },
+    payload
+  )
 
   return payload
 }
