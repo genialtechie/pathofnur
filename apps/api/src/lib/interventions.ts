@@ -10,6 +10,7 @@ import {
 import { z } from "zod"
 
 import { getServerConfig } from "../config.js"
+import { persistInterventionRecord } from "./intervention-store.js"
 import { createOpenRouterChatCompletion } from "./openrouter.js"
 import { retrievePassages } from "./retrieve-passages.js"
 
@@ -31,6 +32,20 @@ const InterventionDraftSchema = z.object({
 })
 
 type InterventionDraft = z.infer<typeof InterventionDraftSchema>
+
+export class InterventionRetrievalError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "InterventionRetrievalError"
+  }
+}
+
+export class NoSupportingPassagesError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "NoSupportingPassagesError"
+  }
+}
 
 export class InterventionGenerationError extends Error {
   constructor(message: string) {
@@ -226,14 +241,25 @@ export async function createIntervention(
   assertGenerationConfigured()
 
   const suggestedType = classifyInterventionType(input.inputText)
-  const retrieval = await retrievePassages({
-    inputText: input.inputText,
-    matchCount: 3,
-  })
+  let retrieval
+  try {
+    retrieval = await retrievePassages({
+      inputText: input.inputText,
+      matchCount: 3,
+    })
+  } catch (error) {
+    throw new InterventionRetrievalError(
+      error instanceof Error
+        ? `Intervention retrieval failed: ${error.message}`
+        : "Intervention retrieval failed."
+    )
+  }
   const matches = retrieval.matches
 
   if (!matches.length) {
-    throw new Error("No supporting passages were found for this intervention.")
+    throw new NoSupportingPassagesError(
+      "No supporting passages were found for this intervention."
+    )
   }
 
   let draft: InterventionDraft
@@ -251,7 +277,7 @@ export async function createIntervention(
     )
   }
 
-  return InterventionPayloadSchema.parse({
+  const payload = InterventionPayloadSchema.parse({
     id: crypto.randomUUID(),
     type: draft.type,
     title: draft.title,
@@ -264,4 +290,8 @@ export async function createIntervention(
     ledgerSummary: draft.ledgerSummary,
     createdAtUtc: new Date().toISOString(),
   })
+
+  await persistInterventionRecord(input, payload)
+
+  return payload
 }

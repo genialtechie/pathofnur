@@ -633,6 +633,33 @@
       ],
       "implementation_notes": "Start by fixing package resolution correctly so the backend can keep building without worktree-specific import hacks. Keep the intervention endpoint lean: retrieval-backed, structured, and cited. Do not widen into full auth/session gating yet.",
       "updated_at_utc": "2026-03-11T17:45:00Z"
+    },
+    {
+      "task_id": "T-20260311-005",
+      "title": "Persist interventions to Supabase and expose ledger read path",
+      "scope_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-004"
+      ],
+      "branch_name": "feat/T-20260311-005-intervention-persistence",
+      "worktree_path": ".worktrees/T-20260311-005",
+      "acceptance_criteria": [
+        "Successful POST /v1/interventions writes a durable intervention record into Supabase",
+        "Successful POST /v1/interventions also writes a corresponding ledger entry in the same durable flow",
+        "The stored intervention record keeps input text, classified type, generated payload, and cited passage ids",
+        "GET /v1/ledger returns persisted ledger entries instead of 501",
+        "Shared contracts reflect the persisted ledger/intervention response shape used by the api",
+        "apps/api and packages/contracts typecheck passes and the live local route works against the current Supabase project"
+      ],
+      "implementation_notes": "Build persistence on top of the merged intervention route. Keep the schema lean but durable. Do not widen into auth enforcement yet, but structure the data model so user linkage can be added cleanly.",
+      "updated_at_utc": "2026-03-11T18:40:00Z"
     }
   ]
 }

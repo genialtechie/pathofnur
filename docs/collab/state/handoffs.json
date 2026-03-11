@@ -955,6 +955,71 @@
         "Increase the seeded corpus before evaluating the quality of intervention retrieval and model formatting",
         "If needed later, harden OpenRouter response parsing with a stricter structured-output contract"
       ]
+    },
+    {
+      "handoff_id": "H-20260311-005",
+      "task_id": "T-20260311-005",
+      "branch_name": "feat/T-20260311-005-intervention-persistence",
+      "worktree_path": ".worktrees/T-20260311-005",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T18:40:00Z",
+      "summary": {
+        "completed": [
+          "Added Supabase migration support for durable interventions and ledger entries plus a transactional create_intervention_and_ledger RPC and cursorable list_ledger_entries RPC",
+          "Persisted successful POST /v1/interventions responses into Supabase and exposed GET /v1/ledger as a real read path scoped by sessionId",
+          "Updated shared contracts so sessionId is required for intervention persistence and ledger entries include their intervention linkage",
+          "Addressed review findings by fixing nearest-env precedence, removing the publishable-key fallback for the admin client, deleting the stale contracts shim, and separating retrieval failures from generation failures at the route level"
+        ],
+        "remaining": [
+          "Persist records against real authenticated user ids once auth is wired instead of session-only actor scope",
+          "Replace heuristic intervention classification with a stronger classified request path"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/config.ts",
+        "apps/api/src/lib/env.ts",
+        "apps/api/src/lib/intervention-store.ts",
+        "apps/api/src/lib/interventions.ts",
+        "apps/api/src/routes/v1.ts",
+        "apps/api/supabase/migrations/20260311181500_interventions_and_ledger.sql",
+        "packages/contracts/src/index.ts",
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm --workspace @imaan/contracts run typecheck",
+          "npm --workspace @imaan/api run typecheck",
+          "supabase db push --workdir apps/api --include-all",
+          "npx tsx <env precedence smoke script>",
+          "env -i ... npx tsx <admin key fail-fast smoke script>",
+          "npm --workspace @imaan/api run start",
+          "curl -s -X POST http://127.0.0.1:3001/v1/interventions -H 'content-type: application/json' -d '{\"inputText\":\"I feel ashamed and overwhelmed after messing up today\",\"sessionId\":\"session-...\"}'",
+          "curl -s 'http://127.0.0.1:3001/v1/ledger?sessionId=session-...&limit=10'",
+          "IMAAN_PREFER_PROCESS_ENV=1 PORT=3002 EMBEDDING_API_KEY=bad npm --workspace @imaan/api run start",
+          "curl -s -X POST http://127.0.0.1:3002/v1/interventions -H 'content-type: application/json' -d '{\"inputText\":\"I feel ashamed and overwhelmed after messing up today\",\"sessionId\":\"session-...\"}'"
+        ],
+        "result": "pass",
+        "notes": "The normal path now persists and reads back ledger data through the API against the live Supabase project. The review issues were addressed: nearest env files override parent env files, publishable keys no longer satisfy the admin client config, retrieval dependency failures return retrieval_failed, and the contracts shim is gone."
+      },
+      "risks": [
+        "Actor scoping is still session-based until auth lands, so historical data is durable but not yet tied to authenticated user ids",
+        "Intervention classification is still heuristic even though storage and failure semantics are now durable"
+      ],
+      "follow_ups": [
+        "Add authenticated user linkage to interventions and ledger entries",
+        "Persist resolution actions and follow-up state instead of leaving those fields null",
+        "Upgrade the classifier path before broadening intervention coverage"
+      ],
+      "next_recommended_actions": [
+        "Wire Supabase auth through onboarding and replace session-only actor scope with authenticated user ids",
+        "Implement POST /v1/interventions/:id/resolve as a real persisted state update",
+        "Add a dedicated classification step so intervention type selection is not heuristic"
+      ]
     }
   ]
 }
