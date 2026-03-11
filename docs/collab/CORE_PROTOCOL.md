@@ -86,6 +86,7 @@ Format: `T-YYYYMMDD-###`
 - No out-of-scope edits.
 - No cross-boundary edits without decision record + reservation update.
 - Shared files are lead-gated (see `MERGE_RULES.md`).
+- If the schema or semantics of `docs/collab/state/*.json` change, the same task must update `scripts/validate_collab_state.py` and the relevant collaboration docs before merge.
 
 ## Merge Rules
 
@@ -113,3 +114,8 @@ Canonical files:
 - `docs/collab/state/decisions.json`
 
 If chat instructions conflict with state files, lead must resolve by updating state files.
+
+Control-plane drift is not allowed:
+
+- Do not land state-shape changes without validator parity.
+- Do not add fallback/deprecation/legacy bridge logic to the control plane unless explicitly approved by the human.

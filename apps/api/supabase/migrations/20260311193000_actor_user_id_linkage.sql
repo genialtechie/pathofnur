@@ -1,11 +1,5 @@
 alter table public.interventions
-  alter column actor_session_id drop not null;
-
-alter table public.interventions
   add column if not exists actor_user_id uuid null;
-
-alter table public.ledger_entries
-  alter column actor_session_id drop not null;
 
 alter table public.ledger_entries
   add column if not exists actor_user_id uuid null;

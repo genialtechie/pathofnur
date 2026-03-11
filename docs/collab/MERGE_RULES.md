@@ -35,6 +35,12 @@ Shared files require:
 2. lead-created exclusive reservation
 3. explicit reviewer note in PR
 
+If a task changes the schema or semantics of `docs/collab/state/*.json`, it must also:
+
+1. update `scripts/validate_collab_state.py`
+2. update the relevant collaboration docs
+3. include validator results in the validation notes
+
 ## Cross-Boundary Exception Workflow
 
 1. Agent flags need in handoff note or lead chat.

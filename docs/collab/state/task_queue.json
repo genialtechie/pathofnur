@@ -58,10 +58,7 @@
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
-      "depends_on": [
-        "T-20260211-004",
-        "T-20260211-005"
-      ],
+      "depends_on": ["T-20260211-004", "T-20260211-005"],
       "branch_name": "feat/T-20260211-006-home-screen",
       "updated_at_utc": "2026-02-11T21:00:00Z"
     },
@@ -71,19 +68,14 @@
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
-      "depends_on": [
-        "T-20260211-005"
-      ],
+      "depends_on": ["T-20260211-005"],
       "branch_name": "feat/T-20260211-007-library-audio",
       "updated_at_utc": "2026-02-11T21:05:00Z"
     },
     {
       "task_id": "T-20260211-011",
       "title": "Location service + Prayer times + Islamic date (Aladhan API)",
-      "scope_paths": [
-        "src/lib/location/**",
-        "src/lib/prayer/**"
-      ],
+      "scope_paths": ["src/lib/location/**", "src/lib/prayer/**"],
       "owner_role": "opencode",
       "status": "completed",
       "priority": "P0",
@@ -109,10 +101,7 @@
     {
       "task_id": "T-20260211-013",
       "title": "Ambient audio layer for library (bundled loops + mixer)",
-      "scope_paths": [
-        "src/lib/audio/**",
-        "public/audio/ambient/**"
-      ],
+      "scope_paths": ["src/lib/audio/**", "public/audio/ambient/**"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
@@ -124,16 +113,11 @@
     {
       "task_id": "T-20260211-008",
       "title": "Tools screen: Tasbih counter and Qiblah compass",
-      "scope_paths": [
-        "src/features/tools/**",
-        "app/(tabs)/tools.tsx"
-      ],
+      "scope_paths": ["src/features/tools/**", "app/(tabs)/tools.tsx"],
       "owner_role": "claude",
       "status": "completed",
       "priority": "P0",
-      "depends_on": [
-        "T-20260211-011"
-      ],
+      "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-008-tools-tasbih-qiblah",
       "worktree_path": ".worktrees/T-20260211-008",
       "acceptance_criteria": [
@@ -152,16 +136,11 @@
     {
       "task_id": "T-20260211-009",
       "title": "Journey screen: Ramadan 30-day tracker",
-      "scope_paths": [
-        "src/features/journey/**",
-        "app/(tabs)/journey.tsx"
-      ],
+      "scope_paths": ["src/features/journey/**", "app/(tabs)/journey.tsx"],
       "owner_role": "cursor",
       "status": "completed",
       "priority": "P1",
-      "depends_on": [
-        "T-20260211-011"
-      ],
+      "depends_on": ["T-20260211-011"],
       "branch_name": "feat/T-20260211-009-journey-ramadan-tracker",
       "worktree_path": ".worktrees/T-20260211-009",
       "acceptance_criteria": [
@@ -181,11 +160,7 @@
     {
       "task_id": "T-20260211-010",
       "title": "PWA config, app icon, and splash screen",
-      "scope_paths": [
-        "assets/images/**",
-        "public/manifest.json",
-        "app.json"
-      ],
+      "scope_paths": ["assets/images/**", "public/manifest.json", "app.json"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P1",
@@ -196,9 +171,7 @@
     {
       "task_id": "T-20260211-012",
       "title": "Stripe Payment Link integration for donations",
-      "scope_paths": [
-        "src/features/donate/**"
-      ],
+      "scope_paths": ["src/features/donate/**"],
       "owner_role": "lead",
       "status": "blocked",
       "priority": "P1",
@@ -215,16 +188,11 @@
     {
       "task_id": "T-20260212-015",
       "title": "Fix T-013 ambient audio: native asset loading + file size",
-      "scope_paths": [
-        "src/lib/audio/useAmbientPlayer.ts",
-        "public/audio/ambient/**"
-      ],
+      "scope_paths": ["src/lib/audio/useAmbientPlayer.ts", "public/audio/ambient/**"],
       "owner_role": "claude",
       "status": "completed",
       "priority": "P0",
-      "depends_on": [
-        "T-20260211-013"
-      ],
+      "depends_on": ["T-20260211-013"],
       "branch_name": "fix/T-20260212-015-ambient-audio-native",
       "worktree_path": ".worktrees/T-20260212-015",
       "acceptance_criteria": [
@@ -238,15 +206,11 @@
     {
       "task_id": "T-20260212-016",
       "title": "Fix T-008 Qiblah: use Location.watchHeadingAsync for True North",
-      "scope_paths": [
-        "app/tools/qiblah.tsx"
-      ],
+      "scope_paths": ["app/tools/qiblah.tsx"],
       "owner_role": "claude",
       "status": "completed",
       "priority": "P0",
-      "depends_on": [
-        "T-20260211-008"
-      ],
+      "depends_on": ["T-20260211-008"],
       "branch_name": "fix/T-20260212-016-qiblah-true-north",
       "worktree_path": ".worktrees/T-20260212-016",
       "acceptance_criteria": [
@@ -261,9 +225,7 @@
     {
       "task_id": "T-20260307-022",
       "title": "Rework Journey hub and My Streaks interaction flow",
-      "scope_paths": [
-        "src/features/journey/**"
-      ],
+      "scope_paths": ["src/features/journey/**"],
       "owner_role": "codex",
       "status": "completed",
       "priority": "P0",
@@ -737,7 +699,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-006"
@@ -752,7 +714,7 @@
         "Touched backend and docs surfaces validate cleanly"
       ],
       "implementation_notes": "Remove the session ownership column outright rather than preserving it as a nullable legacy path. Also tighten the repo instruction surface so agents stop adding defensive fallback/deprecation scaffolding unless explicitly approved.",
-      "updated_at_utc": "2026-03-11T17:23:11Z"
+      "updated_at_utc": "2026-03-11T17:43:26Z"
     },
     {
       "task_id": "T-20260311-008",

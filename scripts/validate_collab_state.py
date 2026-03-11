@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
@@ -32,6 +33,22 @@ def patterns_overlap(a: str, b: str) -> bool:
     return na == nb or na.startswith(nb + "/") or nb.startswith(na + "/")
 
 
+def parse_utc_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+
+    normalized = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return None
+
+    return parsed.astimezone(timezone.utc)
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -46,6 +63,10 @@ def main() -> int:
         ("handoffs.json", handoffs, "handoffs"),
         ("decisions.json", decisions, "decisions"),
     ):
+        if not isinstance(payload.get("schema_version"), str):
+            errors.append(f"{name}: `schema_version` must be a string")
+        if parse_utc_timestamp(payload.get("last_updated_utc")) is None:
+            errors.append(f"{name}: `last_updated_utc` must be an ISO-8601 UTC timestamp")
         if key not in payload or not isinstance(payload[key], list):
             errors.append(f"{name}: `{key}` must be a list")
 
@@ -58,6 +79,7 @@ def main() -> int:
     branch_names = set()
     worktree_paths = set()
     task_by_id: dict[str, dict] = {}
+    active_task_ids: set[str] = set()
 
     for idx, task in enumerate(tasks):
         ctx = f"task[{idx}]"
@@ -66,14 +88,10 @@ def main() -> int:
             (
                 "task_id",
                 "title",
-                "scope_paths",
                 "owner_role",
                 "status",
                 "priority",
                 "depends_on",
-                "branch_name",
-                "worktree_path",
-                "acceptance_criteria",
                 "updated_at_utc",
             ),
             ctx,
@@ -83,52 +101,64 @@ def main() -> int:
         task_id = task.get("task_id")
         branch_name = task.get("branch_name")
         worktree_path = task.get("worktree_path")
+        status = task.get("status")
+
+        if parse_utc_timestamp(task.get("updated_at_utc")) is None:
+            errors.append(f"{ctx}: `updated_at_utc` must be an ISO-8601 UTC timestamp")
 
         if task_id in task_ids:
             errors.append(f"{ctx}: duplicate task_id `{task_id}`")
         task_ids.add(task_id)
         task_by_id[task_id] = task
 
-        if branch_name in branch_names:
+        if isinstance(branch_name, str) and branch_name in branch_names:
             errors.append(f"{ctx}: duplicate branch_name `{branch_name}`")
-        branch_names.add(branch_name)
+        if isinstance(branch_name, str):
+            branch_names.add(branch_name)
 
         if task_id and branch_name and task_id not in branch_name:
             errors.append(f"{ctx}: branch_name `{branch_name}` should include task_id `{task_id}`")
 
-        if worktree_path in worktree_paths:
+        if isinstance(worktree_path, str) and worktree_path in worktree_paths:
             errors.append(f"{ctx}: duplicate worktree_path `{worktree_path}`")
-        worktree_paths.add(worktree_path)
+        if isinstance(worktree_path, str):
+            worktree_paths.add(worktree_path)
 
         if isinstance(worktree_path, str) and not worktree_path.startswith(".worktrees/"):
             errors.append(f"{ctx}: worktree_path must start with `.worktrees/`")
 
-    reservation_ids = set()
-    reservation_worktrees = set()
+        if status == "in_progress":
+            active_task_ids.add(task_id)
+            require_keys(
+                task,
+                ("scope_paths", "branch_name", "worktree_path", "acceptance_criteria"),
+                ctx,
+                errors,
+            )
+
+        if "scope_paths" in task and not isinstance(task.get("scope_paths"), list):
+            errors.append(f"{ctx}: `scope_paths` must be a list when present")
+        if "acceptance_criteria" in task and not isinstance(task.get("acceptance_criteria"), list):
+            errors.append(f"{ctx}: `acceptance_criteria` must be a list when present")
+
+    active_reservations: list[dict] = []
+    active_reservation_task_ids: set[str] = set()
+    now = datetime.now(timezone.utc)
 
     for idx, reservation in enumerate(res_list):
         ctx = f"reservation[{idx}]"
         require_keys(
             reservation,
             (
-                "reservation_id",
                 "task_id",
-                "paths",
-                "reserved_by",
-                "assignee",
                 "worktree_path",
-                "start_utc",
-                "expires_utc",
-                "lock_type",
+                "reserved_paths",
+                "mode",
+                "expires_at_utc",
             ),
             ctx,
             errors,
         )
-
-        reservation_id = reservation.get("reservation_id")
-        if reservation_id in reservation_ids:
-            errors.append(f"{ctx}: duplicate reservation_id `{reservation_id}`")
-        reservation_ids.add(reservation_id)
 
         task_id = reservation.get("task_id")
         if task_id not in task_ids:
@@ -141,23 +171,42 @@ def main() -> int:
                     f"(task={task_worktree}, reservation={reservation.get('worktree_path')})"
                 )
 
-        wt = reservation.get("worktree_path")
-        if wt in reservation_worktrees:
-            errors.append(f"{ctx}: duplicate reserved worktree_path `{wt}`")
-        reservation_worktrees.add(wt)
+        expires_at = parse_utc_timestamp(reservation.get("expires_at_utc"))
+        if expires_at is None:
+            errors.append(f"{ctx}: `expires_at_utc` must be an ISO-8601 UTC timestamp")
+            continue
 
-    exclusive = [r for r in res_list if r.get("lock_type") == "exclusive"]
+        if reservation.get("mode") not in {"exclusive", "shared-read"}:
+            errors.append(f"{ctx}: `mode` must be `exclusive` or `shared-read`")
+
+        if not isinstance(reservation.get("reserved_paths"), list):
+            errors.append(f"{ctx}: `reserved_paths` must be a list")
+
+        if expires_at > now:
+            active_reservations.append(reservation)
+            if isinstance(task_id, str):
+                active_reservation_task_ids.add(task_id)
+                if task_by_id.get(task_id, {}).get("status") != "in_progress":
+                    errors.append(
+                        f"active reservation for task `{task_id}` is invalid because the task is not `in_progress`"
+                    )
+
+    for task_id in active_task_ids:
+        if task_id not in active_reservation_task_ids:
+            errors.append(f"in_progress task `{task_id}` is missing an active reservation")
+
+    exclusive = [r for r in active_reservations if r.get("mode") == "exclusive"]
     for i in range(len(exclusive)):
         for j in range(i + 1, len(exclusive)):
             a = exclusive[i]
             b = exclusive[j]
-            for pa in a.get("paths", []):
-                for pb in b.get("paths", []):
+            for pa in a.get("reserved_paths", []):
+                for pb in b.get("reserved_paths", []):
                     if patterns_overlap(pa, pb):
                         errors.append(
                             "exclusive overlap: "
-                            f"{a.get('reservation_id')} `{pa}` <-> "
-                            f"{b.get('reservation_id')} `{pb}`"
+                            f"{a.get('task_id')} `{pa}` <-> "
+                            f"{b.get('task_id')} `{pb}`"
                         )
 
     seen = set()

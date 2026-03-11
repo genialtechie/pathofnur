@@ -18,7 +18,8 @@ Role: implementation agent
 - Keep diffs small and task-focused.
 - If blocked by scope boundary, request lead update (no silent expansion).
 - Never implement from root checkout.
-- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, or placeholder logic.
+- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, placeholder logic, deprecation scaffolding, or legacy bridge code.
+- If a task changes the schema or semantics of `docs/collab/state/*.json`, update `scripts/validate_collab_state.py` and the relevant collaboration docs in the same task.
 - Add handoff record when done.
 - Typography is non-negotiable:
   - Zalando Sans for app UI by default
