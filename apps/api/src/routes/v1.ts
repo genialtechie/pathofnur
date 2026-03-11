@@ -5,9 +5,12 @@ import {
   BackendErrorResponseSchema,
   CreateInterventionRequestSchema,
   FollowupResponseRequestSchema,
+  RetrievePassagesRequestSchema,
   RegisterPushTokenRequestSchema,
   ResolveInterventionRequestSchema,
-} from "@imaan/contracts"
+} from "../lib/contracts.js"
+
+import { retrievePassages } from "../lib/retrieve-passages.js"
 
 function sendNotImplemented(reply: FastifyReply, feature: string) {
   const payload: BackendErrorResponse = BackendErrorResponseSchema.parse({
@@ -29,6 +32,27 @@ export async function registerV1Routes(app: FastifyInstance) {
 
   app.get("/v1/followups", async (_request, reply) => {
     return sendNotImplemented(reply, "Follow-up retrieval")
+  })
+
+  app.post("/v1/retrieve", async (request, reply) => {
+    const parsed = RetrievePassagesRequestSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: parsed.error.message,
+      })
+    }
+
+    try {
+      const response = await retrievePassages(parsed.data)
+      return reply.code(200).send(response)
+    } catch (error) {
+      return reply.code(500).send({
+        error: "retrieval_failed",
+        message:
+          error instanceof Error ? error.message : "Passage retrieval failed.",
+      })
+    }
   })
 
   app.post("/v1/devices/push-token", async (request, reply) => {

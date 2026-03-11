@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:32:00Z",
+  "last_updated_utc": "2026-03-11T16:25:00Z",
   "handoffs": [
     {
       "handoff_id": "H-20260311-008",
@@ -834,6 +834,67 @@
         "Replace the phone placeholder visuals with real product screenshots",
         "Run final social-card validation against Twitter/X and iMessage once the production domain is live",
         "Continue landing-page iteration directly in apps/landing from a new task worktree"
+      ]
+    },
+    {
+      "handoff_id": "H-20260311-003",
+      "task_id": "T-20260311-003",
+      "branch_name": "feat/T-20260311-003-retrieval-api",
+      "worktree_path": ".worktrees/T-20260311-003",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T16:25:00Z",
+      "summary": {
+        "completed": [
+          "Added shared request and response contracts for citation-ready passage retrieval",
+          "Implemented a retrieval service that embeds the query, calls match_retrieval_passages, and maps results into stable API matches",
+          "Exposed POST /v1/retrieve in Fastify with payload validation and typed failure handling",
+          "Verified the route locally against the seeded Supabase sample, including source filtering and invalid-payload behavior"
+        ],
+        "remaining": [
+          "Wire retrieved matches into the intervention creation flow",
+          "Seed a larger reviewed corpus slice so retrieval quality is meaningful beyond the current sample rows"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/config.ts",
+        "apps/api/src/lib/contracts.ts",
+        "apps/api/src/lib/retrieve-passages.ts",
+        "apps/api/src/routes/v1.ts",
+        "packages/contracts/src/index.ts",
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm --workspace @imaan/contracts run typecheck",
+          "npm --workspace @imaan/api run typecheck",
+          "EMBEDDING_PROVIDER=openai_compatible EMBEDDING_BASE_URL=https://openrouter.ai/api/v1 EMBEDDING_MODEL=openai/text-embedding-3-small npx tsx <retrievePassages smoke script>",
+          "npm --workspace @imaan/api run start",
+          "curl -sS http://127.0.0.1:3001/health",
+          "curl -sS -X POST http://127.0.0.1:3001/v1/retrieve -H 'Content-Type: application/json' -d '{\"inputText\":\"fear before a difficult conversation\",\"matchCount\":3}'",
+          "curl -sS -X POST http://127.0.0.1:3001/v1/retrieve -H 'Content-Type: application/json' -d '{\"inputText\":\"fear before a difficult conversation\",\"matchCount\":2,\"sourceTypes\":[\"quran\"]}'",
+          "curl -sS -X POST http://127.0.0.1:3001/v1/retrieve -H 'Content-Type: application/json' -d '{\"inputText\":\"\"}'"
+        ],
+        "result": "pass",
+        "notes": "The retrieval route now works with the repo's current .env defaults after fixing the openai-compatible default base URL to OpenRouter. Live local checks returned citation-ready matches from the seeded Supabase table, honored the sourceTypes filter, and returned a 400 for invalid payloads."
+      },
+      "risks": [
+        "Retrieval quality is still constrained by the currently seeded 20-row sample corpus",
+        "The apps/api worktree currently bridges contract imports directly to the workspace source because root node_modules still resolves @imaan/contracts to the root checkout package view during isolated worktree runs"
+      ],
+      "follow_ups": [
+        "Replace the temporary api-local contracts bridge once workspace resolution is normalized across worktrees",
+        "Implement intervention assembly on top of the retrieval route or service",
+        "Seed a larger reviewed corpus before relying on retrieval quality"
+      ],
+      "next_recommended_actions": [
+        "Start the intervention creation slice and consume retrievePassages internally rather than calling the route from within the server",
+        "Normalize workspace package resolution so apps/api can import @imaan/contracts directly in isolated worktrees",
+        "Run a larger corpus seed before evaluating retrieval relevance seriously"
       ]
     }
   ]
