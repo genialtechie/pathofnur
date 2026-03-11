@@ -19,6 +19,7 @@ export const FollowupStatusSchema = z.enum([
 ])
 
 export const NotificationPlatformSchema = z.enum(["ios", "android"])
+export const RetrievalSourceTypeSchema = z.enum(["quran", "hadith"])
 
 export const CitationSchema = z.object({
   id: z.string().min(1),
@@ -116,15 +117,34 @@ export const BackendErrorResponseSchema = z.object({
   message: z.string().min(1),
 })
 
+export const RetrievalPassageSchema = z.object({
+  id: z.string().min(1),
+  sourceType: RetrievalSourceTypeSchema,
+  reference: z.string().min(1),
+  citationTitle: z.string().min(1),
+  arabicText: z.string().min(1),
+  englishTranslation: z.string().min(1),
+  contextSummary: z.string().min(1),
+  emotionalTags: z.array(z.string().min(1)),
+  retrievalText: z.string().min(1),
+})
+
+export const SeededRetrievalPassageSchema = RetrievalPassageSchema.extend({
+  embedding: z.array(z.number()),
+})
+
 export type InterventionType = z.infer<typeof InterventionTypeSchema>
 export type SourceKind = z.infer<typeof SourceKindSchema>
 export type ResolutionState = z.infer<typeof ResolutionStateSchema>
 export type Citation = z.infer<typeof CitationSchema>
 export type Dua = z.infer<typeof DuaSchema>
+export type RetrievalSourceType = z.infer<typeof RetrievalSourceTypeSchema>
 export type InterventionPayload = z.infer<typeof InterventionPayloadSchema>
 export type AppUserProfile = z.infer<typeof AppUserProfileSchema>
 export type LedgerEntry = z.infer<typeof LedgerEntrySchema>
 export type FollowupRecord = z.infer<typeof FollowupRecordSchema>
+export type RetrievalPassage = z.infer<typeof RetrievalPassageSchema>
+export type SeededRetrievalPassage = z.infer<typeof SeededRetrievalPassageSchema>
 export type CreateInterventionRequest = z.infer<
   typeof CreateInterventionRequestSchema
 >

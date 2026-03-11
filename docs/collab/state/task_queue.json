@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-10T23:04:38Z",
+  "last_updated_utc": "2026-03-11T03:55:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -436,15 +436,52 @@
         "shared/**",
         "docs/collab/**"
       ],
-      "owner_role": "opencode",
-      "status": "pending",
+      "owner_role": "codex",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260310-001"
       ],
       "branch_name": "feat/T-20260310-006-corpus-embedding-pipeline",
       "worktree_path": ".worktrees/T-20260310-006",
-      "updated_at_utc": "2026-03-10T23:04:38Z"
+      "acceptance_criteria": [
+        "Shared contracts define the lean runtime retrieval passage shape used for request-time citation and vector search",
+        "Server package contains local corpus processing scripts for Quran and hadith normalization, embedding generation, and Supabase seeding",
+        "Runtime schema is documented as a single retrieval_passages table plus vector index, without review workflow tables",
+        "Hadith processing defaults to explicit collection whitelisting because the chosen hadith dataset does not expose per-hadith grade metadata; the default seed scope is Bukhari and Muslim",
+        "Embedding generation happens before seed write and is provider-configurable through server-side environment variables",
+        "A developer can run the full local flow from source JSON to Supabase upsert using documented commands",
+        "npm --prefix server run typecheck passes"
+      ],
+      "implementation_notes": "Keep this intentionally lean. Do not build review/admin workflow tables. Assume manual human review happens outside the runtime system and only final retrieval rows are seeded into Supabase. The currently selected hadith dataset lacks per-hadith grade metadata, so the safe default is an explicit collection whitelist rather than synthetic grade inference.",
+      "updated_at_utc": "2026-03-11T03:55:00Z"
+    },
+    {
+      "task_id": "T-20260310-007",
+      "title": "Set up monorepo-safe Vite landing page app",
+      "scope_paths": [
+        "apps/landing/**",
+        "package.json",
+        "package-lock.json",
+        ".gitignore"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P1",
+      "depends_on": [
+        "T-20260310-001"
+      ],
+      "branch_name": "feat/T-20260310-007-vite-landing-app",
+      "worktree_path": ".worktrees/T-20260310-007",
+      "acceptance_criteria": [
+        "Repo supports a separate landing page app in its own deployable folder without disturbing the existing Expo app layout",
+        "A new Vite landing page exists under apps/landing and can be deployed by setting that folder as the Vercel root",
+        "Landing page uses the existing brand icon/favicon assets and reflects the imaan.app product direction",
+        "Root package scripts expose landing dev/build commands",
+        "npm run landing:build passes"
+      ],
+      "implementation_notes": "Keep the monorepo setup minimal and git-safe. Do not move the Expo app out of root. Introduce a new apps/landing workspace and keep all landing assets self-contained inside that folder.",
+      "updated_at_utc": "2026-03-11T00:32:00Z"
     }
   ]
 }
