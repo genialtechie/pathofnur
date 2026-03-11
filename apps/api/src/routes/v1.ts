@@ -12,6 +12,10 @@ import {
   ResolveInterventionRequestSchema,
 } from "@imaan/contracts"
 
+import {
+  BackendAuthenticationError,
+  getAuthenticatedActor,
+} from "../lib/auth.js"
 import { createIntervention } from "../lib/interventions.js"
 import { listLedgerEntries } from "../lib/intervention-store.js"
 import {
@@ -30,19 +34,46 @@ function sendNotImplemented(reply: FastifyReply, feature: string) {
   return reply.code(501).send(payload)
 }
 
+async function authenticateRequest(
+  request: Parameters<typeof getAuthenticatedActor>[0],
+  reply: FastifyReply
+) {
+  try {
+    return await getAuthenticatedActor(request)
+  } catch (error) {
+    if (error instanceof BackendAuthenticationError) {
+      await reply.code(401).send({
+        error: "authentication_failed",
+        message: error.message,
+      })
+      return null
+    }
+
+    await reply.code(500).send({
+      error: "authentication_failed",
+      message: "Actor authentication failed.",
+    })
+    return null
+  }
+}
+
 export async function registerV1Routes(app: FastifyInstance) {
   app.get("/v1/me", async (_request, reply) => {
     return sendNotImplemented(reply, "Profile lookup")
   })
 
   app.get("/v1/ledger", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
     const rawQuery =
       typeof request.query === "object" && request.query
         ? (request.query as Record<string, unknown>)
         : {}
     const rawLimit = rawQuery.limit
     const parsed = GetLedgerRequestSchema.safeParse({
-      sessionId: rawQuery.sessionId,
       cursor: rawQuery.cursor,
       limit:
         rawLimit === undefined
@@ -58,7 +89,10 @@ export async function registerV1Routes(app: FastifyInstance) {
     }
 
     try {
-      const response = await listLedgerEntries(parsed.data)
+      const response = await listLedgerEntries({
+        userId: actor.userId,
+        ...parsed.data,
+      })
       return reply.code(200).send(response)
     } catch (error) {
       return reply.code(500).send({
@@ -107,6 +141,11 @@ export async function registerV1Routes(app: FastifyInstance) {
   })
 
   app.post("/v1/interventions", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
     const parsed = CreateInterventionRequestSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.code(400).send({
@@ -116,7 +155,7 @@ export async function registerV1Routes(app: FastifyInstance) {
     }
 
     try {
-      const payload = await createIntervention(parsed.data)
+      const payload = await createIntervention(actor, parsed.data)
       return reply.code(200).send(InterventionPayloadSchema.parse(payload))
     } catch (error) {
       if (error instanceof InterventionRetrievalError) {

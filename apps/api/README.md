@@ -11,7 +11,8 @@ Responsibilities:
 - push token registration
 - local corpus preparation and seeding scripts
 
-This scaffold intentionally stops at typed routes and runtime boundaries. It does not yet implement real intervention logic or ingestion pipelines.
+The backend now supports live corpus retrieval plus authenticated intervention and ledger persistence.
+Follow-up workflows, device registration, and admin/corpus operations are still unfinished.
 
 ## Expected environment variables
 
@@ -103,12 +104,15 @@ The route embeds the query, calls `match_retrieval_passages`, and returns citati
 
 `POST /v1/interventions`
 
+Authorization:
+
+- `Authorization: Bearer <supabase_access_token>` required
+
 Request shape:
 
 ```json
 {
-  "inputText": "I am terrified of failing my interview tomorrow",
-  "sessionId": "device-or-app-session-id"
+  "inputText": "I am terrified of failing my interview tomorrow"
 }
 ```
 
@@ -119,16 +123,19 @@ Behavior:
 - uses OpenRouter to format a structured response
 - fails with an upstream retrieval error if embeddings, corpus lookup, or Supabase retrieval break
 - fails with an upstream generation error if OpenRouter is unavailable or returns invalid structured output
-- persists the intervention and ledger entry together in Supabase before returning success
+- persists the intervention and ledger entry together in Supabase scoped to the authenticated user before returning success
 
 `GET /v1/ledger`
 
+Authorization:
+
+- `Authorization: Bearer <supabase_access_token>` required
+
 Query parameters:
 
-- `sessionId` required
 - `cursor` optional
 - `limit` optional, max `50`
 
-The ledger route returns persisted entries for the scoped session in reverse chronological order.
+The ledger route returns persisted entries for the authenticated user in reverse chronological order.
 
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

@@ -81,7 +81,10 @@ function toLedgerEntry(row: z.infer<typeof LedgerRowSchema>): LedgerEntry {
 }
 
 export async function persistInterventionRecord(
-  request: CreateInterventionRequest,
+  input: {
+    userId: string
+    request: CreateInterventionRequest
+  },
   payload: InterventionPayload
 ): Promise<void> {
   const supabase = getSupabaseAdminClient()
@@ -90,10 +93,10 @@ export async function persistInterventionRecord(
   const { data, error } = await supabase.rpc("create_intervention_and_ledger", {
     intervention_id: payload.id,
     ledger_entry_id: ledgerEntryId,
-    actor_session_id: request.sessionId,
-    input_text: request.inputText,
-    locale: request.locale ?? null,
-    entry_source: request.entrySource ?? null,
+    actor_user_id: input.userId,
+    input_text: input.request.inputText,
+    locale: input.request.locale ?? null,
+    entry_source: input.request.entrySource ?? null,
     intervention_type: payload.type,
     generated_payload: payload,
     citation_ids: payload.citations.map((citation) => citation.id),
@@ -114,7 +117,7 @@ export async function persistInterventionRecord(
 }
 
 export async function listLedgerEntries(input: {
-  sessionId: string
+  userId: string
   cursor?: string
   limit?: number
 }) {
@@ -123,7 +126,7 @@ export async function listLedgerEntries(input: {
   const pageSize = input.limit ?? DEFAULT_LEDGER_PAGE_SIZE
 
   const { data, error } = await supabase.rpc("list_ledger_entries", {
-    actor_session_id: input.sessionId,
+    actor_user_id: input.userId,
     page_size: pageSize + 1,
     cursor_occurred_at: cursor?.occurredAtUtc ?? null,
     cursor_id: cursor?.id ?? null,
