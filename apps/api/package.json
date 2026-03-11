@@ -6,6 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
+    "corpus:download": "tsx scripts/download-default-corpus-sources.ts",
     "corpus:prepare": "tsx scripts/prepare-retrieval-passages.ts",
     "corpus:seed": "tsx scripts/seed-retrieval-passages.ts"
   },

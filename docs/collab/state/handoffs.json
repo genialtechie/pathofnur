@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T04:36:30Z",
+  "last_updated_utc": "2026-03-11T15:10:00Z",
   "handoffs": [
     {
       "handoff_id": "H-20260311-008",
@@ -729,6 +729,70 @@
         "Land the retrieval_passages migration in Supabase before wiring backend retrieval calls",
         "Curate a first production seed set of Quran passages plus the default hadith whitelist",
         "Keep the runtime retrieval table lean until real request-time retrieval proves a need for more structure"
+      ]
+    },
+    {
+      "handoff_id": "H-20260311-002",
+      "task_id": "T-20260311-002",
+      "branch_name": "feat/T-20260311-002-api-seed-wiring",
+      "worktree_path": ".worktrees/T-20260311-002",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T15:10:00Z",
+      "summary": {
+        "completed": [
+          "Added deterministic local env loading plus alias support so the api package can use the current project .env names without secret renames",
+          "Added a default corpus download script, subset controls for corpus preparation, and a Supabase migration folder inside apps/api",
+          "Verified OpenRouter-backed corpus preparation by generating a 20-row embedded sample corpus file",
+          "Linked the remote Supabase project, pushed the retrieval_passages migration, and seeded 20 sample rows successfully"
+        ],
+        "remaining": [
+          "Run the full corpus prepare and seed pass once you are comfortable with the embedding volume and cost",
+          "Build request-time retrieval and citation assembly against the live retrieval_passages table"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/package.json",
+        "apps/api/scripts/download-default-corpus-sources.ts",
+        "apps/api/scripts/prepare-retrieval-passages.ts",
+        "apps/api/src/config.ts",
+        "apps/api/src/lib/embeddings.ts",
+        "apps/api/src/lib/env.ts",
+        "apps/api/supabase/.gitignore",
+        "apps/api/supabase/config.toml",
+        "apps/api/supabase/migrations/20260311053342_retrieval_passages.sql",
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm --workspace @imaan/api run typecheck",
+          "npm --workspace @imaan/api run corpus:download",
+          "EMBEDDING_PROVIDER=openai_compatible EMBEDDING_BASE_URL=https://openrouter.ai/api/v1 EMBEDDING_MODEL=openai/text-embedding-3-small npm --workspace @imaan/api run corpus:prepare -- --quran-limit 10 --hadith-limit 10 --output apps/api/.generated/corpus/retrieval-passages-sample.json",
+          "supabase link --workdir apps/api --project-ref <derived-project-ref> -p <db-password>",
+          "supabase db push --workdir apps/api --include-all -p <db-password>",
+          "npm --workspace @imaan/api run corpus:seed -- --input apps/api/.generated/corpus/retrieval-passages-sample.json",
+          "readback count from retrieval_passages via Supabase client"
+        ],
+        "result": "pass",
+        "notes": "The initial Google embedding path failed due free-tier quota limits and a stale default model, so the live seed flow was switched to OpenRouter-compatible embeddings. The end-to-end sample path now works: 20 rows were embedded, seeded, and confirmed readable from Supabase."
+      },
+      "risks": [
+        "Full-corpus preparation will still take time and consume embedding credits, so it should be run intentionally rather than as part of every validation pass",
+        "The current SQL and defaults assume 768-dimensional embeddings; changing embedding dimensions requires updating the migration and retrieval schema"
+      ],
+      "follow_ups": [
+        "Run a larger staged corpus prepare and seed pass once you choose the initial production corpus size",
+        "Implement the request-time retrieval helper and citation assembly in apps/api",
+        "Decide whether to keep Google as an optional secondary embedding path or standardize on OpenRouter for corpus generation"
+      ],
+      "next_recommended_actions": [
+        "Start the request-time retrieval task against the live retrieval_passages table",
+        "Seed a larger reviewed corpus slice before integrating retrieval into the intervention response pipeline",
+        "Add a deliberate full-seed runbook so future refreshes do not depend on chat history"
       ]
     }
   ]

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T04:08:00Z",
+  "last_updated_utc": "2026-03-11T15:10:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -253,6 +253,20 @@
       "rationale": "The user wants the repo cleaned before it grows further. A one-pass structural move is safer now than allowing more feature branches to land on a mixed root layout that will immediately be invalidated.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T04:08:00Z",
+      "supersedes": null
+    }
+    ,
+    {
+      "decision_id": "D-20260311-021",
+      "topic": "Cross-lane exception for api seed wiring and env alias support",
+      "options_considered": [
+        "Wait for the default api lane owner to pick up env and seeding work",
+        "Allow codex to execute a narrow apps/api-only slice so the first live seed can happen immediately"
+      ],
+      "selected_option": "Allow codex to execute a narrow apps/api-only slice so the first live seed can happen immediately",
+      "rationale": "The user wants the first real seed path wired now. The work is tightly scoped to the api package plus collab state and is a direct continuation of the corpus pipeline already implemented by codex.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T14:25:00Z",
       "supersedes": null
     }
   ]
