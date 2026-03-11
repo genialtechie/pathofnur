@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-10T22:51:00Z",
+  "last_updated_utc": "2026-03-11T00:32:00Z",
   "reservations": [
     {
       "task_id": "T-20260211-009",
@@ -48,6 +48,29 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-11T02:51:00Z"
+    },
+    {
+      "task_id": "T-20260310-006",
+      "worktree_path": ".worktrees/T-20260310-006",
+      "reserved_paths": [
+        "server/**",
+        "shared/**",
+        "docs/collab/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T04:20:00Z"
+    },
+    {
+      "task_id": "T-20260310-007",
+      "worktree_path": ".worktrees/T-20260310-007",
+      "reserved_paths": [
+        "apps/landing/**",
+        "package.json",
+        "package-lock.json",
+        ".gitignore"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-11T04:32:00Z"
     }
   ]
 }

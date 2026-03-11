@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-10T23:04:38Z",
+  "last_updated_utc": "2026-03-11T03:55:00Z",
   "handoffs": [
     {
       "handoff_id": "H-20260211-001",
@@ -613,6 +613,72 @@
         "Start T-20260310-002 to wire Supabase Auth into onboarding and session hydration",
         "Start T-20260310-006 to ingest reviewed sources and generate embeddings in Supabase",
         "Keep legacy UI flows untouched until each replacement task lands to avoid half-migrated product copy"
+      ]
+    },
+    {
+      "handoff_id": "H-20260310-006",
+      "task_id": "T-20260310-006",
+      "branch_name": "feat/T-20260310-006-corpus-embedding-pipeline",
+      "worktree_path": ".worktrees/T-20260310-006",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T03:55:00Z",
+      "summary": {
+        "completed": [
+          "Added a lean runtime retrieval schema for Quran and hadith passages with pgvector search support",
+          "Implemented local corpus preparation and seed scripts that normalize source JSON, generate embeddings, and upsert final retrieval rows into Supabase",
+          "Added shared retrieval passage contracts plus server-side embedding and Supabase upsert helpers",
+          "Documented the local source layout, runtime schema, and safe hadith seeding default"
+        ],
+        "remaining": [
+          "Source, review, and author the actual override metadata for high-value passages before production seeding",
+          "Apply the retrieval_passages SQL in Supabase and run a real seeded pass with production embedding credentials",
+          "Add request-time retrieval wiring in the intervention backend once corpus seeding is complete"
+        ]
+      },
+      "changed_files": [
+        "docs/collab/state/decisions.json",
+        "docs/collab/state/handoffs.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/task_queue.json",
+        "server/.gitignore",
+        "server/README.md",
+        "server/corpus/README.md",
+        "server/package.json",
+        "server/scripts/prepare-retrieval-passages.ts",
+        "server/scripts/seed-retrieval-passages.ts",
+        "server/sql/retrieval_passages.sql",
+        "server/src/config.ts",
+        "server/src/corpus/retrieval-passages.ts",
+        "server/src/corpus/types.ts",
+        "server/src/lib/embeddings.ts",
+        "server/src/lib/retrieval-passages.ts",
+        "server/tsconfig.json",
+        "shared/imaan-contracts.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run typecheck",
+          "npm --prefix server run typecheck",
+          "npx tsx -e \"import { loadHadithPassages, loadQuranPassages } from './server/src/corpus/retrieval-passages.ts'; const run = async () => { const quran = await loadQuranPassages('./server/.tmp/quran_en.json', {}); const hadith = await loadHadithPassages('./server/.tmp/hadith', {}); console.log(JSON.stringify({ quran: quran.length, hadith: hadith.length, sampleQuran: quran[0]?.reference, sampleHadith: hadith[0]?.reference }, null, 2)); }; void run();\""
+        ],
+        "result": "pass",
+        "notes": "Root and server typecheck passed. Normalization was dry-run against live source files downloaded into a temporary local folder; the parser produced 6,236 Quran passages and 14,735 hadith passages across the default Bukhari and Muslim whitelist."
+      },
+      "risks": [
+        "The selected hadith-json dataset does not expose per-hadith grade metadata, so this pipeline cannot enforce Sahih/Hasan filtering inside a collection without swapping datasets",
+        "The SQL migration is currently written for vector(768); if EMBEDDING_DIMENSIONS changes, the migration must be updated to match before seeding"
+      ],
+      "follow_ups": [
+        "Select and prepare the production source files under server/corpus/source",
+        "Author manual overrides for context summaries and emotional tags",
+        "Apply the retrieval_passages SQL in Supabase and run corpus:prepare plus corpus:seed with real credentials",
+        "Implement request-time retrieval and citation assembly in the intervention backend"
+      ],
+      "next_recommended_actions": [
+        "Land the retrieval_passages migration in Supabase before wiring backend retrieval calls",
+        "Curate a first production seed set of Quran passages plus the default hadith whitelist",
+        "Keep the runtime retrieval table lean until real request-time retrieval proves a need for more structure"
       ]
     }
   ]

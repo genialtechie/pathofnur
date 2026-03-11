@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-10T22:51:00Z",
+  "last_updated_utc": "2026-03-11T03:55:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -200,6 +200,46 @@
       "rationale": "The repo instructions, task queue, and code architecture all encode the old product. A single coordinated reset is the fastest way to stop new work from landing on stale assumptions.",
       "owner": "lead",
       "timestamp_utc": "2026-03-10T22:51:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-016",
+      "topic": "Cross-lane exception for lean corpus seeding implementation",
+      "options_considered": [
+        "Wait for opencode to take the server/shared corpus task",
+        "Allow codex to implement the corpus scripts and runtime retrieval schema immediately"
+      ],
+      "selected_option": "Allow codex to implement the corpus scripts and runtime retrieval schema immediately",
+      "rationale": "The user wants a lean local-script flow now, and the work stays tightly scoped to server/shared/docs. A single pass avoids building the wrong ingestion architecture.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T00:20:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-017",
+      "topic": "Cross-boundary exception for monorepo landing app setup",
+      "options_considered": [
+        "Keep the repo single-app and add static marketing files at root",
+        "Allow codex to introduce a separate Vite landing app with minimal root monorepo plumbing"
+      ],
+      "selected_option": "Allow codex to introduce a separate Vite landing app with minimal root monorepo plumbing",
+      "rationale": "The user explicitly wants a separate Vercel root for the landing page. A small workspace-style setup isolates marketing deploys from the Expo app and reduces future git churn without forcing a full repo move.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T00:32:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-018",
+      "topic": "Hadith corpus safety policy for the lean retrieval seed",
+      "options_considered": [
+        "Infer or fabricate per-hadith grades from an ungraded JSON dataset",
+        "Block the corpus task until a graded hadith dataset is sourced",
+        "Use a conservative collection whitelist with explicit documentation of the dataset limitation"
+      ],
+      "selected_option": "Use a conservative collection whitelist with explicit documentation of the dataset limitation",
+      "rationale": "The chosen hadith-json dataset does not expose per-hadith grade metadata. The safe MVP path is to seed only explicitly whitelisted collections by default and keep grade inference out of the pipeline.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T03:55:00Z",
       "supersedes": null
     }
   ]

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "corpus:prepare": "tsx scripts/prepare-retrieval-passages.ts",
+    "corpus:seed": "tsx scripts/seed-retrieval-passages.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
