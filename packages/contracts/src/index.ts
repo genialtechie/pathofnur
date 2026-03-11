@@ -60,6 +60,7 @@ export const AppUserProfileSchema = z.object({
 
 export const LedgerEntrySchema = z.object({
   id: z.string().min(1),
+  interventionId: z.string().min(1),
   occurredAtUtc: z.string().datetime(),
   summary: z.string().min(1),
   interventionType: InterventionTypeSchema,
@@ -78,8 +79,14 @@ export const FollowupRecordSchema = z.object({
 export const CreateInterventionRequestSchema = z.object({
   inputText: z.string().min(1),
   locale: z.string().min(1).optional(),
-  sessionId: z.string().min(1).optional(),
+  sessionId: z.string().min(1),
   entrySource: z.string().min(1).optional(),
+})
+
+export const GetLedgerRequestSchema = z.object({
+  sessionId: z.string().min(1),
+  cursor: z.string().min(1).optional(),
+  limit: z.number().int().min(1).max(50).optional(),
 })
 
 export const ResolveInterventionRequestSchema = z.object({
@@ -181,6 +188,7 @@ export type CreateInterventionRequest = z.infer<
 export type ResolveInterventionRequest = z.infer<
   typeof ResolveInterventionRequestSchema
 >
+export type GetLedgerRequest = z.infer<typeof GetLedgerRequestSchema>
 export type LedgerPageResponse = z.infer<typeof LedgerPageResponseSchema>
 export type FollowupListResponse = z.infer<typeof FollowupListResponseSchema>
 export type MeResponse = z.infer<typeof MeResponseSchema>

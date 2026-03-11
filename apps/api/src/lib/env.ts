@@ -24,19 +24,23 @@ function parseEnvFile(content: string): Array<[string, string]> {
 }
 
 function collectEnvFilePaths(startDirectory: string): string[] {
-  const candidates = new Set<string>()
+  const directories: string[] = []
   let current = startDirectory
 
   while (true) {
-    candidates.add(path.join(current, ".env"))
-    candidates.add(path.join(current, ".env.local"))
+    directories.push(current)
 
     const parent = path.dirname(current)
     if (parent === current) break
     current = parent
   }
 
-  return Array.from(candidates)
+  return directories
+    .reverse()
+    .flatMap((directory) => [
+      path.join(directory, ".env"),
+      path.join(directory, ".env.local"),
+    ])
 }
 
 export function loadLocalEnv(startDirectory = process.cwd()): void {

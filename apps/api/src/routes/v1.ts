@@ -5,6 +5,7 @@ import {
   BackendErrorResponseSchema,
   CreateInterventionRequestSchema,
   FollowupResponseRequestSchema,
+  GetLedgerRequestSchema,
   InterventionPayloadSchema,
   RetrievePassagesRequestSchema,
   RegisterPushTokenRequestSchema,
@@ -12,7 +13,12 @@ import {
 } from "@imaan/contracts"
 
 import { createIntervention } from "../lib/interventions.js"
-import { InterventionGenerationError } from "../lib/interventions.js"
+import { listLedgerEntries } from "../lib/intervention-store.js"
+import {
+  InterventionGenerationError,
+  InterventionRetrievalError,
+  NoSupportingPassagesError,
+} from "../lib/interventions.js"
 import { retrievePassages } from "../lib/retrieve-passages.js"
 
 function sendNotImplemented(reply: FastifyReply, feature: string) {
@@ -29,8 +35,38 @@ export async function registerV1Routes(app: FastifyInstance) {
     return sendNotImplemented(reply, "Profile lookup")
   })
 
-  app.get("/v1/ledger", async (_request, reply) => {
-    return sendNotImplemented(reply, "Ledger retrieval")
+  app.get("/v1/ledger", async (request, reply) => {
+    const rawQuery =
+      typeof request.query === "object" && request.query
+        ? (request.query as Record<string, unknown>)
+        : {}
+    const rawLimit = rawQuery.limit
+    const parsed = GetLedgerRequestSchema.safeParse({
+      sessionId: rawQuery.sessionId,
+      cursor: rawQuery.cursor,
+      limit:
+        rawLimit === undefined
+          ? undefined
+          : Number(rawLimit),
+    })
+
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: parsed.error.message,
+      })
+    }
+
+    try {
+      const response = await listLedgerEntries(parsed.data)
+      return reply.code(200).send(response)
+    } catch (error) {
+      return reply.code(500).send({
+        error: "ledger_failed",
+        message:
+          error instanceof Error ? error.message : "Ledger retrieval failed.",
+      })
+    }
   })
 
   app.get("/v1/followups", async (_request, reply) => {
@@ -83,6 +119,20 @@ export async function registerV1Routes(app: FastifyInstance) {
       const payload = await createIntervention(parsed.data)
       return reply.code(200).send(InterventionPayloadSchema.parse(payload))
     } catch (error) {
+      if (error instanceof InterventionRetrievalError) {
+        return reply.code(502).send({
+          error: "retrieval_failed",
+          message: error.message,
+        })
+      }
+
+      if (error instanceof NoSupportingPassagesError) {
+        return reply.code(422).send({
+          error: "no_supporting_passages",
+          message: error.message,
+        })
+      }
+
       if (error instanceof InterventionGenerationError) {
         return reply.code(502).send({
           error: "generation_failed",

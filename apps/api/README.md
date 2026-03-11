@@ -30,11 +30,12 @@ This scaffold intentionally stops at typed routes and runtime boundaries. It doe
 Current alias support also accepts:
 
 - `SUPABASE_PROJECT_URL` for `SUPABASE_URL`
-- `SUPABASE_SECRET_KEY` or `SUPABASE_PUBLISHABLE_KEY` for `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY` for `SUPABASE_SERVICE_ROLE_KEY`
 - `GOOGLE_API_KEY` for `EMBEDDING_API_KEY`
 - `OPENROUTER_API_KEY` for `EMBEDDING_API_KEY` when `EMBEDDING_PROVIDER=openai_compatible`
 
-For local development, the api package loads the nearest repo `.env` files automatically. Set
+For local development, the api package loads parent `.env` files from farthest to nearest, so the
+nearest package-local `.env` and `.env.local` override broader repo-level files. Set
 `IMAAN_PREFER_PROCESS_ENV=1` if you need exported shell variables to win over repo-local `.env`
 values.
 
@@ -106,7 +107,8 @@ Request shape:
 
 ```json
 {
-  "inputText": "I am terrified of failing my interview tomorrow"
+  "inputText": "I am terrified of failing my interview tomorrow",
+  "sessionId": "device-or-app-session-id"
 }
 ```
 
@@ -115,8 +117,18 @@ Behavior:
 - classifies the request into a first-pass intervention type
 - retrieves the top supporting passages from Supabase
 - uses OpenRouter to format a structured response
+- fails with an upstream retrieval error if embeddings, corpus lookup, or Supabase retrieval break
 - fails with an upstream generation error if OpenRouter is unavailable or returns invalid structured output
+- persists the intervention and ledger entry together in Supabase before returning success
 
-The route is retrieval-backed and citation-safe, but it does not persist interventions yet.
+`GET /v1/ledger`
+
+Query parameters:
+
+- `sessionId` required
+- `cursor` optional
+- `limit` optional, max `50`
+
+The ledger route returns persisted entries for the scoped session in reverse chronological order.
 
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

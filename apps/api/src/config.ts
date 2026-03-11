@@ -39,8 +39,7 @@ export function getServerConfig(): ServerConfig {
     supabaseUrl: readEnv("SUPABASE_URL", "SUPABASE_PROJECT_URL"),
     supabaseServiceRoleKey: readEnv(
       "SUPABASE_SERVICE_ROLE_KEY",
-      "SUPABASE_SECRET_KEY",
-      "SUPABASE_PUBLISHABLE_KEY"
+      "SUPABASE_SECRET_KEY"
     ),
     openRouterApiKey: readEnv("OPENROUTER_API_KEY"),
     openRouterModel:

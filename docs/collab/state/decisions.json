@@ -306,6 +306,19 @@
       "owner": "lead",
       "timestamp_utc": "2026-03-11T17:15:00Z",
       "supersedes": null
+    },
+    {
+      "decision_id": "D-20260311-024",
+      "topic": "Cross-lane exception for intervention persistence and ledger read path",
+      "options_considered": [
+        "Wait for the default api lane owner to add Supabase persistence after the intervention route merge",
+        "Allow codex to continue directly into the persistence slice so the backend loop becomes durable immediately"
+      ],
+      "selected_option": "Allow codex to continue directly into the persistence slice so the backend loop becomes durable immediately",
+      "rationale": "The intervention route is now merged and functioning, but it is still transient. Persisting interventions and exposing a real ledger path is the next production-critical backend slice and remains tightly scoped to api, contracts, and collab state.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T18:15:00Z",
+      "supersedes": null
     }
   ]
 }
