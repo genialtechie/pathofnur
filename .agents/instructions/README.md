@@ -21,8 +21,9 @@ Implementers must execute coding tasks only from task worktrees under `.worktree
 ## Quality Bar (Hard)
 
 - Default to production-standard implementations.
-- Do not introduce "MVP" shortcuts, fake fallback behavior, or placeholder logic unless the human explicitly approves that tradeoff.
+- Do not introduce "MVP" shortcuts, fake fallback behavior, placeholder logic, deprecation scaffolding, or legacy bridge code unless the human explicitly approves that tradeoff.
 - When a dependency failure should make a feature unavailable, fail clearly instead of fabricating behavior.
+- If you change the schema or semantics of `docs/collab/state/*.json`, you must update `scripts/validate_collab_state.py` and the relevant collaboration docs in the same task.
 
 ## Typography Rule (Hard)
 

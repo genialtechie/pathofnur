@@ -1,6 +1,6 @@
 create table if not exists public.interventions (
   id text primary key,
-  actor_session_id text not null,
+  actor_user_id uuid null,
   input_text text not null,
   locale text null,
   entry_source text null,
@@ -12,12 +12,12 @@ create table if not exists public.interventions (
   created_at timestamptz not null default timezone('utc', now())
 );
 
-create index if not exists interventions_actor_session_id_created_at_idx
-  on public.interventions (actor_session_id, created_at desc, id desc);
+create index if not exists interventions_actor_user_id_created_at_idx
+  on public.interventions (actor_user_id, created_at desc, id desc);
 
 create table if not exists public.ledger_entries (
   id text primary key,
-  actor_session_id text not null,
+  actor_user_id uuid null,
   intervention_id text not null references public.interventions(id) on delete cascade,
   occurred_at timestamptz not null default timezone('utc', now()),
   summary text not null,
@@ -30,13 +30,13 @@ create table if not exists public.ledger_entries (
   )
 );
 
-create index if not exists ledger_entries_actor_session_id_occurred_at_idx
-  on public.ledger_entries (actor_session_id, occurred_at desc, id desc);
+create index if not exists ledger_entries_actor_user_id_occurred_at_idx
+  on public.ledger_entries (actor_user_id, occurred_at desc, id desc);
 
 create or replace function public.create_intervention_and_ledger(
   intervention_id text,
   ledger_entry_id text,
-  actor_session_id text,
+  actor_user_id uuid,
   input_text text,
   locale text,
   entry_source text,
@@ -58,7 +58,7 @@ as $$
 begin
   insert into public.interventions (
     id,
-    actor_session_id,
+    actor_user_id,
     input_text,
     locale,
     entry_source,
@@ -69,7 +69,7 @@ begin
   )
   values (
     intervention_id,
-    actor_session_id,
+    actor_user_id,
     input_text,
     locale,
     entry_source,
@@ -81,7 +81,7 @@ begin
 
   insert into public.ledger_entries (
     id,
-    actor_session_id,
+    actor_user_id,
     intervention_id,
     occurred_at,
     summary,
@@ -91,7 +91,7 @@ begin
   )
   values (
     ledger_entry_id,
-    actor_session_id,
+    actor_user_id,
     intervention_id,
     occurred_at,
     summary,
@@ -109,7 +109,7 @@ end;
 $$;
 
 create or replace function public.list_ledger_entries(
-  actor_session_id text,
+  actor_user_id uuid,
   page_size int default 20,
   cursor_occurred_at timestamptz default null,
   cursor_id text default null
@@ -135,7 +135,7 @@ as $$
     l.resolution_state,
     l.followup_status
   from public.ledger_entries l
-  where l.actor_session_id = list_ledger_entries.actor_session_id
+  where l.actor_user_id = list_ledger_entries.actor_user_id
     and (
       cursor_occurred_at is null
       or (l.occurred_at, l.id) < (cursor_occurred_at, coalesce(cursor_id, ''))

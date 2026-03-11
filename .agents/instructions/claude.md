@@ -18,7 +18,8 @@ Role: implementation agent
 - Do not change queue/reservation files directly (lead-owned).
 - Escalate cross-boundary requirements before editing.
 - Never implement from root checkout.
-- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, or placeholder logic.
+- Build to production standard by default; do not add unapproved "MVP" shortcuts, fake fallbacks, placeholder logic, deprecation scaffolding, or legacy bridge code.
+- If a task changes the schema or semantics of `docs/collab/state/*.json`, require the validator and collaboration docs to be updated in the same task.
 - Typography is non-negotiable:
   - Zalando Sans for app UI by default
   - Lora only for Quran/Hadith/long-form scripture

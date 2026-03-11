@@ -699,7 +699,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-006"
@@ -714,7 +714,7 @@
         "Touched backend and docs surfaces validate cleanly"
       ],
       "implementation_notes": "Remove the session ownership column outright rather than preserving it as a nullable legacy path. Also tighten the repo instruction surface so agents stop adding defensive fallback/deprecation scaffolding unless explicitly approved.",
-      "updated_at_utc": "2026-03-11T17:23:11Z"
+      "updated_at_utc": "2026-03-11T17:43:26Z"
     }
   ]
 }

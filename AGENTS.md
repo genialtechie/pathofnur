@@ -128,9 +128,10 @@ The app should optimize for:
 Default assumption for all work in this repo:
 
 - build to production standard unless the human explicitly approves a temporary shortcut
-- do not ship placeholder logic, fake fallback behavior, or "MVP" scaffolding that weakens trust, correctness, or long-term maintainability
+- do not ship placeholder logic, fake fallback behavior, deprecation scaffolding, legacy bridges, or "MVP" scaffolding that weakens trust, correctness, or long-term maintainability
 - if a dependency failure should make a feature unavailable, fail clearly instead of fabricating degraded behavior
 - temporary code is only acceptable when it is explicitly labeled, isolated, and approved as transitional
+- if you change the schema or semantics of `docs/collab/state/*.json`, update `scripts/validate_collab_state.py` and the relevant collaboration docs in the same change; state-shape drift is not allowed
 
 Rule of thumb:
 

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T09:54:54Z",
+  "last_updated_utc": "2026-03-11T17:43:26Z",
   "handoffs": [
     {
       "handoff_id": "H-20260311-008",
@@ -1082,6 +1082,67 @@
         "Implement POST /v1/interventions/:id/resolve as an authenticated persisted update",
         "Add user-scoped follow-up persistence and retrieval on top of the same actor model",
         "Replace heuristic intervention classification with a dedicated structured classification step"
+      ]
+    },
+    {
+      "handoff_id": "H-20260311-007",
+      "task_id": "T-20260311-007",
+      "branch_name": "fix/T-20260311-007-drop-session-ownership",
+      "worktree_path": ".worktrees/T-20260311-007",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T17:43:26Z",
+      "summary": {
+        "completed": [
+          "Removed session ownership from the forward migration path so interventions and ledger entries are modeled around actor_user_id only",
+          "Added a live migration that drops actor_session_id and its old indexes from already-migrated Supabase environments",
+          "Updated the collaboration-state validator to match the real JSON shape and active-reservation model",
+          "Added repo-wide rules that state-schema changes must update the validator and relevant collaboration docs in the same task",
+          "Tightened the quality-bar wording so fallback, deprecation, and legacy bridge logic are not added by default"
+        ],
+        "remaining": [
+          "Implement POST /v1/interventions/:id/resolve as a real authenticated persisted update"
+        ]
+      },
+      "changed_files": [
+        "apps/api/supabase/migrations/20260311181500_interventions_and_ledger.sql",
+        "apps/api/supabase/migrations/20260311193000_actor_user_id_linkage.sql",
+        "apps/api/supabase/migrations/20260311200500_actor_session_id_nullable.sql",
+        "apps/api/supabase/migrations/20260311203000_drop_actor_session_id.sql",
+        "scripts/validate_collab_state.py",
+        "AGENTS.md",
+        ".agents/instructions/README.md",
+        ".agents/instructions/antigravity.md",
+        ".agents/instructions/claude.md",
+        ".agents/instructions/codex.md",
+        ".agents/instructions/cursor.md",
+        ".agents/instructions/opencode.md",
+        "docs/collab/CORE_PROTOCOL.md",
+        "docs/collab/MERGE_RULES.md",
+        "docs/collab/state/task_queue.json",
+        "docs/collab/state/reservations.json",
+        "docs/collab/state/handoffs.json"
+      ],
+      "validation": {
+        "commands": [
+          "python3 scripts/validate_collab_state.py",
+          "supabase link --workdir apps/api --project-ref <derived-from-supabase-url> --password <env-db-password>",
+          "supabase db push --workdir apps/api --include-all",
+          "Supabase REST check: select actor_user_id succeeds and select actor_session_id fails"
+        ],
+        "result": "pass",
+        "notes": "The validator now passes against the current control-plane files. The remote Supabase project accepted the drop-column migration, and direct REST verification confirmed actor_user_id remains queryable while actor_session_id no longer exists on interventions."
+      },
+      "risks": [
+        "Historical handoff and decision records still mention the old session-only path as prior context, which is acceptable as audit history but not as live schema guidance"
+      ],
+      "follow_ups": [
+        "Implement authenticated persisted intervention resolution",
+        "Consider a small dedicated cleanup for historical collab-state wording if audit-log references to session ownership become noisy"
+      ],
+      "next_recommended_actions": [
+        "Build POST /v1/interventions/:id/resolve on the actor_user_id-only schema",
+        "Keep control-plane validation in the review checklist any time state files change"
       ]
     }
   ]
