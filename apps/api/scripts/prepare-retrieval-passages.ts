@@ -19,6 +19,18 @@ function getArg(name: string): string | null {
   return process.argv[index + 1] || null
 }
 
+function getNumberArg(name: string): number | null {
+  const value = getArg(name)
+  if (!value) return null
+
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${name} must be a non-negative number`)
+  }
+
+  return parsed
+}
+
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const sourceRoot = path.join(serverRoot, "corpus", "source")
 const quranFile = getArg("--quran-file") || path.join(sourceRoot, "quran_en.json")
@@ -29,16 +41,36 @@ const overridesFile =
 const outputFile = getArg("--output") || buildDefaultOutputPath(serverRoot)
 const hadithCollections =
   getArg("--hadith-collections")?.split(",").map((value) => value.trim()) || []
+const quranLimit = getNumberArg("--quran-limit")
+const hadithLimit = getNumberArg("--hadith-limit")
 
 async function main() {
   const overrides = await loadOverrides(overridesFile)
-  const quran = await loadQuranPassages(quranFile, overrides)
-  const hadith = await loadHadithPassages(
-    hadithDirectory,
-    overrides,
-    hadithCollections
+  const quran = (await loadQuranPassages(quranFile, overrides)).slice(
+    0,
+    quranLimit ?? undefined
   )
+  const hadith = (
+    await loadHadithPassages(
+      hadithDirectory,
+      overrides,
+      hadithCollections
+    )
+  ).slice(0, hadithLimit ?? undefined)
   const all = [...quran, ...hadith]
+
+  console.log(
+    JSON.stringify(
+      {
+        stage: "normalize",
+        total: all.length,
+        counts: getSourceTypeCounts(all),
+      },
+      null,
+      2
+    )
+  )
+
   const vectors = await embedTexts(
     all.map((passage) => passage.retrievalText),
     "document"
@@ -63,6 +95,10 @@ async function main() {
         outputFile,
         total: seeded.length,
         counts: getSourceTypeCounts(seeded),
+        limited: {
+          quran: quranLimit,
+          hadith: hadithLimit,
+        },
       },
       null,
       2

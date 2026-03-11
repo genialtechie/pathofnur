@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T04:36:30Z",
+  "last_updated_utc": "2026-03-11T15:10:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -526,6 +526,32 @@
       ],
       "implementation_notes": "Superseded by T-20260310-008, which performs the full monorepo cleanup and landing-page setup together.",
       "updated_at_utc": "2026-03-11T04:08:00Z"
+    },
+    {
+      "task_id": "T-20260311-002",
+      "title": "Wire api env aliases and run first live corpus seed",
+      "scope_paths": [
+        "apps/api/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-006",
+        "T-20260310-008"
+      ],
+      "branch_name": "feat/T-20260311-002-api-seed-wiring",
+      "worktree_path": ".worktrees/T-20260311-002",
+      "acceptance_criteria": [
+        "API config accepts the currently provisioned local env variable names without forcing secret renames",
+        "Corpus prepare flow can run end-to-end from the monorepo api package using the configured embedding provider",
+        "Supabase retrieval_passages SQL is applied or a ready-to-run documented path is verified against the current project",
+        "A first live seed pass is executed or the remaining blocker is narrowed to an exact external permission/credential issue",
+        "apps/api typecheck passes"
+      ],
+      "implementation_notes": "Keep this slice focused on making the real seed path work in the current monorepo layout. Prefer env alias support over forcing .env churn. Do not widen into request-time retrieval yet.",
+      "updated_at_utc": "2026-03-11T15:10:00Z"
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { loadLocalEnv } from "./lib/env.js"
+
 export type ServerConfig = {
   port: number
   allowedOrigin: string | null
@@ -13,39 +15,56 @@ export type ServerConfig = {
   embeddingDimensions: number
 }
 
-function readEnv(name: string): string | null {
-  const value = process.env[name]?.trim()
-  return value ? value : null
+loadLocalEnv()
+
+function readEnv(...names: string[]): string | null {
+  for (const name of names) {
+    const value = process.env[name]?.trim()
+    if (value) return value
+  }
+
+  return null
 }
 
 export function getServerConfig(): ServerConfig {
   const portValue = Number(process.env.PORT || 3001)
+  const embeddingProvider =
+    readEnv("EMBEDDING_PROVIDER") === "openai_compatible"
+      ? "openai_compatible"
+      : "google"
 
   return {
     port: Number.isFinite(portValue) ? portValue : 3001,
     allowedOrigin: readEnv("ALLOWED_ORIGIN"),
-    supabaseUrl: readEnv("SUPABASE_URL"),
-    supabaseServiceRoleKey: readEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    supabaseUrl: readEnv("SUPABASE_URL", "SUPABASE_PROJECT_URL"),
+    supabaseServiceRoleKey: readEnv(
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "SUPABASE_SECRET_KEY",
+      "SUPABASE_PUBLISHABLE_KEY"
+    ),
     openRouterApiKey: readEnv("OPENROUTER_API_KEY"),
     openRouterModel:
       readEnv("OPENROUTER_MODEL") || "openai/gpt-4.1-mini",
     openRouterBaseUrl:
       readEnv("OPENROUTER_BASE_URL") || "https://openrouter.ai/api/v1",
-    embeddingProvider:
-      readEnv("EMBEDDING_PROVIDER") === "openai_compatible"
-        ? "openai_compatible"
-        : "google",
+    embeddingProvider,
     embeddingApiKey:
-      readEnv("EMBEDDING_API_KEY") || readEnv("GOOGLE_GENERATIVE_AI_API_KEY"),
+      embeddingProvider === "openai_compatible"
+        ? readEnv("EMBEDDING_API_KEY", "OPENROUTER_API_KEY")
+        : readEnv(
+            "EMBEDDING_API_KEY",
+            "GOOGLE_GENERATIVE_AI_API_KEY",
+            "GOOGLE_API_KEY"
+          ),
     embeddingModel:
       readEnv("EMBEDDING_MODEL") ||
-      (readEnv("EMBEDDING_PROVIDER") === "openai_compatible"
+      (embeddingProvider === "openai_compatible"
         ? "text-embedding-3-small"
-        : "text-embedding-004"),
+        : "gemini-embedding-001"),
     embeddingBaseUrl:
       readEnv("EMBEDDING_BASE_URL") ||
-      (readEnv("EMBEDDING_PROVIDER") === "openai_compatible"
-        ? "https://api.openai.com/v1"
+      (embeddingProvider === "openai_compatible"
+        ? readEnv("OPENROUTER_BASE_URL") || "https://api.openai.com/v1"
         : "https://generativelanguage.googleapis.com/v1beta"),
     embeddingDimensions: Number(readEnv("EMBEDDING_DIMENSIONS") || "768"),
   }

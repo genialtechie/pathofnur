@@ -43,7 +43,10 @@ async function embedWithGoogle(
     })
 
     if (!response.ok) {
-      throw new Error(`Google embedding request failed (${response.status})`)
+      const errorText = await response.text()
+      throw new Error(
+        `Google embedding request failed (${response.status}): ${errorText}`
+      )
     }
 
     const payload = (await response.json()) as {
@@ -88,7 +91,10 @@ async function embedWithOpenAiCompatible(
     })
 
     if (!response.ok) {
-      throw new Error(`Embedding request failed (${response.status})`)
+      const errorText = await response.text()
+      throw new Error(
+        `Embedding request failed (${response.status}): ${errorText}`
+      )
     }
 
     const payload = (await response.json()) as {

@@ -27,6 +27,17 @@ This scaffold intentionally stops at typed routes and runtime boundaries. It doe
 - `EMBEDDING_DIMENSIONS`
 - `EMBEDDING_BASE_URL`
 
+Current alias support also accepts:
+
+- `SUPABASE_PROJECT_URL` for `SUPABASE_URL`
+- `SUPABASE_SECRET_KEY` or `SUPABASE_PUBLISHABLE_KEY` for `SUPABASE_SERVICE_ROLE_KEY`
+- `GOOGLE_API_KEY` for `EMBEDDING_API_KEY`
+- `OPENROUTER_API_KEY` for `EMBEDDING_API_KEY` when `EMBEDDING_PROVIDER=openai_compatible`
+
+For local development, the api package loads the nearest repo `.env` files automatically. Set
+`IMAAN_PREFER_PROCESS_ENV=1` if you need exported shell variables to win over repo-local `.env`
+values.
+
 ## Run locally
 
 ```bash
@@ -54,9 +65,16 @@ The retrieval corpus stays lean:
 Commands:
 
 ```bash
+npm run corpus:download
 npm run corpus:prepare
 npm run corpus:seed
 ```
+
+For a controlled first pass, `corpus:prepare` also accepts:
+
+- `--quran-limit <n>`
+- `--hadith-limit <n>`
+- `--hadith-collections bukhari,muslim`
 
 The provided SQL migration uses `vector(768)`. If you change `EMBEDDING_DIMENSIONS`, update
 `apps/api/sql/retrieval_passages.sql` to match before seeding.
