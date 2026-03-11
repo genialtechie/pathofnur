@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:10:00Z",
+  "last_updated_utc": "2026-03-11T15:32:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -254,8 +254,20 @@
       "owner": "lead",
       "timestamp_utc": "2026-03-11T04:08:00Z",
       "supersedes": null
-    }
-    ,
+    },
+    {
+      "decision_id": "D-20260311-020",
+      "topic": "Cross-lane exception for landing waitlist page implementation",
+      "options_considered": [
+        "Wait for the default apps/landing owner to take the page work",
+        "Allow codex to implement the waitlist one-pager directly in apps/landing after explicit human direction"
+      ],
+      "selected_option": "Allow codex to implement the waitlist one-pager directly in apps/landing after explicit human direction",
+      "rationale": "The human explicitly asked to start the landing page now. Keeping the task scoped to apps/landing only preserves isolation while avoiding unnecessary handoff delay.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-11T04:52:00Z",
+      "supersedes": null
+    },
     {
       "decision_id": "D-20260311-021",
       "topic": "Cross-lane exception for api seed wiring and env alias support",

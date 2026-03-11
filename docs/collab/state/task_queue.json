@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:10:00Z",
+  "last_updated_utc": "2026-03-11T15:32:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -526,6 +526,30 @@
       ],
       "implementation_notes": "Superseded by T-20260310-008, which performs the full monorepo cleanup and landing-page setup together.",
       "updated_at_utc": "2026-03-11T04:08:00Z"
+    },
+    {
+      "task_id": "T-20260311-001",
+      "title": "Build landing waitlist one-pager",
+      "scope_paths": [
+        "apps/landing/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260310-008"
+      ],
+      "branch_name": "feat/T-20260311-001-landing-waitlist-page",
+      "worktree_path": ".worktrees/T-20260311-001",
+      "acceptance_criteria": [
+        "Landing page becomes a clean single-page waitlist surface aligned with the Path of Nur visual direction",
+        "Hero includes a strong CTA, a phone-stage mock, and explicit coming-soon App Store messaging",
+        "Primary action is an email notify form with client-side validation and clear success/error states",
+        "Signup flow is spreadsheet-ready via a configurable webhook endpoint without introducing backend coupling into the landing app",
+        "landing:build passes"
+      ],
+      "implementation_notes": "Keep the scope inside apps/landing only. Use the existing brand assets and current dark premium visual language. Implement a webhook-based submit adapter so the notify flow can later append rows into a simple spreadsheet automation without changing the page UX.",
+      "updated_at_utc": "2026-03-11T15:32:00Z"
     },
     {
       "task_id": "T-20260311-002",

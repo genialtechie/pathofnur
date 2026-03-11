@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T15:10:00Z",
+  "last_updated_utc": "2026-03-11T15:32:00Z",
   "handoffs": [
     {
       "handoff_id": "H-20260311-008",
@@ -793,6 +793,47 @@
         "Start the request-time retrieval task against the live retrieval_passages table",
         "Seed a larger reviewed corpus slice before integrating retrieval into the intervention response pipeline",
         "Add a deliberate full-seed runbook so future refreshes do not depend on chat history"
+      ]
+    },
+    {
+      "handoff_id": "H-20260311-009",
+      "task_id": "T-20260311-001",
+      "branch_name": "feat/T-20260311-001-landing-waitlist-page",
+      "worktree_path": ".worktrees/T-20260311-001",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-11T15:32:00Z",
+      "summary": {
+        "completed": [
+          "Built a one-page Vite landing experience in apps/landing with premium dark hero, App Store coming-soon messaging, waitlist form, and FAQ accordion",
+          "Wired the landing waitlist form directly to the deployed Google Apps Script endpoint for the imaan.app sheet",
+          "Added social metadata and code-generated Open Graph assets under apps/landing/og and apps/landing/public"
+        ],
+        "remaining": [
+          "Optional: replace the placeholder phone mock content with real app screens before launch"
+        ]
+      },
+      "changed_files": [
+        "apps/landing/index.html",
+        "apps/landing/src/main.js",
+        "apps/landing/src/styles.css",
+        "apps/landing/.env.example",
+        "apps/landing/og/generate-og.mjs",
+        "apps/landing/og/og-components.mjs",
+        "apps/landing/public/og-image.svg",
+        "apps/landing/public/og-image.png"
+      ],
+      "validation": {
+        "commands": [
+          "npm run landing:build",
+          "npm run check:typography"
+        ],
+        "result": "pass"
+      },
+      "next_recommended_actions": [
+        "Replace the phone placeholder visuals with real product screenshots",
+        "Run final social-card validation against Twitter/X and iMessage once the production domain is live",
+        "Continue landing-page iteration directly in apps/landing from a new task worktree"
       ]
     }
   ]
