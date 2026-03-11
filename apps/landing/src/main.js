@@ -1,181 +1,305 @@
 import "./styles.css";
 
-document.querySelector("#app").innerHTML = `
+const DEFAULT_WAITLIST_WEBHOOK_URL =
+  "WAITLIST_WEBHOOK_URL_REMOVED";
+const DEFAULT_WAITLIST_WEBHOOK_KEY = "WAITLIST_WEBHOOK_KEY_REMOVED";
+const WAITLIST_WEBHOOK_URL =
+  import.meta.env.VITE_WAITLIST_WEBHOOK_URL?.trim() || DEFAULT_WAITLIST_WEBHOOK_URL;
+const WAITLIST_WEBHOOK_KEY =
+  import.meta.env.VITE_WAITLIST_WEBHOOK_KEY?.trim() || DEFAULT_WAITLIST_WEBHOOK_KEY;
+const PREVIEW_STORAGE_KEY = "imaan-landing-preview-waitlist";
+
+const app = document.querySelector("#app");
+
+app.innerHTML = `
   <div class="page-shell">
     <header class="site-header">
       <a class="brand" href="#top" aria-label="imaan.app home">
         <img class="brand-logo" src="/logo.png" alt="imaan.app logo" />
         <div class="brand-copy">
           <span class="brand-name">imaan.app</span>
-          <span class="brand-subtitle">Native intervention companion</span>
+          <span class="brand-subtitle">A calmer Muslim companion</span>
         </div>
       </a>
-
-      <nav class="site-nav" aria-label="Primary">
-        <a href="#model">Model</a>
-        <a href="#memory">Memory</a>
-        <a href="#trust">Trust</a>
-      </nav>
     </header>
 
     <main id="top">
       <section class="hero-section">
         <div class="hero-copy">
-          <p class="eyebrow">Built for the exact point of spiritual friction</p>
-          <h1>Not a passive dashboard. A calm intervention when the heart feels pressure.</h1>
+          <p class="eyebrow">Coming soon</p>
+          <h1>A spiritual companion for the moments that pull at the heart.</h1>
           <p class="hero-text">
-            imaan.app is being rebuilt as a state-driven spiritual companion for Muslims. It listens for grief, anxiety,
-            urgency, and practical questions, then responds with the right shape of grounded help instead of forcing users
-            to browse through utilities.
+            imaan.app is being crafted as a calmer Muslim companion for daily friction, quiet grounding,
+            and gentle continuity. Join the waitlist to be notified when the App Store release goes live.
           </p>
 
-          <div class="hero-actions">
-            <a class="button button-primary" href="#model">See the intervention model</a>
-            <a class="button button-secondary" href="#memory">Explore the memory layer</a>
+          <div class="hero-store-lockup" aria-label="Coming soon to the App Store">
+            <div class="app-store-badge">
+              <svg class="app-store-badge-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M15.89 12.63C15.91 14.79 17.79 15.51 17.81 15.52C17.79 15.57 17.51 16.57 16.8 17.62C16.18 18.53 15.54 19.45 14.52 19.47C13.52 19.49 13.2 18.88 12.06 18.88C10.91 18.88 10.57 19.45 9.63 19.48C8.66 19.52 7.91 18.49 7.27 17.59C5.98 15.7 4.99 12.24 6.32 9.96C6.98 8.83 8.17 8.1 9.45 8.09C10.4 8.07 11.29 8.73 11.87 8.73C12.45 8.73 13.53 7.93 14.68 8.04C15.16 8.06 16.5 8.25 17.36 9.54C17.3 9.58 15.87 10.45 15.89 12.63ZM13.98 6.94C14.49 6.34 14.82 5.49 14.73 4.64C13.99 4.67 13.08 5.14 12.55 5.75C12.08 6.29 11.66 7.17 11.78 7.99C12.61 8.06 13.46 7.57 13.98 6.94Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <div class="app-store-badge-copy">
+                <span>Coming soon to the</span>
+                <strong>App Store</strong>
+              </div>
+            </div>
           </div>
 
-          <div class="source-row" aria-label="Source coverage">
-            <span>Quran</span>
-            <span>Hadith</span>
-            <span>Seerah</span>
-            <span>Fiqh</span>
-          </div>
+          <form class="waitlist-form" data-waitlist-form novalidate>
+            <label class="sr-only" for="waitlist-email">Email address</label>
+            <div class="waitlist-row">
+              <input
+                id="waitlist-email"
+                class="waitlist-input"
+                data-waitlist-email
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="Enter your email"
+                aria-describedby="waitlist-status"
+                required
+              />
+              <button class="button button-primary waitlist-button" data-waitlist-submit type="submit">
+                Notify me
+              </button>
+            </div>
+
+            <p class="waitlist-note">
+              We will only email you when the app is ready, early access opens, or the App Store launch is live.
+            </p>
+            <p class="waitlist-status" id="waitlist-status" data-waitlist-status aria-live="polite"></p>
+          </form>
         </div>
 
-        <div class="hero-stage">
+        <div class="hero-stage" aria-hidden="true">
           <div class="hero-glow hero-glow-gold"></div>
           <div class="hero-glow hero-glow-blue"></div>
+          <div class="phone-cluster">
+            <div class="phone-shell phone-shell-side phone-shell-left">
+              <div class="phone-frame">
+                <div class="phone-notch"></div>
 
-          <div class="phone-card">
-            <div class="phone-card-top">
-              <span class="phone-pill">What is on your mind?</span>
-              <img class="phone-logo" src="/logo.png" alt="" />
-            </div>
+                <div class="phone-screen">
+                  <div class="screen-topbar">
+                    <span class="screen-time">9:41</span>
+                    <img class="screen-logo" src="/logo.png" alt="" />
+                  </div>
 
-            <div class="phone-card-copy">
-              <p class="phone-label">Contextual Anchor</p>
-              <h2>The app begins where the pressure is.</h2>
-              <p>
-                Deep emotional friction gets grounding first. Acute moments get quick validation. Practical questions get a concise ruling with citation.
-              </p>
-            </div>
+                  <div class="screen-header">
+                    <span class="screen-label">imaan.app</span>
+                    <div class="screen-title-block">
+                      <div class="screen-title-line screen-title-line-short"></div>
+                      <div class="screen-title-line"></div>
+                    </div>
+                  </div>
 
-            <div class="phone-image-frame">
-              <img src="/hero-mark.webp" alt="imaan.app launch artwork" />
-            </div>
-
-            <div class="phone-metrics">
-              <div class="metric-box">
-                <span class="metric-label">Response shape</span>
-                <strong>Anchor, validation, or ruling</strong>
-              </div>
-              <div class="metric-box">
-                <span class="metric-label">Companion layer</span>
-                <strong>Remembers what brought you back</strong>
+                  <div class="screen-preview">
+                    <div class="screen-preview-orb"></div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <div class="phone-shell phone-shell-center">
+              <div class="phone-frame">
+                <div class="phone-notch"></div>
+
+                <div class="phone-screen">
+                  <div class="screen-topbar">
+                    <span class="screen-time">9:41</span>
+                    <img class="screen-logo" src="/logo.png" alt="" />
+                  </div>
+
+                  <div class="screen-header">
+                    <span class="screen-label">imaan.app</span>
+                    <div class="screen-title-block">
+                      <div class="screen-title-line screen-title-line-short"></div>
+                      <div class="screen-title-line"></div>
+                      <div class="screen-title-line screen-title-line-mid"></div>
+                    </div>
+                  </div>
+
+                  <div class="screen-preview">
+                    <div class="screen-preview-orb"></div>
+                  </div>
+
+                  <div class="screen-stack">
+                    <div class="screen-card screen-card-primary">
+                      <div class="screen-card-line screen-card-line-short"></div>
+                      <div class="screen-card-line"></div>
+                    </div>
+                    <div class="screen-card-row">
+                      <div class="screen-card screen-card-compact"></div>
+                      <div class="screen-card screen-card-compact"></div>
+                    </div>
+                    <div class="screen-cta">
+                      <div class="screen-cta-dot"></div>
+                      <div class="screen-cta-line"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="phone-shell phone-shell-side phone-shell-right">
+              <div class="phone-frame">
+                <div class="phone-notch"></div>
+
+                <div class="phone-screen">
+                  <div class="screen-topbar">
+                    <span class="screen-time">9:41</span>
+                    <img class="screen-logo" src="/logo.png" alt="" />
+                  </div>
+
+                  <div class="screen-header">
+                    <span class="screen-label">imaan.app</span>
+                    <div class="screen-title-block">
+                      <div class="screen-title-line screen-title-line-short"></div>
+                      <div class="screen-title-line"></div>
+                    </div>
+                  </div>
+
+                  <div class="screen-preview">
+                    <div class="screen-preview-orb"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="content-section" id="model">
-        <div class="section-heading">
-          <p class="eyebrow">Three intervention types</p>
-          <h2>One input. The right response.</h2>
-          <p>
-            The system is organized around the user’s state, not around feature browsing. That keeps the product fast, calm, and focused.
-          </p>
+      <section class="faq-section" aria-label="Frequently asked questions">
+        <div class="faq-heading">
+          <h2>Common questions before launch.</h2>
         </div>
 
-        <div class="card-grid">
-          <article class="feature-card anchor-card">
-            <p class="card-number">01</p>
-            <h3>The Contextual Anchor</h3>
-            <p>For grief, anxiety, shame, and emotional heaviness. Start with reviewed grounding before the dua arrives.</p>
-          </article>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary><span>What is imaan.app?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              imaan.app is a Muslim spiritual companion being built to feel calm, grounded, and genuinely supportive in everyday moments.
+            </p>
+          </details>
 
-          <article class="feature-card validation-card">
-            <p class="card-number">02</p>
-            <h3>The Quick Validation</h3>
-            <p>For acute friction happening right now. Validate briefly, remove hesitation, and deliver the needed dua immediately.</p>
-          </article>
+          <details class="faq-item">
+            <summary><span>When will it launch?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              The first release is in progress now. Join the waitlist and we will email you as soon as the App Store launch date is locked in.
+            </p>
+          </details>
 
-          <article class="feature-card ruling-card">
-            <p class="card-number">03</p>
-            <h3>The Concise Ruling</h3>
-            <p>For practical lifestyle and fiqh questions. Keep it short, direct, and cited without burying the answer in fluff.</p>
-          </article>
-        </div>
-      </section>
+          <details class="faq-item">
+            <summary><span>What happens if I join the waitlist?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              You will get a small number of launch-related emails only, including release updates, early access news, and the App Store go-live notice.
+            </p>
+          </details>
 
-      <section class="content-section split-section" id="memory">
-        <div class="split-copy">
-          <p class="eyebrow">Memory, not streak pressure</p>
-          <h2>The product proves it is a companion by remembering.</h2>
-          <p>
-            Home becomes the intervention space. Journey and Ledger become the memory layer that keeps track of what has been heavy,
-            what helped, and what deserves a follow-up.
-          </p>
-
-          <ul class="memory-list">
-            <li>Journey tracks positive momentum without turning spiritual life into a scoreboard.</li>
-            <li>Ledger records past stressors, interventions, and follow-ups in one place.</li>
-            <li>Utilities move out of the core flow so the main action stays spiritually focused.</li>
-          </ul>
-        </div>
-
-        <div class="memory-panel">
-          <div class="memory-cell">
-            <span class="memory-label">Ledger</span>
-            <strong>What brought you here</strong>
-            <p>Stressors and interventions do not disappear into isolated sessions.</p>
-          </div>
-
-          <div class="memory-divider"></div>
-
-          <div class="memory-cell">
-            <span class="memory-label">Journey</span>
-            <strong>What kept you steady</strong>
-            <p>Follow-ups and positive movement build calm continuity instead of raw streak pressure.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="content-section" id="trust">
-        <div class="section-heading">
-          <p class="eyebrow">Trust is the product</p>
-          <h2>Grounded, narrow, and deliberately cited.</h2>
-          <p>
-            imaan.app is not a generic productivity layer, a passive content browser, or an uncited spiritual chatbot.
-            It is a focused intervention tool shaped around reviewed Islamic material and memory-backed continuity.
-          </p>
-        </div>
-
-        <div class="trust-grid">
-          <article class="trust-card">
-            <h3>Reviewed source pool</h3>
-            <p>Quran, hadith, seerah, and practical rulings form the citation backbone for grounding and intervention.</p>
-          </article>
-
-          <article class="trust-card">
-            <h3>Zero-judgment tone</h3>
-            <p>The app meets users where they are instead of forcing them through a utility maze before help arrives.</p>
-          </article>
-
-          <article class="trust-card">
-            <h3>Native-first continuity</h3>
-            <p>The refactor centers account-backed memory, intervention flow, and a more serious backend foundation.</p>
-          </article>
+          <details class="faq-item">
+            <summary><span>Will it be on iPhone first?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              Yes. This page is currently collecting interest for the upcoming App Store release first.
+            </p>
+          </details>
         </div>
       </section>
     </main>
-
-    <footer class="site-footer">
-      <div>
-        <p class="eyebrow">imaan.app</p>
-        <h2>A spiritual companion for moments of friction.</h2>
-      </div>
-      <a class="button button-primary" href="#top">Back to top</a>
-    </footer>
   </div>
 `;
+
+const form = document.querySelector("[data-waitlist-form]");
+const emailInput = document.querySelector("[data-waitlist-email]");
+const submitButton = document.querySelector("[data-waitlist-submit]");
+const statusNode = document.querySelector("[data-waitlist-status]");
+
+function setStatus(message, tone = "neutral") {
+  statusNode.textContent = message;
+  statusNode.dataset.state = tone;
+}
+
+function setSubmitting(isSubmitting) {
+  submitButton.disabled = isSubmitting;
+  submitButton.textContent = isSubmitting ? "Submitting..." : "Notify me";
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function savePreviewSubmission(payload) {
+  const existing = JSON.parse(window.localStorage.getItem(PREVIEW_STORAGE_KEY) ?? "[]");
+  existing.push(payload);
+  window.localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(existing));
+}
+
+async function submitWaitlist(payload) {
+  if (!WAITLIST_WEBHOOK_URL) {
+    savePreviewSubmission(payload);
+    return { mode: "preview" };
+  }
+
+  const requestUrl = WAITLIST_WEBHOOK_KEY
+    ? `${WAITLIST_WEBHOOK_URL}${WAITLIST_WEBHOOK_URL.includes("?") ? "&" : "?"}key=${encodeURIComponent(
+        WAITLIST_WEBHOOK_KEY,
+      )}`
+    : WAITLIST_WEBHOOK_URL;
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (WAITLIST_WEBHOOK_KEY) {
+    headers["x-webhook-key"] = WAITLIST_WEBHOOK_KEY;
+  }
+
+  const response = await fetch(requestUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Waitlist request failed with ${response.status}`);
+  }
+
+  return { mode: "remote" };
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const email = emailInput.value.trim().toLowerCase();
+
+  if (!isValidEmail(email)) {
+    setStatus("Enter a valid email address to join the waitlist.", "error");
+    emailInput.focus();
+    return;
+  }
+
+  setSubmitting(true);
+  setStatus("Submitting...", "neutral");
+
+  const payload = {
+    email,
+    source: "landing_waitlist",
+    submittedAtUtc: new Date().toISOString(),
+    locale: navigator.language,
+    page: window.location.href,
+  };
+
+  try {
+    await submitWaitlist(payload);
+
+    emailInput.value = "";
+    setStatus("You are on the list. We will email you when imaan.app is ready.", "success");
+  } catch (error) {
+    console.error(error);
+    setStatus("The waitlist could not be submitted right now. Please try again shortly.", "error");
+  } finally {
+    setSubmitting(false);
+  }
+});
