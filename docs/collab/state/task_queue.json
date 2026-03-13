@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T20:05:00Z",
+  "last_updated_utc": "2026-03-13T00:00:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -739,6 +739,32 @@
       ],
       "implementation_notes": "Keep changes inside apps/mobile/src/features/home only. Do not mutate the active auth/session or api tasks; if backend session/auth assumptions need adaptation, handle them locally inside the Home feature for this pass.",
       "updated_at_utc": "2026-03-11T20:05:00Z"
+    },
+    {
+      "task_id": "T-20260313-001",
+      "title": "Implement authenticated persisted intervention resolution",
+      "scope_paths": [
+        "apps/api/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-006",
+        "T-20260311-007"
+      ],
+      "branch_name": "feat/T-20260313-001-intervention-resolution",
+      "worktree_path": ".worktrees/T-20260313-001",
+      "acceptance_criteria": [
+        "POST /v1/interventions/:id/resolve persists a resolution update for the authenticated actor",
+        "Resolution writes are scoped by actor_user_id and cannot mutate another user's intervention",
+        "The intervention record and ledger entry stay consistent after resolution updates",
+        "The route returns a typed success response on the happy path and a clear not-found or auth-scoped failure when appropriate",
+        "apps/api typecheck passes and the live local route works against the current Supabase project"
+      ],
+      "implementation_notes": "Keep this slice inside apps/api and the collab state files only. Build on the authenticated actor model already merged. Do not widen into follow-up workflows or classifier changes.",
+      "updated_at_utc": "2026-03-13T00:00:00Z"
     }
   ]
 }

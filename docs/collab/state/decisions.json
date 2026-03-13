@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T20:05:00Z",
+  "last_updated_utc": "2026-03-13T00:00:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -357,6 +357,19 @@
       "rationale": "The user explicitly wants the Home transaction rebuilt now. Keeping the task scoped to apps/mobile/src/features/home only avoids collision with the active auth/session and backend tasks while unblocking the core product surface.",
       "owner": "lead",
       "timestamp_utc": "2026-03-11T20:05:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260313-001",
+      "topic": "Cross-lane exception for authenticated intervention resolution slice",
+      "options_considered": [
+        "Wait until later follow-up work to implement intervention resolution",
+        "Allow codex to extend the merged intervention persistence path with one narrow authenticated resolution slice now"
+      ],
+      "selected_option": "Allow codex to extend the merged intervention persistence path with one narrow authenticated resolution slice now",
+      "rationale": "Resolution is the next missing production backend action on top of the authenticated intervention model. Keeping it scoped to apps/api and collab state avoids collision with the active Home rebuild while tightening the core memory loop.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-13T00:00:00Z",
       "supersedes": null
     }
   ]
