@@ -211,6 +211,7 @@ input {
 .waitlist-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
   padding: 14px;
   border-radius: 30px;
@@ -223,6 +224,13 @@ input {
     box-shadow 220ms ease,
     transform 220ms ease,
     background 220ms ease;
+}
+
+.waitlist-row:focus-within {
+  border-color: rgba(214, 178, 92, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(214, 178, 92, 0.18),
+    0 0 0 7px rgba(214, 178, 92, 0.06);
 }
 
 .waitlist-row[data-invalid="true"] {
@@ -241,30 +249,51 @@ input {
 
 .waitlist-input-shell {
   display: grid;
-  gap: 8px;
+  align-items: center;
   min-width: 0;
 }
 
 .waitlist-field-error {
-  min-height: 1em;
   margin: 0;
   color: var(--danger);
   font-size: 0.84rem;
   line-height: 1.35;
 }
 
+.waitlist-field-error:empty {
+  display: none;
+}
+
 .waitlist-input {
+  display: block;
+  width: 100%;
   min-width: 0;
+  height: 52px;
+  min-height: 0;
   border: 0;
   outline: 0;
   color: var(--text);
   background: transparent;
   padding: 0 8px;
-  min-height: 52px;
+  line-height: 52px;
+  caret-color: var(--text);
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .waitlist-input::placeholder {
   color: rgba(189, 197, 210, 0.74);
+}
+
+.waitlist-input:-webkit-autofill,
+.waitlist-input:-webkit-autofill:hover,
+.waitlist-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  border: 0;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  box-shadow: 0 0 0 1000px transparent inset;
+  transition: background-color 9999s ease-out 0s;
 }
 
 .button {
@@ -1010,8 +1039,9 @@ input {
   }
 
   .waitlist-input {
-    min-height: 46px;
+    height: 46px;
     padding: 0 6px;
+    line-height: 46px;
   }
 
   .button {
