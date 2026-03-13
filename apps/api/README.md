@@ -138,4 +138,24 @@ Query parameters:
 
 The ledger route returns persisted entries for the authenticated user in reverse chronological order.
 
+`POST /v1/interventions/:id/resolve`
+
+Authorization:
+
+- `Authorization: Bearer <supabase_access_token>` required
+
+Request shape:
+
+```json
+{
+  "resolution": "grounded"
+}
+```
+
+Behavior:
+
+- updates the authenticated actor's intervention resolution state
+- keeps the intervention record and its ledger entry in sync
+- returns `404` when the intervention does not belong to the authenticated actor or does not exist
+
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

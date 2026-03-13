@@ -2,8 +2,10 @@ import {
   type CreateInterventionRequest,
   type InterventionPayload,
   type LedgerEntry,
+  type ResolutionState,
   LedgerPageResponseSchema,
   LedgerEntrySchema,
+  MutationSuccessSchema,
 } from "@imaan/contracts"
 import { z } from "zod"
 
@@ -15,6 +17,11 @@ const CreateInterventionAndLedgerRowSchema = z.object({
   stored_intervention_id: z.string().min(1),
   stored_ledger_entry_id: z.string().min(1),
   stored_occurred_at: z.string().min(1),
+})
+
+const ResolveInterventionRowSchema = z.object({
+  updated_intervention_id: z.string().min(1),
+  updated_resolution_state: z.enum(["grounded", "done"]),
 })
 
 const LedgerRowSchema = z.object({
@@ -148,5 +155,48 @@ export async function listLedgerEntries(input: {
           id: nextRow.id,
         })
       : null,
+  })
+}
+
+export class InterventionResolutionNotFoundError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "InterventionResolutionNotFoundError"
+  }
+}
+
+export async function resolveInterventionRecord(input: {
+  userId: string
+  interventionId: string
+  resolution: ResolutionState
+}) {
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc("resolve_intervention_for_actor", {
+    target_intervention_id: input.interventionId,
+    actor_user_id: input.userId,
+    next_resolution_state: input.resolution,
+  })
+
+  if (error) {
+    throw new Error(`Failed to resolve intervention: ${error.message}`)
+  }
+
+  const row = ((data as unknown[]) ?? []).at(0)
+  if (!row) {
+    throw new InterventionResolutionNotFoundError(
+      "No matching intervention was found for this actor."
+    )
+  }
+
+  const parsed = ResolveInterventionRowSchema.parse(row)
+  if (
+    parsed.updated_intervention_id !== input.interventionId ||
+    parsed.updated_resolution_state !== input.resolution
+  ) {
+    throw new Error("Resolved intervention payload did not match the requested update.")
+  }
+
+  return MutationSuccessSchema.parse({
+    ok: true,
   })
 }

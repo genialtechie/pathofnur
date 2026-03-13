@@ -17,7 +17,11 @@ import {
   getAuthenticatedActor,
 } from "../lib/auth.js"
 import { createIntervention } from "../lib/interventions.js"
-import { listLedgerEntries } from "../lib/intervention-store.js"
+import {
+  InterventionResolutionNotFoundError,
+  listLedgerEntries,
+  resolveInterventionRecord,
+} from "../lib/intervention-store.js"
 import {
   InterventionGenerationError,
   InterventionRetrievalError,
@@ -190,6 +194,25 @@ export async function registerV1Routes(app: FastifyInstance) {
   })
 
   app.post("/v1/interventions/:id/resolve", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
+    const params =
+      typeof request.params === "object" && request.params
+        ? (request.params as Record<string, unknown>)
+        : {}
+    const interventionId =
+      typeof params.id === "string" ? params.id.trim() : ""
+
+    if (!interventionId) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: "Intervention id is required.",
+      })
+    }
+
     const parsed = ResolveInterventionRequestSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.code(400).send({
@@ -198,7 +221,29 @@ export async function registerV1Routes(app: FastifyInstance) {
       })
     }
 
-    return sendNotImplemented(reply, "Intervention resolution")
+    try {
+      const response = await resolveInterventionRecord({
+        userId: actor.userId,
+        interventionId,
+        resolution: parsed.data.resolution,
+      })
+      return reply.code(200).send(response)
+    } catch (error) {
+      if (error instanceof InterventionResolutionNotFoundError) {
+        return reply.code(404).send({
+          error: "intervention_not_found",
+          message: error.message,
+        })
+      }
+
+      return reply.code(500).send({
+        error: "intervention_resolution_failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Intervention resolution failed.",
+      })
+    }
   })
 
   app.post("/v1/followups/:id/respond", async (request, reply) => {
