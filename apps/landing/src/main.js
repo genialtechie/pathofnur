@@ -1,13 +1,8 @@
 import "./styles.css";
 
-const DEFAULT_WAITLIST_WEBHOOK_URL =
-  "WAITLIST_WEBHOOK_URL_REMOVED";
-const DEFAULT_WAITLIST_WEBHOOK_KEY = "WAITLIST_WEBHOOK_KEY_REMOVED";
-const WAITLIST_WEBHOOK_URL =
-  import.meta.env.VITE_WAITLIST_WEBHOOK_URL?.trim() || DEFAULT_WAITLIST_WEBHOOK_URL;
-const WAITLIST_WEBHOOK_KEY =
-  import.meta.env.VITE_WAITLIST_WEBHOOK_KEY?.trim() || DEFAULT_WAITLIST_WEBHOOK_KEY;
-const PREVIEW_STORAGE_KEY = "imaan-landing-preview-waitlist";
+const WAITLIST_ENDPOINT = "/api/waitlist";
+const SUCCESS_RESET_MS = 1800;
+const ALERT_CLOSE_MS = 180;
 
 const app = document.querySelector("#app");
 
@@ -48,29 +43,53 @@ app.innerHTML = `
             </div>
           </div>
 
-          <form class="waitlist-form" data-waitlist-form novalidate>
+          <form class="waitlist-form" data-waitlist-form data-state="idle" novalidate>
             <label class="sr-only" for="waitlist-email">Email address</label>
-            <div class="waitlist-row">
-              <input
-                id="waitlist-email"
-                class="waitlist-input"
-                data-waitlist-email
-                type="email"
-                inputmode="email"
-                autocomplete="email"
-                placeholder="Enter your email"
-                aria-describedby="waitlist-status"
-                required
-              />
+            <div class="waitlist-row" data-waitlist-row data-invalid="false">
+              <div class="waitlist-input-shell">
+                <input
+                  id="waitlist-email"
+                  class="waitlist-input"
+                  data-waitlist-email
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  placeholder="Enter your email"
+                  aria-describedby="waitlist-note waitlist-status waitlist-field-error"
+                  required
+                />
+                <p
+                  class="waitlist-field-error"
+                  id="waitlist-field-error"
+                  data-waitlist-field-error
+                  aria-live="polite"
+                ></p>
+              </div>
+
               <button class="button button-primary waitlist-button" data-waitlist-submit type="submit">
-                Notify me
+                <span class="waitlist-button-face waitlist-button-face-idle">Notify me</span>
+                <span class="waitlist-button-face waitlist-button-face-loading" aria-hidden="true">
+                  <span class="waitlist-spinner"></span>
+                  <span>Submitting</span>
+                </span>
+                <span class="waitlist-button-face waitlist-button-face-success" aria-hidden="true">
+                  <svg class="waitlist-checkmark" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M4.75 10.5L8.25 14L15.5 6.75"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.25"
+                    />
+                  </svg>
+                </span>
               </button>
             </div>
 
-            <p class="waitlist-note">
+            <p class="waitlist-note" id="waitlist-note">
               We will only email you when the app is ready, early access opens, or the App Store launch is live.
             </p>
-            <p class="waitlist-status" id="waitlist-status" data-waitlist-status aria-live="polite"></p>
+            <p class="waitlist-status sr-only" id="waitlist-status" data-waitlist-status aria-live="polite"></p>
           </form>
         </div>
 
@@ -209,64 +228,160 @@ app.innerHTML = `
       </section>
     </main>
   </div>
+
+  <div class="waitlist-alert-backdrop" data-waitlist-alert hidden>
+    <div
+      class="waitlist-alert"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="waitlist-alert-title"
+      aria-describedby="waitlist-alert-body"
+    >
+      <button class="waitlist-alert-close" data-waitlist-alert-close type="button" aria-label="Close alert">
+        <span aria-hidden="true">+</span>
+      </button>
+      <p class="waitlist-alert-kicker">Submission issue</p>
+      <h2 class="waitlist-alert-title" id="waitlist-alert-title">The waitlist could not be submitted</h2>
+      <p class="waitlist-alert-body" id="waitlist-alert-body" data-waitlist-alert-body">
+        Please try again shortly.
+      </p>
+      <button class="button button-primary waitlist-alert-button" data-waitlist-alert-dismiss type="button">
+        Try again
+      </button>
+    </div>
+  </div>
 `;
 
 const form = document.querySelector("[data-waitlist-form]");
+const row = document.querySelector("[data-waitlist-row]");
 const emailInput = document.querySelector("[data-waitlist-email]");
 const submitButton = document.querySelector("[data-waitlist-submit]");
+const fieldErrorNode = document.querySelector("[data-waitlist-field-error]");
 const statusNode = document.querySelector("[data-waitlist-status]");
+const alertBackdrop = document.querySelector("[data-waitlist-alert]");
+const alertBodyNode = document.querySelector("[data-waitlist-alert-body]");
+const alertDismissButton = document.querySelector("[data-waitlist-alert-dismiss]");
+const alertCloseButton = document.querySelector("[data-waitlist-alert-close]");
 
-function setStatus(message, tone = "neutral") {
+let successResetTimer = null;
+let alertCloseTimer = null;
+let lastFocusedElement = null;
+
+function setStatus(message) {
   statusNode.textContent = message;
-  statusNode.dataset.state = tone;
 }
 
-function setSubmitting(isSubmitting) {
-  submitButton.disabled = isSubmitting;
-  submitButton.textContent = isSubmitting ? "Submitting..." : "Notify me";
+function setFormState(state) {
+  form.dataset.state = state;
+  submitButton.disabled = state === "submitting" || state === "success";
+}
+
+function clearFieldError() {
+  row.dataset.invalid = "false";
+  fieldErrorNode.textContent = "";
+  emailInput.removeAttribute("aria-invalid");
+}
+
+function triggerInvalidAnimation() {
+  row.classList.remove("waitlist-row-shake");
+  void row.offsetWidth;
+  row.classList.add("waitlist-row-shake");
+}
+
+function showFieldError(message) {
+  row.dataset.invalid = "true";
+  fieldErrorNode.textContent = message;
+  emailInput.setAttribute("aria-invalid", "true");
+  setStatus(message);
+  triggerInvalidAnimation();
+}
+
+function isAlertOpen() {
+  return !alertBackdrop.hidden;
+}
+
+function openAlert(message) {
+  if (alertCloseTimer) {
+    window.clearTimeout(alertCloseTimer);
+    alertCloseTimer = null;
+  }
+
+  alertBodyNode.textContent = message;
+  lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  alertBackdrop.hidden = false;
+  document.body.classList.add("waitlist-alert-open");
+
+  requestAnimationFrame(() => {
+    alertBackdrop.dataset.open = "true";
+    alertDismissButton.focus();
+  });
+
+  setStatus(message);
+}
+
+function closeAlert() {
+  if (!isAlertOpen()) {
+    return;
+  }
+
+  alertBackdrop.dataset.open = "false";
+  document.body.classList.remove("waitlist-alert-open");
+
+  alertCloseTimer = window.setTimeout(() => {
+    alertBackdrop.hidden = true;
+    alertCloseTimer = null;
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
+  }, ALERT_CLOSE_MS);
 }
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function savePreviewSubmission(payload) {
-  const existing = JSON.parse(window.localStorage.getItem(PREVIEW_STORAGE_KEY) ?? "[]");
-  existing.push(payload);
-  window.localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify(existing));
+async function parseResponse(response) {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!contentType.includes("application/json")) {
+    return null;
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 async function submitWaitlist(payload) {
-  if (!WAITLIST_WEBHOOK_URL) {
-    savePreviewSubmission(payload);
-    return { mode: "preview" };
-  }
-
-  const requestUrl = WAITLIST_WEBHOOK_KEY
-    ? `${WAITLIST_WEBHOOK_URL}${WAITLIST_WEBHOOK_URL.includes("?") ? "&" : "?"}key=${encodeURIComponent(
-        WAITLIST_WEBHOOK_KEY,
-      )}`
-    : WAITLIST_WEBHOOK_URL;
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
-
-  if (WAITLIST_WEBHOOK_KEY) {
-    headers["x-webhook-key"] = WAITLIST_WEBHOOK_KEY;
-  }
-
-  const response = await fetch(requestUrl, {
+  const response = await fetch(WAITLIST_ENDPOINT, {
     method: "POST",
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    throw new Error(`Waitlist request failed with ${response.status}`);
+  const responseBody = await parseResponse(response);
+
+  if (!response.ok || !responseBody?.ok) {
+    throw new Error(
+      responseBody?.message || "The waitlist could not be submitted right now. Please try again shortly.",
+    );
+  }
+}
+
+function resetSuccessStateSoon() {
+  if (successResetTimer) {
+    window.clearTimeout(successResetTimer);
   }
 
-  return { mode: "remote" };
+  successResetTimer = window.setTimeout(() => {
+    setFormState("idle");
+    setStatus("");
+    successResetTimer = null;
+  }, SUCCESS_RESET_MS);
 }
 
 form.addEventListener("submit", async (event) => {
@@ -274,14 +389,18 @@ form.addEventListener("submit", async (event) => {
 
   const email = emailInput.value.trim().toLowerCase();
 
+  closeAlert();
+  clearFieldError();
+
   if (!isValidEmail(email)) {
-    setStatus("Enter a valid email address to join the waitlist.", "error");
+    setFormState("idle");
+    showFieldError("Enter a valid email address to join the waitlist.");
     emailInput.focus();
     return;
   }
 
-  setSubmitting(true);
-  setStatus("Submitting...", "neutral");
+  setFormState("submitting");
+  setStatus("Submitting your email to the waitlist.");
 
   const payload = {
     email,
@@ -293,13 +412,54 @@ form.addEventListener("submit", async (event) => {
 
   try {
     await submitWaitlist(payload);
-
     emailInput.value = "";
-    setStatus("You are on the list. We will email you when imaan.app is ready.", "success");
+    setFormState("success");
+    setStatus("You are on the list. We will email you when imaan.app is ready.");
+    resetSuccessStateSoon();
   } catch (error) {
     console.error(error);
-    setStatus("The waitlist could not be submitted right now. Please try again shortly.", "error");
-  } finally {
-    setSubmitting(false);
+    setFormState("idle");
+    openAlert(error instanceof Error ? error.message : "Please try again shortly.");
+  }
+});
+
+emailInput.addEventListener("input", () => {
+  if (row.dataset.invalid === "true") {
+    clearFieldError();
+  }
+
+  if (form.dataset.state === "success") {
+    if (successResetTimer) {
+      window.clearTimeout(successResetTimer);
+      successResetTimer = null;
+    }
+
+    setFormState("idle");
+  }
+
+  setStatus("");
+});
+
+row.addEventListener("animationend", () => {
+  row.classList.remove("waitlist-row-shake");
+});
+
+alertBackdrop.addEventListener("click", (event) => {
+  if (event.target === alertBackdrop) {
+    closeAlert();
+  }
+});
+
+alertDismissButton.addEventListener("click", () => {
+  closeAlert();
+});
+
+alertCloseButton.addEventListener("click", () => {
+  closeAlert();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isAlertOpen()) {
+    closeAlert();
   }
 });
