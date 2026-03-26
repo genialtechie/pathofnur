@@ -765,6 +765,33 @@
       ],
       "implementation_notes": "Keep this slice inside apps/api and the collab state files only. Build on the authenticated actor model already merged. Do not widen into follow-up workflows or classifier changes.",
       "updated_at_utc": "2026-03-26T18:37:27Z"
+    },
+    {
+      "task_id": "T-20260326-002",
+      "title": "Replace heuristic intervention typing with dedicated classifier",
+      "scope_paths": [
+        "apps/api/**",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260311-004",
+        "T-20260311-005",
+        "T-20260313-001"
+      ],
+      "branch_name": "feat/T-20260326-002-intervention-classifier",
+      "worktree_path": ".worktrees/T-20260326-002",
+      "acceptance_criteria": [
+        "apps/api no longer derives intervention type from a local keyword heuristic",
+        "A dedicated classification step runs before generation and returns one of contextual_anchor, quick_validation, or concise_ruling",
+        "Classification failures are surfaced distinctly and fail the intervention request closed",
+        "The intervention creation path uses the classifier output consistently for generation and persistence",
+        "apps/api typecheck passes"
+      ],
+      "implementation_notes": "Keep this slice tightly scoped to apps/api and collab state. Do not widen into follow-up workflows, UI changes, or corpus schema changes.",
+      "updated_at_utc": "2026-03-26T18:37:27Z"
     }
   ]
 }

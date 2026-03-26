@@ -10,6 +10,16 @@
       ],
       "mode": "exclusive",
       "expires_at_utc": "2026-03-26T22:37:27Z"
+    },
+    {
+      "task_id": "T-20260326-002",
+      "worktree_path": ".worktrees/T-20260326-002",
+      "reserved_paths": [
+        "apps/api/**",
+        "docs/collab/**"
+      ],
+      "mode": "exclusive",
+      "expires_at_utc": "2026-03-26T22:37:27Z"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-13T00:00:00Z",
+  "last_updated_utc": "2026-03-26T18:37:27Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -370,6 +370,19 @@
       "rationale": "Resolution is the next missing production backend action on top of the authenticated intervention model. Keeping it scoped to apps/api and collab state avoids collision with the active Home rebuild while tightening the core memory loop.",
       "owner": "lead",
       "timestamp_utc": "2026-03-13T00:00:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260326-002",
+      "topic": "Cross-lane exception for intervention classification hardening",
+      "options_considered": [
+        "Leave the keyword heuristic in place until a later backend phase",
+        "Allow codex to replace the heuristic with a dedicated model-backed classification step now"
+      ],
+      "selected_option": "Allow codex to replace the heuristic with a dedicated model-backed classification step now",
+      "rationale": "The backend core loop is now durable and authenticated, and the next production-critical gap is the heuristic intervention classifier. Keeping the slice scoped to apps/api and collab state avoids overlap with the active Home worktree while improving the trustworthiness of intervention typing.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-26T18:37:27Z",
       "supersedes": null
     }
   ]
