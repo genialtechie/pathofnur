@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-13T00:00:00Z",
+  "last_updated_utc": "2026-03-26T18:37:27Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -748,7 +748,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-006",
@@ -764,7 +764,7 @@
         "apps/api typecheck passes and the live local route works against the current Supabase project"
       ],
       "implementation_notes": "Keep this slice inside apps/api and the collab state files only. Build on the authenticated actor model already merged. Do not widen into follow-up workflows or classifier changes.",
-      "updated_at_utc": "2026-03-13T00:00:00Z"
+      "updated_at_utc": "2026-03-26T18:37:27Z"
     }
   ]
 }

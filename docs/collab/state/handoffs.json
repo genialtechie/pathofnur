@@ -1,7 +1,43 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-11T17:43:26Z",
+  "last_updated_utc": "2026-03-26T18:37:27Z",
   "handoffs": [
+    {
+      "handoff_id": "H-20260326-001",
+      "task_id": "T-20260313-001",
+      "branch_name": "feat/T-20260313-001-intervention-resolution",
+      "worktree_path": ".worktrees/T-20260313-001",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-26T18:37:27Z",
+      "summary": {
+        "completed": [
+          "Implemented authenticated POST /v1/interventions/:id/resolve in apps/api",
+          "Persisted resolution updates against actor_user_id and kept intervention and ledger state synchronized",
+          "Landed a forward-only Supabase migration for intervention resolution without rewriting prior migrations"
+        ],
+        "remaining": [
+          "Push local main if the resolution work should be reflected on origin/main",
+          "Continue the Home intervention entry task in T-20260311-008"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/lib/intervention-store.ts",
+        "apps/api/src/routes/v1.ts",
+        "apps/api/supabase/migrations/20260313002000_intervention_resolution.sql"
+      ],
+      "validation": {
+        "commands": [
+          "timeout 60 node node_modules/typescript/bin/tsc -p apps/api/tsconfig.json --noEmit --pretty false"
+        ],
+        "result": "pass"
+      },
+      "next_recommended_actions": [
+        "Resume the Home intervention-first UI work in T-20260311-008",
+        "Keep collab state reservations refreshed while long-running worktrees remain active"
+      ]
+    },
     {
       "handoff_id": "H-20260311-008",
       "task_id": "T-20260310-008",
