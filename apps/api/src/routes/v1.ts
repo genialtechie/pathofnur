@@ -27,6 +27,7 @@ import {
   InterventionRetrievalError,
   NoSupportingPassagesError,
 } from "../lib/interventions.js"
+import { InterventionClassificationError } from "../lib/intervention-classifier.js"
 import { retrievePassages } from "../lib/retrieve-passages.js"
 
 function sendNotImplemented(reply: FastifyReply, feature: string) {
@@ -162,6 +163,13 @@ export async function registerV1Routes(app: FastifyInstance) {
       const payload = await createIntervention(actor, parsed.data)
       return reply.code(200).send(InterventionPayloadSchema.parse(payload))
     } catch (error) {
+      if (error instanceof InterventionClassificationError) {
+        return reply.code(502).send({
+          error: "classification_failed",
+          message: error.message,
+        })
+      }
+
       if (error instanceof InterventionRetrievalError) {
         return reply.code(502).send({
           error: "retrieval_failed",

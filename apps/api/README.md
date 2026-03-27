@@ -118,12 +118,14 @@ Request shape:
 
 Behavior:
 
-- classifies the request into a first-pass intervention type
+- classifies the request into an authoritative intervention type before retrieval
+- derives retrieval settings from that classified type
 - retrieves the top supporting passages from Supabase
-- uses OpenRouter to format a structured response
+- uses OpenRouter to format a structured response for the locked intervention type
+- persists the classified type, generated payload, and ledger entry together in Supabase scoped to the authenticated user before returning success
+- fails with an upstream classification error if the classifier is unavailable or returns invalid structured output
 - fails with an upstream retrieval error if embeddings, corpus lookup, or Supabase retrieval break
 - fails with an upstream generation error if OpenRouter is unavailable or returns invalid structured output
-- persists the intervention and ledger entry together in Supabase scoped to the authenticated user before returning success
 
 `GET /v1/ledger`
 
