@@ -6,14 +6,27 @@ import {
 import { z } from "zod"
 
 import {
-  createOpenRouterChatCompletion,
-  extractJsonObject,
-  getOpenRouterCompletionText,
+  createOpenRouterStructuredOutput,
+  OpenRouterConfigurationError,
+  OpenRouterStructuredOutputError,
+  OpenRouterUpstreamError,
 } from "./openrouter.js"
 
 const InterventionClassificationSchema = z.object({
   interventionType: InterventionTypeSchema,
 })
+
+const InterventionClassificationJsonSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    interventionType: {
+      type: "string",
+      enum: [...InterventionTypeSchema.options],
+    },
+  },
+  required: ["interventionType"],
+}
 
 const RetrievalConfigSchema = z.object({
   matchCount: z.number().int().min(1).max(10),
@@ -71,9 +84,8 @@ function getRetrievalConfig(
 export async function classifyIntervention(
   input: CreateInterventionRequest
 ): Promise<InterventionClassification> {
-  let response: unknown
   try {
-    response = await createOpenRouterChatCompletion({
+    const parsed = await createOpenRouterStructuredOutput({
       temperature: 0,
       messages: [
         {
@@ -85,29 +97,42 @@ export async function classifyIntervention(
           content: buildClassificationUserPrompt(input),
         },
       ],
+      outputSchema: InterventionClassificationSchema,
+      responseFormat: {
+        name: "intervention_classification",
+        description: "Classify the intervention request into one allowed type.",
+        schema: InterventionClassificationJsonSchema,
+        strict: true,
+      },
     })
-  } catch (error) {
-    throw new InterventionClassificationError(
-      error instanceof Error
-        ? `Intervention classification failed: ${error.message}`
-        : "Intervention classification failed."
-    )
-  }
-
-  try {
-    const content = getOpenRouterCompletionText(response)
-    const json = extractJsonObject(content)
-    const parsed = InterventionClassificationSchema.parse(JSON.parse(json))
 
     return {
       interventionType: parsed.interventionType,
       retrievalConfig: getRetrievalConfig(parsed.interventionType),
     }
   } catch (error) {
+    if (error instanceof OpenRouterConfigurationError) {
+      throw new InterventionClassificationError(
+        "Intervention classification is unavailable because OpenRouter is not configured."
+      )
+    }
+
+    if (error instanceof OpenRouterStructuredOutputError) {
+      throw new InterventionClassificationError(
+        "Intervention classification returned invalid structured output."
+      )
+    }
+
+    if (error instanceof OpenRouterUpstreamError) {
+      throw new InterventionClassificationError(
+        "Intervention classification failed because OpenRouter did not return a successful response."
+      )
+    }
+
     throw new InterventionClassificationError(
       error instanceof Error
-        ? `Intervention classification returned invalid structured output: ${error.message}`
-        : "Intervention classification returned invalid structured output."
+        ? `Intervention classification failed: ${error.message}`
+        : "Intervention classification failed."
     )
   }
 }

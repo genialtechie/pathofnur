@@ -15,9 +15,10 @@ import {
 } from "./intervention-classifier.js"
 import { persistInterventionRecord } from "./intervention-store.js"
 import {
-  createOpenRouterChatCompletion,
-  extractJsonObject,
-  getOpenRouterCompletionText,
+  createOpenRouterStructuredOutput,
+  OpenRouterConfigurationError,
+  OpenRouterStructuredOutputError,
+  OpenRouterUpstreamError,
 } from "./openrouter.js"
 import { retrievePassages } from "./retrieve-passages.js"
 
@@ -36,6 +37,81 @@ const InterventionDraftSchema = z.object({
   followupSuggested: z.boolean(),
   ledgerSummary: z.string().min(1),
 })
+
+const NullableNonEmptyStringJsonSchema: Record<string, unknown> = {
+  anyOf: [
+    {
+      type: "string",
+      minLength: 1,
+    },
+    {
+      type: "null",
+    },
+  ],
+}
+
+const InterventionDraftJsonSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    title: {
+      type: "string",
+      minLength: 1,
+    },
+    validationCopy: {
+      type: "string",
+      minLength: 1,
+    },
+    primaryText: {
+      type: "string",
+      minLength: 1,
+    },
+    dua: {
+      anyOf: [
+        {
+          type: "null",
+        },
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            arabic: NullableNonEmptyStringJsonSchema,
+            transliteration: NullableNonEmptyStringJsonSchema,
+            translation: NullableNonEmptyStringJsonSchema,
+          },
+          required: ["arabic", "transliteration", "translation"],
+        },
+      ],
+    },
+    repeatCount: {
+      anyOf: [
+        {
+          type: "integer",
+          minimum: 1,
+        },
+        {
+          type: "null",
+        },
+      ],
+    },
+    followupSuggested: {
+      type: "boolean",
+    },
+    ledgerSummary: {
+      type: "string",
+      minLength: 1,
+    },
+  },
+  required: [
+    "title",
+    "validationCopy",
+    "primaryText",
+    "dua",
+    "repeatCount",
+    "followupSuggested",
+    "ledgerSummary",
+  ],
+}
 
 type InterventionDraft = z.infer<typeof InterventionDraftSchema>
 
@@ -115,29 +191,50 @@ async function generateDraftWithOpenRouter(
   interventionType: InterventionType,
   matches: RetrievedPassage[]
 ) : Promise<InterventionDraft> {
-  const response = await createOpenRouterChatCompletion({
-    temperature: 0.2,
-    messages: [
-      {
-        role: "system",
-        content: buildSystemPrompt(),
-      },
-      {
-        role: "user",
-        content: buildUserPrompt(input, interventionType, matches),
-      },
-    ],
-  })
-
-  const content = getOpenRouterCompletionText(response)
-  const json = extractJsonObject(content)
   try {
-    return InterventionDraftSchema.parse(JSON.parse(json))
+    return await createOpenRouterStructuredOutput({
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content: buildSystemPrompt(),
+        },
+        {
+          role: "user",
+          content: buildUserPrompt(input, interventionType, matches),
+        },
+      ],
+      outputSchema: InterventionDraftSchema,
+      responseFormat: {
+        name: "intervention_draft",
+        description: "Generate the structured intervention payload fields.",
+        schema: InterventionDraftJsonSchema,
+        strict: true,
+      },
+    })
   } catch (error) {
+    if (error instanceof OpenRouterConfigurationError) {
+      throw new InterventionGenerationError(
+        "Intervention generation is unavailable because OpenRouter is not configured."
+      )
+    }
+
+    if (error instanceof OpenRouterStructuredOutputError) {
+      throw new InterventionGenerationError(
+        "Intervention generation returned invalid structured output."
+      )
+    }
+
+    if (error instanceof OpenRouterUpstreamError) {
+      throw new InterventionGenerationError(
+        "Intervention generation failed because OpenRouter did not return a successful response."
+      )
+    }
+
     throw new InterventionGenerationError(
       error instanceof Error
-        ? `Intervention generation returned invalid structured output: ${error.message}`
-        : "Intervention generation returned invalid structured output."
+        ? `Intervention generation failed: ${error.message}`
+        : "Intervention generation failed."
     )
   }
 }
