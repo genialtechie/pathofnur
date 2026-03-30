@@ -7,5 +7,5 @@ type TabBarIconProps = {
 };
 
 export function TabBarIcon({ name, focused, color }: TabBarIconProps) {
-  return <MinimalTabIcon name={name} focused={focused} color={color} size={22} />;
+  return <MinimalTabIcon name={name} focused={focused} color={color} size={28} />;
 }

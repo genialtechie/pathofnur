@@ -22,27 +22,33 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="journey"
+        options={{
+          title: "Journey"
+        }}
+      />
+      <Tabs.Screen
         name="home"
         options={{
           title: "Home"
         }}
       />
       <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings"
+        }}
+      />
+      <Tabs.Screen
         name="library"
         options={{
-          title: "Library"
+          href: null
         }}
       />
       <Tabs.Screen
         name="tools"
         options={{
-          title: "Tools"
-        }}
-      />
-      <Tabs.Screen
-        name="journey"
-        options={{
-          title: "Journey"
+          href: null
         }}
       />
       <Tabs.Screen
