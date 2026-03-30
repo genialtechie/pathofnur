@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-30T05:50:35Z",
+  "last_updated_utc": "2026-03-30T05:54:06Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -774,7 +774,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "completed",
+      "status": "in_progress",
       "priority": "P0",
       "depends_on": [
         "T-20260311-004",
@@ -791,7 +791,7 @@
         "apps/api typecheck passes"
       ],
       "implementation_notes": "Keep this slice tightly scoped to apps/api and collab state. Do not widen into follow-up workflows, UI changes, or corpus schema changes.",
-      "updated_at_utc": "2026-03-30T05:50:35Z"
+      "updated_at_utc": "2026-03-30T05:54:06Z"
     },
     {
       "task_id": "T-20260330-001",
@@ -824,7 +824,7 @@
         "apps/mobile/src/components/icons/MinimalTabIcon.tsx"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [],
       "branch_name": "feat/T-20260330-002-three-tab-shell",
@@ -837,7 +837,7 @@
         "apps/mobile typecheck passes and typography validation remains green"
       ],
       "implementation_notes": "Keep this pass focused on tab structure, icon scale, and a minimal Settings shell. Do not add fold/composer animations in this task.",
-      "updated_at_utc": "2026-03-30T05:20:00Z"
+      "updated_at_utc": "2026-03-30T05:54:06Z"
     }
   ]
 }
