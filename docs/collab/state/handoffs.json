@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-26T18:37:27Z",
+  "last_updated_utc": "2026-03-30T05:50:35Z",
   "handoffs": [
     {
       "handoff_id": "H-20260326-001",
@@ -1179,6 +1179,52 @@
       "next_recommended_actions": [
         "Build POST /v1/interventions/:id/resolve on the actor_user_id-only schema",
         "Keep control-plane validation in the review checklist any time state files change"
+      ]
+    },
+    {
+      "handoff_id": "H-20260330-001",
+      "task_id": "T-20260326-002",
+      "branch_name": "feat/T-20260326-002-intervention-classifier",
+      "worktree_path": ".worktrees/T-20260326-002",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-30T05:50:35Z",
+      "summary": {
+        "completed": [
+          "Replaced the local keyword heuristic with a dedicated intervention classification step that runs before retrieval",
+          "Locked intervention generation and persistence to the classified intervention type instead of letting generation override it",
+          "Hardened the OpenRouter path for interventions by requiring structured outputs, enforcing provider parameter support, and sanitizing configuration and upstream failures"
+        ],
+        "remaining": [
+          "Ensure deployed OPENROUTER_MODEL values support json_schema structured outputs because this path now fails closed when they do not",
+          "Add API tests around intervention classification and generation behavior if this route is expanded further"
+        ]
+      },
+      "changed_files": [
+        "apps/api/README.md",
+        "apps/api/src/lib/intervention-classifier.ts",
+        "apps/api/src/lib/interventions.ts",
+        "apps/api/src/lib/openrouter.ts",
+        "apps/api/src/routes/v1.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run api:typecheck",
+          "git diff --check"
+        ],
+        "result": "pass",
+        "notes": "The rebased task branch passed API typecheck and whitespace checks before merge. Manual review confirmed the intervention route now uses structured OpenRouter responses and sanitized classification and generation failures."
+      },
+      "risks": [
+        "The intervention route now intentionally fails closed if the configured OpenRouter model does not support json_schema structured outputs"
+      ],
+      "follow_ups": [
+        "Document the structured-output model requirement in deployment setup if this API is rolled out beyond local development",
+        "Add route-level tests once the team is ready to lock this behavior under automated coverage"
+      ],
+      "next_recommended_actions": [
+        "Continue T-20260311-008 to align the Home intervention-first mobile surface with the hardened backend route",
+        "Keep only the active T-20260330-002 reservation in the control plane after worktree teardown"
       ]
     }
   ]

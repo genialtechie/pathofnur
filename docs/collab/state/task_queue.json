@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-30T04:52:00Z",
+  "last_updated_utc": "2026-03-30T05:50:35Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -723,7 +723,7 @@
         "apps/mobile/src/features/home/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-006"
@@ -738,7 +738,7 @@
         "npm run typecheck passes and npm run check:typography passes"
       ],
       "implementation_notes": "Keep changes inside apps/mobile/src/features/home only. Do not mutate the active auth/session or api tasks; if backend session/auth assumptions need adaptation, handle them locally inside the Home feature for this pass.",
-      "updated_at_utc": "2026-03-30T04:50:00Z"
+      "updated_at_utc": "2026-03-30T05:20:00Z"
     },
     {
       "task_id": "T-20260313-001",
@@ -774,7 +774,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-004",
@@ -791,7 +791,7 @@
         "apps/api typecheck passes"
       ],
       "implementation_notes": "Keep this slice tightly scoped to apps/api and collab state. Do not widen into follow-up workflows, UI changes, or corpus schema changes.",
-      "updated_at_utc": "2026-03-30T04:52:00Z"
+      "updated_at_utc": "2026-03-30T05:50:35Z"
     },
     {
       "task_id": "T-20260330-001",
@@ -814,6 +814,30 @@
       ],
       "implementation_notes": "Keep this hotfix scoped to the mobile app root entry files only. Do not redesign onboarding or the Home surface in this task.",
       "updated_at_utc": "2026-03-30T04:50:00Z"
+    },
+    {
+      "task_id": "T-20260330-002",
+      "title": "Simplify mobile tab shell to journey home settings",
+      "scope_paths": [
+        "apps/mobile/app/(tabs)/**",
+        "apps/mobile/src/components/navigation/**",
+        "apps/mobile/src/components/icons/MinimalTabIcon.tsx"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "feat/T-20260330-002-three-tab-shell",
+      "worktree_path": ".worktrees/T-20260330-002",
+      "acceptance_criteria": [
+        "Top-level tabs render only Journey, Home, and Settings in that order",
+        "Home remains the default tab and the floating capsule is tuned for three larger icons with improved whitespace balance",
+        "A new Settings tab route exists with lightweight links into Tasbih and Qiblah",
+        "Library and Tools leave the tab bar without breaking their deeper routes",
+        "apps/mobile typecheck passes and typography validation remains green"
+      ],
+      "implementation_notes": "Keep this pass focused on tab structure, icon scale, and a minimal Settings shell. Do not add fold/composer animations in this task.",
+      "updated_at_utc": "2026-03-30T05:20:00Z"
     }
   ]
 }
