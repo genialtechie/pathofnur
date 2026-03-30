@@ -1,6 +1,6 @@
-import Svg, { Path, Rect } from "react-native-svg";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-export type MinimalTabIconName = "home" | "library" | "tools" | "journey";
+export type MinimalTabIconName = "home" | "library" | "tools" | "journey" | "settings";
 
 type MinimalTabIconProps = {
   name: MinimalTabIconName;
@@ -119,6 +119,43 @@ export function MinimalTabIcon({ name, focused, color, size = 24 }: MinimalTabIc
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+      </Svg>
+    );
+  }
+
+  if (name === "settings") {
+    return focused ? (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Rect x="4.6" y="6.15" width="14.8" height="1.95" rx="0.98" fill={color} />
+        <Rect x="4.6" y="11.03" width="14.8" height="1.95" rx="0.98" fill={color} />
+        <Rect x="4.6" y="15.9" width="14.8" height="1.95" rx="0.98" fill={color} />
+        <Circle cx="15.85" cy="7.12" r="2.35" fill={color} />
+        <Circle cx="8.2" cy="12" r="2.35" fill={color} />
+        <Circle cx="13.15" cy="16.87" r="2.35" fill={color} />
+      </Svg>
+    ) : (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M5 7.12H19"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <Path
+          d="M5 12H19"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <Path
+          d="M5 16.88H19"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <Circle cx="15.85" cy="7.12" r="2.05" stroke={color} strokeWidth="1.75" />
+        <Circle cx="8.2" cy="12" r="2.05" stroke={color} strokeWidth="1.75" />
+        <Circle cx="13.15" cy="16.87" r="2.05" stroke={color} strokeWidth="1.75" />
       </Svg>
     );
   }

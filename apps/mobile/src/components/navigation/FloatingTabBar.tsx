@@ -6,11 +6,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabBarIcon } from "@/src/components/navigation/TabBarIcon";
 import { spacing } from "@/src/theme";
 
+const VISIBLE_ROUTE_NAMES = ["journey", "home", "settings"] as const;
+
 const ICON_BY_ROUTE = {
-  home: "home",
-  library: "library",
-  tools: "tools",
   journey: "journey",
+  home: "home",
+  settings: "settings",
 } as const;
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -29,12 +30,15 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     borderColor: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(255, 255, 255, 0.5)",
   };
   const activePillStyle = {
-    backgroundColor: isDark ? "rgba(255, 255, 255, 0.14)" : "rgba(15, 23, 42, 0.1)",
+    backgroundColor: isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(15, 23, 42, 0.1)",
   };
   const iconColor = {
     active: navigationTheme.colors.text,
     inactive: isDark ? "rgba(226, 232, 240, 0.82)" : "rgba(15, 23, 42, 0.7)",
   };
+  const visibleRoutes = VISIBLE_ROUTE_NAMES.map((name) =>
+    state.routes.find((route) => route.name === name)
+  ).filter((route): route is (typeof state.routes)[number] => Boolean(route));
 
   return (
     <View pointerEvents="box-none" style={styles.root}>
@@ -48,12 +52,10 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
         ]}
       >
         <View pointerEvents="none" style={[styles.sheen, sheenStyle]} />
-        {state.routes.map((route, index) => {
-          if (route.name === "index") return null;
-
+        {visibleRoutes.map((route) => {
           const descriptor = descriptors[route.key];
           const options = descriptor.options;
-          const isFocused = state.index === index;
+          const isFocused = state.routes[state.index]?.name === route.name;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -111,20 +113,17 @@ const styles = StyleSheet.create({
   },
   capsule: {
     position: "absolute",
-    left: 16,
-    right: 16,
+    left: 18,
+    right: 18,
     overflow: "hidden",
     borderRadius: 999,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 24,
-    elevation: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    boxShadow: "0px 16px 40px rgba(0, 0, 0, 0.22)",
   },
   sheen: {
     ...StyleSheet.absoluteFillObject,
@@ -133,9 +132,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   tabButton: {
-    minWidth: 66,
-    height: 54,
-    borderRadius: 26,
+    minWidth: 86,
+    height: 62,
+    borderRadius: 31,
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
