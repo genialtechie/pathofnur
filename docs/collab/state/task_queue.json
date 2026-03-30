@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-26T18:37:27Z",
+  "last_updated_utc": "2026-03-30T04:50:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -738,7 +738,7 @@
         "npm run typecheck passes and npm run check:typography passes"
       ],
       "implementation_notes": "Keep changes inside apps/mobile/src/features/home only. Do not mutate the active auth/session or api tasks; if backend session/auth assumptions need adaptation, handle them locally inside the Home feature for this pass.",
-      "updated_at_utc": "2026-03-11T20:05:00Z"
+      "updated_at_utc": "2026-03-30T04:50:00Z"
     },
     {
       "task_id": "T-20260313-001",
@@ -774,7 +774,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-004",
@@ -792,6 +792,28 @@
       ],
       "implementation_notes": "Keep this slice tightly scoped to apps/api and collab state. Do not widen into follow-up workflows, UI changes, or corpus schema changes.",
       "updated_at_utc": "2026-03-26T18:37:27Z"
+    },
+    {
+      "task_id": "T-20260330-001",
+      "title": "Disable onboarding as app launch entrypoint",
+      "scope_paths": [
+        "apps/mobile/app/_layout.tsx",
+        "apps/mobile/app/index.tsx"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [],
+      "branch_name": "fix/T-20260330-001-disable-onboarding-entry",
+      "worktree_path": ".worktrees/T-20260330-001",
+      "acceptance_criteria": [
+        "The native app no longer launches into the onboarding stack by default",
+        "Root app entry redirects directly into the main tab experience instead of onboarding",
+        "Onboarding screens remain in the repo but are inactive unless explicitly navigated to later",
+        "apps/mobile typecheck passes and typography validation remains green"
+      ],
+      "implementation_notes": "Keep this hotfix scoped to the mobile app root entry files only. Do not redesign onboarding or the Home surface in this task.",
+      "updated_at_utc": "2026-03-30T04:50:00Z"
     }
   ]
 }

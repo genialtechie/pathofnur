@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-26T18:37:27Z",
+  "last_updated_utc": "2026-03-30T04:50:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -383,6 +383,19 @@
       "rationale": "The backend core loop is now durable and authenticated, and the next production-critical gap is the heuristic intervention classifier. Keeping the slice scoped to apps/api and collab state avoids overlap with the active Home worktree while improving the trustworthiness of intervention typing.",
       "owner": "lead",
       "timestamp_utc": "2026-03-26T18:37:27Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260330-001",
+      "topic": "Cross-lane exception for mobile launch-entry onboarding bypass",
+      "options_considered": [
+        "Leave onboarding launch behavior in place and work around it while redesigning Home",
+        "Allow codex to make a narrow shared-route hotfix so the native app enters the main tab experience by default"
+      ],
+      "selected_option": "Allow codex to make a narrow shared-route hotfix so the native app enters the main tab experience by default",
+      "rationale": "The current native app entry tree forces onboarding on every launch, which blocks iterative work on the main product surfaces. The fix is intentionally narrow and limited to the two root mobile entry files.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-30T04:47:00Z",
       "supersedes": null
     }
   ]

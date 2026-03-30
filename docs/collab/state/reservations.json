@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-26T18:37:27Z",
+  "last_updated_utc": "2026-03-30T04:50:00Z",
   "reservations": [
     {
       "task_id": "T-20260311-008",
@@ -9,17 +9,7 @@
         "apps/mobile/src/features/home/**"
       ],
       "mode": "exclusive",
-      "expires_at_utc": "2026-03-26T22:37:27Z"
-    },
-    {
-      "task_id": "T-20260326-002",
-      "worktree_path": ".worktrees/T-20260326-002",
-      "reserved_paths": [
-        "apps/api/**",
-        "docs/collab/**"
-      ],
-      "mode": "exclusive",
-      "expires_at_utc": "2026-03-26T22:37:27Z"
+      "expires_at_utc": "2026-03-30T16:00:00Z"
     }
   ]
 }
