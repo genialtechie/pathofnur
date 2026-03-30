@@ -23,7 +23,7 @@ import { LocationProvider } from "@/src/lib/location";
 import { darkColors, lightColors } from "@/src/theme/tokens";
 
 export const unstable_settings = {
-  initialRouteName: "(onboarding)"
+  initialRouteName: "(tabs)"
 };
 
 if (process.env.EXPO_OS !== "web") {
