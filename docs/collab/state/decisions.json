@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-30T04:50:00Z",
+  "last_updated_utc": "2026-04-04T13:55:00Z",
   "decisions": [
     {
       "decision_id": "D-20260211-001",
@@ -396,6 +396,19 @@
       "rationale": "The current native app entry tree forces onboarding on every launch, which blocks iterative work on the main product surfaces. The fix is intentionally narrow and limited to the two root mobile entry files.",
       "owner": "lead",
       "timestamp_utc": "2026-03-30T04:47:00Z",
+      "supersedes": null
+    },
+    {
+      "decision_id": "D-20260330-002",
+      "topic": "Cross-boundary exception for API Azure deployability packaging",
+      "options_considered": [
+        "Keep apps/api as a local-only TypeScript workspace and defer deploy packaging work",
+        "Allow codex to package the API for Azure deployment across apps/api, packages/contracts, and minimal root workspace files in one isolated task"
+      ],
+      "selected_option": "Allow codex to package the API for Azure deployment across apps/api, packages/contracts, and minimal root workspace files in one isolated task",
+      "rationale": "A deployable Azure Container Apps target requires a production runtime build, workspace-safe shared contracts packaging, and a repo-root Docker context. Splitting those changes across ownership lanes would slow the first real backend deployment path and increase integration risk.",
+      "owner": "lead",
+      "timestamp_utc": "2026-03-30T06:37:18Z",
       "supersedes": null
     }
   ]

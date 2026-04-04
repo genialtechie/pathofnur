@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-30T05:54:06Z",
+  "last_updated_utc": "2026-04-04T13:55:00Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -774,7 +774,7 @@
         "docs/collab/**"
       ],
       "owner_role": "codex",
-      "status": "in_progress",
+      "status": "completed",
       "priority": "P0",
       "depends_on": [
         "T-20260311-004",
@@ -791,7 +791,7 @@
         "apps/api typecheck passes"
       ],
       "implementation_notes": "Keep this slice tightly scoped to apps/api and collab state. Do not widen into follow-up workflows, UI changes, or corpus schema changes.",
-      "updated_at_utc": "2026-03-30T05:54:06Z"
+      "updated_at_utc": "2026-03-30T06:37:18Z"
     },
     {
       "task_id": "T-20260330-001",
@@ -838,6 +838,34 @@
       ],
       "implementation_notes": "Keep this pass focused on tab structure, icon scale, and a minimal Settings shell. Do not add fold/composer animations in this task.",
       "updated_at_utc": "2026-03-30T05:54:06Z"
+    },
+    {
+      "task_id": "T-20260330-003",
+      "title": "Make apps/api Azure deployable from monorepo",
+      "scope_paths": [
+        "apps/api/**",
+        "packages/contracts/**",
+        "package.json",
+        ".dockerignore"
+      ],
+      "owner_role": "codex",
+      "status": "in_progress",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260326-002"
+      ],
+      "branch_name": "feat/T-20260330-003-api-azure-deployability",
+      "worktree_path": ".worktrees/T-20260330-003",
+      "acceptance_criteria": [
+        "packages/contracts and apps/api build to production JS artifacts for container runtime use",
+        "apps/api production start runs compiled JS with node instead of tsx",
+        "A repo-root-context Docker build exists at apps/api/Dockerfile and produces a runtime image for the API",
+        "apps/api includes API-specific deployment docs and env example for Azure Container Apps",
+        "The repo includes an Azure CLI deployment path for one API Container App and documents required external prerequisites",
+        "apps/api typecheck and build pass"
+      ],
+      "implementation_notes": "Keep this scoped to the API container app deployment path. Do not add CI/CD, workers, or fallback runtime behavior. OpenRouter structured-output support remains a hard requirement for intervention generation.",
+      "updated_at_utc": "2026-03-30T06:51:26Z"
     }
   ]
 }

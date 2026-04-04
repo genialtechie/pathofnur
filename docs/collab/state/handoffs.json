@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-03-30T05:50:35Z",
+  "last_updated_utc": "2026-04-04T13:55:00Z",
   "handoffs": [
     {
       "handoff_id": "H-20260326-001",
@@ -1225,6 +1225,65 @@
       "next_recommended_actions": [
         "Continue T-20260311-008 to align the Home intervention-first mobile surface with the hardened backend route",
         "Keep only the active T-20260330-002 reservation in the control plane after worktree teardown"
+      ]
+    },
+    {
+      "handoff_id": "H-20260330-002",
+      "task_id": "T-20260330-003",
+      "branch_name": "feat/T-20260330-003-api-azure-deployability",
+      "worktree_path": ".worktrees/T-20260330-003",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-03-30T06:51:26Z",
+      "summary": {
+        "completed": [
+          "Added a production build and runtime path for the API and shared contracts so the backend runs compiled JavaScript with node instead of tsx",
+          "Added a repo-root-context Dockerfile, restrictive root .dockerignore, and an API-specific env example for packaging the monorepo backend into one container image",
+          "Added an idempotent Azure CLI deployment script and deployment documentation for one Azure Container App, including secret wiring, ACR build/push, ingress, and the OpenRouter structured-output requirement"
+        ],
+        "remaining": [
+          "Run the checked-in Azure deploy script with real Azure credentials and runtime secrets",
+          "Apply Supabase migrations and seed retrieval data in the target environment before full route smoke testing"
+        ]
+      },
+      "changed_files": [
+        ".dockerignore",
+        "apps/api/.env.example",
+        "apps/api/Dockerfile",
+        "apps/api/README.md",
+        "apps/api/deploy/azure-container-app.sh",
+        "apps/api/package.json",
+        "apps/api/tsconfig.build.json",
+        "package.json",
+        "packages/contracts/package.json",
+        "packages/contracts/tsconfig.build.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm run contracts:typecheck",
+          "npm run api:typecheck",
+          "npm run api:build",
+          "PORT=4010 npm run api:start",
+          "curl -sf http://127.0.0.1:4010/health",
+          "bash -n apps/api/deploy/azure-container-app.sh",
+          "git diff --check",
+          "clean-room npm workspace install/build/prune run matching the Dockerfile stages"
+        ],
+        "result": "pass",
+        "notes": "The API typecheck and production build pass, the compiled server starts with node and returns 200 from /health, and the deploy script parses cleanly. Docker itself was unavailable because the local daemon was not running, so the Dockerfile logic was validated by replaying its workspace install/build/prune stages in a clean temporary directory, and that flow passed."
+      },
+      "risks": [
+        "A live Azure deployment was not executed in this environment because no Azure credentials or runtime secrets were provided",
+        "Full route testing still depends on migrated Supabase state, seeded retrieval passages, and an OPENROUTER_MODEL that supports json_schema structured outputs"
+      ],
+      "follow_ups": [
+        "Run a real Azure Container Apps deploy and verify the public /health endpoint",
+        "Smoke test /v1/retrieve, /v1/ledger, and /v1/interventions against live Supabase and OpenRouter configuration",
+        "Add CI or release automation once the manual Azure path is proven"
+      ],
+      "next_recommended_actions": [
+        "Merge T-20260330-003 after review and use the checked-in script to perform the first Azure deployment",
+        "Document any subscription-specific Azure naming or policy constraints discovered during the first live deploy"
       ]
     }
   ]
