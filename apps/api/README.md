@@ -19,6 +19,9 @@ Follow-up workflows, device registration, and admin/corpus operations are still 
 - `PORT`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `IMAAN_DEV_AUTH_BYPASS`
+- `IMAAN_DEV_AUTH_BYPASS_TOKEN`
+- `IMAAN_DEV_AUTH_BYPASS_USER_ID`
 - `OPENROUTER_API_KEY`
 - `OPENROUTER_MODEL`
 - `ALLOWED_ORIGIN`
@@ -51,6 +54,40 @@ Use `apps/api/.env.example` as the shape for your local env file or exported she
 npm install
 npm run dev
 ```
+
+## Development bearer-token bypass
+
+For local UI work before real auth is wired, the API can accept one explicit dev bearer token and
+map it to one fixed actor id.
+
+Server env:
+
+- `IMAAN_DEV_AUTH_BYPASS=1`
+- `IMAAN_DEV_AUTH_BYPASS_TOKEN=<local-dev-token>`
+- `IMAAN_DEV_AUTH_BYPASS_USER_ID=<fixed-random-uuid>`
+
+Behavior:
+
+- the bypass is disabled by default
+- the request still must send `Authorization: Bearer <token>`
+- only the configured token is accepted by the bypass
+- all persisted interventions and ledger reads resolve to the configured fixed actor id
+- any other bearer token still goes through normal Supabase auth
+
+Mobile local env:
+
+- `EXPO_PUBLIC_IMAAN_USE_DEV_BEARER_TOKEN=1`
+- `EXPO_PUBLIC_IMAAN_DEV_BEARER_TOKEN=<same-local-dev-token>`
+- `EXPO_PUBLIC_IMAAN_DEV_ACTOR_ID=<same-fixed-random-uuid>`
+
+Important:
+
+- do not commit real values for any of these variables
+- keep the bypass off in shared and production environments
+- `EXPO_PUBLIC_*` values are bundled into the client and must be treated as non-secret convenience
+  values only
+- use `apps/mobile/.env.example` and `apps/api/.env.example` as the shape for local untracked env
+  files
 
 ## Production build and run
 

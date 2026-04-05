@@ -19,7 +19,12 @@ export async function submitHomeIntervention(inputText: string): Promise<Interve
   try {
     return await createIntervention(
       {
-        entrySource: actor ? "home_authenticated" : "home_anonymous",
+        entrySource:
+          actor?.kind === "development"
+            ? "home_development_bypass"
+            : actor
+              ? "home_authenticated"
+              : "home_anonymous",
         inputText,
         locale: "en",
       },

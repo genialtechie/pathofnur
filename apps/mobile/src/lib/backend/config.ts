@@ -2,6 +2,9 @@ export type BackendPublicConfig = {
   apiBaseUrl: string | null
   supabaseUrl: string | null
   supabaseAnonKey: string | null
+  useDevelopmentBearerToken: boolean
+  developmentBearerToken: string | null
+  developmentActorUserId: string | null
 }
 
 function normalizeUrl(value: string | undefined): string | null {
@@ -15,6 +18,12 @@ export function getBackendPublicConfig(): BackendPublicConfig {
     apiBaseUrl: normalizeUrl(process.env.EXPO_PUBLIC_IMAAN_API_BASE_URL),
     supabaseUrl: normalizeUrl(process.env.EXPO_PUBLIC_SUPABASE_URL),
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() || null,
+    useDevelopmentBearerToken:
+      process.env.EXPO_PUBLIC_IMAAN_USE_DEV_BEARER_TOKEN === "1",
+    developmentBearerToken:
+      process.env.EXPO_PUBLIC_IMAAN_DEV_BEARER_TOKEN?.trim() || null,
+    developmentActorUserId:
+      process.env.EXPO_PUBLIC_IMAAN_DEV_ACTOR_ID?.trim() || null,
   }
 }
 

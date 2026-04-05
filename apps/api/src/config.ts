@@ -5,6 +5,9 @@ export type ServerConfig = {
   allowedOrigin: string | null
   supabaseUrl: string | null
   supabaseServiceRoleKey: string | null
+  devAuthBypassEnabled: boolean
+  devAuthBypassToken: string | null
+  devAuthBypassUserId: string | null
   openRouterApiKey: string | null
   openRouterModel: string
   openRouterBaseUrl: string
@@ -41,6 +44,9 @@ export function getServerConfig(): ServerConfig {
       "SUPABASE_SERVICE_ROLE_KEY",
       "SUPABASE_SECRET_KEY"
     ),
+    devAuthBypassEnabled: readEnv("IMAAN_DEV_AUTH_BYPASS") === "1",
+    devAuthBypassToken: readEnv("IMAAN_DEV_AUTH_BYPASS_TOKEN"),
+    devAuthBypassUserId: readEnv("IMAAN_DEV_AUTH_BYPASS_USER_ID"),
     openRouterApiKey: readEnv("OPENROUTER_API_KEY"),
     openRouterModel:
       readEnv("OPENROUTER_MODEL") || "openai/gpt-4.1-mini",
