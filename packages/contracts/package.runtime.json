@@ -1,0 +1,13 @@
+{
+  "name": "@imaan/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "dependencies": {
+    "zod": "^3.25.42"
+  }
+}

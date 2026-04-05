@@ -20,7 +20,10 @@
     "landing:build": "npm --workspace @imaan/landing run build",
     "landing:preview": "npm --workspace @imaan/landing run preview",
     "api:dev": "npm --workspace @imaan/api run dev",
+    "api:build": "npm run contracts:build && npm --workspace @imaan/api run build",
+    "api:start": "npm --workspace @imaan/api run start",
     "api:typecheck": "npm --workspace @imaan/api run typecheck",
+    "contracts:build": "npm --workspace @imaan/contracts run build",
     "contracts:typecheck": "npm --workspace @imaan/contracts run typecheck",
     "typecheck": "npm run contracts:typecheck && npm run api:typecheck && npm run mobile:typecheck",
     "check:typography": "npm --workspace @imaan/mobile run check:typography"
