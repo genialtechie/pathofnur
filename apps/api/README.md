@@ -43,14 +43,93 @@ values.
 The default live retrieval path assumes `EMBEDDING_PROVIDER=openai_compatible` and falls back to
 `https://openrouter.ai/api/v1` when no explicit `EMBEDDING_BASE_URL` is set.
 
-## Run locally
+Use `apps/api/.env.example` as the shape for your local env file or exported shell variables before running the commands below.
+
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
+## Production build and run
+
+From the monorepo root:
+
+```bash
+npm run contracts:build
+npm run api:build
+npm run api:start
+```
+
+The production start path is `node dist/index.js`. `tsx` is now development-only and is not required
+inside the deployment image.
+
+## Docker build
+
+Build from the monorepo root so the API can include the shared contracts workspace:
+
+```bash
+docker build -f apps/api/Dockerfile -t imaan-api:local .
+```
+
+Run the image locally:
+
+```bash
+docker run --rm \
+  --env-file <path-to-your-api-env-file> \
+  -p 3001:3001 \
+  imaan-api:local
+```
+
+Smoke test:
+
+```bash
+curl http://127.0.0.1:3001/health
+```
+
+The container does not run Supabase migrations, retrieval corpus preparation, or retrieval seeding on boot.
+
 ## Azure target
+
+`apps/api` is deployed from monorepo root context. The checked-in deploy path is a Docker image built
+with `az acr build` and deployed to one Azure Container App.
+
+Prerequisites:
+
+- `az login`
+- the Azure CLI plus the `containerapp` extension
+- an Azure subscription that can create ACR and Container Apps resources
+- all required runtime env vars exported in your shell
+- a globally unique `AZURE_ACR_NAME`
+- Supabase migrations already applied
+- retrieval corpus already seeded into `retrieval_passages`
+- an `OPENROUTER_MODEL` that supports `json_schema` structured outputs for `/v1/interventions`
+
+Deployment command:
+
+```bash
+bash apps/api/deploy/azure-container-app.sh
+```
+
+On a fresh subscription the first run may take a few minutes because the script registers the
+required `Microsoft.App`, `Microsoft.OperationalInsights`, and `Microsoft.ContainerRegistry`
+providers before creating resources.
+
+Default resource names are:
+
+- resource group: `imaan-api-rg`
+- container apps environment: `imaan-api-env`
+- container app: `imaan-api`
+- image repository: `imaan-api`
+
+Override them with the `AZURE_*` variables in `apps/api/.env.example`.
+
+After deployment, verify the public health route:
+
+```bash
+curl "https://<container-app-fqdn>/health"
+```
 
 Recommended deployment shape:
 
@@ -126,6 +205,10 @@ Behavior:
 - fails with a sanitized classification error if OpenRouter is not configured, is unavailable, or returns invalid structured output
 - fails with an upstream retrieval error if embeddings, corpus lookup, or Supabase retrieval break
 - fails with a sanitized generation error if OpenRouter is not configured, is unavailable, or returns invalid structured output
+
+Deployment note:
+
+- `/v1/interventions` now hard-requires an OpenRouter model that supports `response_format: { type: "json_schema" }`
 
 `GET /v1/ledger`
 

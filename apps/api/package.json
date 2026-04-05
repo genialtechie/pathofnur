@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "corpus:download": "tsx scripts/download-default-corpus-sources.ts",
     "corpus:prepare": "tsx scripts/prepare-retrieval-passages.ts",
