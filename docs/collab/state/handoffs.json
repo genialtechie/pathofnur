@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-04-05T14:27:25Z",
+  "last_updated_utc": "2026-04-05T21:32:48Z",
   "handoffs": [
     {
       "handoff_id": "H-20260326-001",
@@ -1337,6 +1337,50 @@
       "next_recommended_actions": [
         "Use apps/api/deploy/azure-container-app.sh for future API deployments from main",
         "Continue mobile work against the now-live Azure API base URL once environment wiring is ready"
+      ]
+    },
+    {
+      "handoff_id": "H-20260405-002",
+      "task_id": "T-20260405-002",
+      "branch_name": "feat/T-20260405-002-dev-auth-bypass",
+      "worktree_path": ".worktrees/T-20260405-002",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-04-05T21:32:48Z",
+      "summary": {
+        "completed": [
+          "Added a server-side dev bearer-token bypass that still requires Authorization and maps one configured token to one fixed configured actor UUID while keeping normal Supabase bearer auth as the default path",
+          "Added a mobile dev session seam that can intentionally provide the configured dev bearer token when no real session exists, without introducing anonymous fallback behavior",
+          "Documented the API and mobile env variables with example files only, keeping all real token and UUID values out of the repo"
+        ],
+        "remaining": [
+          "Wire real auth into the mobile app so the dev bearer-token path can eventually be removed"
+        ]
+      },
+      "changed_files": [
+        "apps/api/.env.example",
+        "apps/api/README.md",
+        "apps/api/src/config.ts",
+        "apps/api/src/lib/auth.ts",
+        "apps/mobile/.env.example",
+        "apps/mobile/src/features/home/submit-home-intervention.ts",
+        "apps/mobile/src/lib/backend/config.ts",
+        "apps/mobile/src/lib/session/session-cache.ts"
+      ],
+      "validation": {
+        "commands": [
+          "npm run api:typecheck",
+          "npm run mobile:typecheck",
+          "local api:dev smoke with IMAAN_DEV_AUTH_BYPASS=1, a placeholder dev bearer token, and a placeholder fixed UUID",
+          "local unauthenticated GET /v1/ledger returned 401",
+          "local authenticated smoke exercised /health, /v1/interventions, /v1/interventions/:id/resolve, and /v1/ledger"
+        ],
+        "result": "pass",
+        "notes": "The local smoke test verified that anonymous access still fails, while the explicit dev bearer token successfully persisted an intervention, resolved it, and read back the matching ledger entry for the configured fixed actor UUID."
+      },
+      "next_recommended_actions": [
+        "Point local mobile UI work at the documented dev bearer-token env values until real auth is wired",
+        "Remove the dev bearer-token path after the authenticated mobile flow lands"
       ]
     }
   ]

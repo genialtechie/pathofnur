@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-04-05T14:27:25Z",
+  "last_updated_utc": "2026-04-05T21:32:48Z",
   "tasks": [
     {
       "task_id": "T-20260211-001",
@@ -866,6 +866,34 @@
       ],
       "implementation_notes": "Keep this scoped to the API container app deployment path. Do not add CI/CD, workers, or fallback runtime behavior. OpenRouter structured-output support remains a hard requirement for intervention generation.",
       "updated_at_utc": "2026-04-05T14:27:25Z"
+    },
+    {
+      "task_id": "T-20260405-002",
+      "title": "Add explicit dev bearer-token path for pre-auth UI testing",
+      "scope_paths": [
+        "apps/api/**",
+        "apps/mobile/src/lib/session/**",
+        "apps/mobile/src/lib/backend/**",
+        "apps/mobile/.env.example",
+        "docs/collab/**"
+      ],
+      "owner_role": "codex",
+      "status": "completed",
+      "priority": "P0",
+      "depends_on": [
+        "T-20260330-003"
+      ],
+      "branch_name": "feat/T-20260405-002-dev-auth-bypass",
+      "worktree_path": ".worktrees/T-20260405-002",
+      "acceptance_criteria": [
+        "The API can authenticate one explicit dev bearer token as one fixed configured actor id while keeping normal Supabase bearer auth as the default path",
+        "The bypass is disabled by default and still requires an Authorization bearer token rather than allowing anonymous writes",
+        "The mobile session seam can intentionally provide the configured dev bearer token for local UI testing when no real session exists",
+        "API and mobile env examples document the required variables without committing any real token, UUID, or deployment identifier",
+        "apps/api typecheck and apps/mobile typecheck pass"
+      ],
+      "implementation_notes": "Keep this explicit and dev-only. Do not add anonymous access, implicit fallback behavior, or fake persistence. The dev actor id may be any fixed UUID because actor_user_id is not constrained to auth.users in the current schema.",
+      "updated_at_utc": "2026-04-05T21:32:48Z"
     }
   ]
 }
