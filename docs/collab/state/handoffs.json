@@ -1324,11 +1324,11 @@
           "npm run api:build",
           "bash -n apps/api/deploy/azure-container-app.sh",
           "bash apps/api/deploy/azure-container-app.sh",
-          "curl -sf https://imaan-api.lemonforest-80c5f0f4.eastus.azurecontainerapps.io/health",
+          "curl -sf https://<container-app-fqdn>/health",
           "live disposable-user smoke covering /v1/retrieve, /v1/ledger, /v1/interventions, and /v1/interventions/:id/resolve"
         ],
         "result": "pass",
-        "notes": "The deploy script completed successfully against Azure subscription dd9930a0-3ed8-4456-ae15-145eb1fe97b1, publishing image imaanapidd9930a0.azurecr.io/imaan-api:20260405-verified to the imaan-api Container App. The public health endpoint returned 200, and a disposable Supabase user successfully exercised retrieve, intervention creation, resolution, and ledger readback end to end."
+        "notes": "The deploy script completed successfully against the target Azure subscription, published the current API image to the Container App, and the public health endpoint returned 200. A disposable Supabase user then exercised retrieve, intervention creation, resolution, and ledger readback end to end."
       },
       "follow_ups": [
         "Add CI or release automation around the checked-in Azure deployment path once the manual flow is stable enough to standardize",
