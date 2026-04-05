@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "last_updated_utc": "2026-04-04T13:55:00Z",
+  "last_updated_utc": "2026-04-05T14:27:25Z",
   "handoffs": [
     {
       "handoff_id": "H-20260326-001",
@@ -1284,6 +1284,59 @@
       "next_recommended_actions": [
         "Merge T-20260330-003 after review and use the checked-in script to perform the first Azure deployment",
         "Document any subscription-specific Azure naming or policy constraints discovered during the first live deploy"
+      ]
+    },
+    {
+      "handoff_id": "H-20260405-001",
+      "task_id": "T-20260330-003",
+      "branch_name": "feat/T-20260330-003-api-azure-deployability",
+      "worktree_path": ".worktrees/T-20260330-003",
+      "from_agent": "codex",
+      "to_agent": "lead",
+      "timestamp_utc": "2026-04-05T14:27:25Z",
+      "summary": {
+        "completed": [
+          "Merged the API Azure deployability branch into main after restoring source-based workspace runtime resolution for @imaan/contracts and keeping dist-only resolution inside the container image",
+          "Patched the checked-in Azure Container Apps deploy script against live subscription behavior, including preview extension install, provider registration, managed environment detection, and create/update command compatibility",
+          "Executed the checked-in deploy path to Azure, verified the public health endpoint, and smoke tested retrieval, intervention creation, intervention resolution, and ledger persistence against live Supabase and OpenRouter services"
+        ],
+        "remaining": [
+          "Add automated CI or scripted live smoke coverage if the team wants repeatable release validation beyond the documented manual deploy path"
+        ]
+      },
+      "changed_files": [
+        ".dockerignore",
+        "apps/api/.env.example",
+        "apps/api/Dockerfile",
+        "apps/api/README.md",
+        "apps/api/deploy/azure-container-app.sh",
+        "apps/api/package.json",
+        "apps/api/tsconfig.build.json",
+        "package.json",
+        "packages/contracts/package.json",
+        "packages/contracts/package.runtime.json",
+        "packages/contracts/tsconfig.build.json"
+      ],
+      "validation": {
+        "commands": [
+          "npm run contracts:typecheck",
+          "npm run api:typecheck",
+          "npm run api:build",
+          "bash -n apps/api/deploy/azure-container-app.sh",
+          "bash apps/api/deploy/azure-container-app.sh",
+          "curl -sf https://imaan-api.lemonforest-80c5f0f4.eastus.azurecontainerapps.io/health",
+          "live disposable-user smoke covering /v1/retrieve, /v1/ledger, /v1/interventions, and /v1/interventions/:id/resolve"
+        ],
+        "result": "pass",
+        "notes": "The deploy script completed successfully against Azure subscription dd9930a0-3ed8-4456-ae15-145eb1fe97b1, publishing image imaanapidd9930a0.azurecr.io/imaan-api:20260405-verified to the imaan-api Container App. The public health endpoint returned 200, and a disposable Supabase user successfully exercised retrieve, intervention creation, resolution, and ledger readback end to end."
+      },
+      "follow_ups": [
+        "Add CI or release automation around the checked-in Azure deployment path once the manual flow is stable enough to standardize",
+        "Consider checking in a reusable smoke harness if the team wants repeatable live verification before each deployment"
+      ],
+      "next_recommended_actions": [
+        "Use apps/api/deploy/azure-container-app.sh for future API deployments from main",
+        "Continue mobile work against the now-live Azure API base URL once environment wiring is ready"
       ]
     }
   ]
