@@ -1,8 +1,11 @@
 import {
   type CreateInterventionRequest,
   type InterventionPayload,
+  type JourneyMoment,
   type LedgerEntry,
   type ResolutionState,
+  JourneyMomentSchema,
+  JourneyMomentsResponseSchema,
   LedgerPageResponseSchema,
   LedgerEntrySchema,
   MutationSuccessSchema,
@@ -14,6 +17,7 @@ import { getSupabaseAdminClient } from "./supabase.js"
 const DEFAULT_LEDGER_PAGE_SIZE = 20
 
 const CreateInterventionAndLedgerRowSchema = z.object({
+  stored_moment_id: z.string().min(1),
   stored_intervention_id: z.string().min(1),
   stored_ledger_entry_id: z.string().min(1),
   stored_occurred_at: z.string().min(1),
@@ -38,6 +42,17 @@ const LedgerRowSchema = z.object({
   followup_status: z
     .enum(["pending", "sent", "completed", "dismissed", "expired"])
     .nullable(),
+})
+
+const JourneyMomentRowSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  status: z.enum(["open", "revisited", "resolved"]),
+  created_at: z.string().min(1),
+  updated_at: z.string().min(1),
+  resolved_at: z.string().min(1).nullable(),
+  latest_intervention_id: z.string().min(1),
 })
 
 type LedgerCursor = {
@@ -87,6 +102,21 @@ function toLedgerEntry(row: z.infer<typeof LedgerRowSchema>): LedgerEntry {
   })
 }
 
+function toJourneyMoment(
+  row: z.infer<typeof JourneyMomentRowSchema>
+): JourneyMoment {
+  return JourneyMomentSchema.parse({
+    id: row.id,
+    title: row.title,
+    summary: row.summary,
+    status: row.status,
+    createdAtUtc: new Date(row.created_at).toISOString(),
+    updatedAtUtc: new Date(row.updated_at).toISOString(),
+    resolvedAtUtc: row.resolved_at ? new Date(row.resolved_at).toISOString() : null,
+    latestInterventionId: row.latest_intervention_id,
+  })
+}
+
 export async function persistInterventionRecord(
   input: {
     userId: string
@@ -95,9 +125,11 @@ export async function persistInterventionRecord(
   payload: InterventionPayload
 ): Promise<void> {
   const supabase = getSupabaseAdminClient()
+  const momentId = crypto.randomUUID()
   const ledgerEntryId = crypto.randomUUID()
 
-  const { data, error } = await supabase.rpc("create_intervention_and_ledger", {
+  const { data, error } = await supabase.rpc("create_moment_intervention_and_ledger", {
+    moment_id: momentId,
     intervention_id: payload.id,
     ledger_entry_id: ledgerEntryId,
     actor_user_id: input.userId,
@@ -108,7 +140,8 @@ export async function persistInterventionRecord(
     generated_payload: payload,
     citation_ids: payload.citations.map((citation) => citation.id),
     occurred_at: payload.createdAtUtc,
-    summary: payload.ledgerSummary,
+    moment_title: payload.title,
+    moment_summary: payload.ledgerSummary,
     resolution_state: null,
     followup_status: null,
   })
@@ -118,6 +151,9 @@ export async function persistInterventionRecord(
   }
 
   const row = CreateInterventionAndLedgerRowSchema.parse(data?.[0])
+  if (row.stored_moment_id !== momentId) {
+    throw new Error("Persisted moment id did not match the requested moment.")
+  }
   if (row.stored_intervention_id !== payload.id) {
     throw new Error("Persisted intervention id did not match the response payload.")
   }
@@ -155,6 +191,31 @@ export async function listLedgerEntries(input: {
           id: nextRow.id,
         })
       : null,
+  })
+}
+
+export async function listJourneyMoments(input: {
+  userId: string
+  limit?: number
+  windowDays?: number
+}) {
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc("list_journey_moments", {
+    actor_user_id: input.userId,
+    page_size: input.limit ?? 100,
+    window_days: input.windowDays ?? 180,
+  })
+
+  if (error) {
+    throw new Error(`Failed to read journey moments: ${error.message}`)
+  }
+
+  const rows = ((data as unknown[]) ?? []).map((item) =>
+    JourneyMomentRowSchema.parse(item)
+  )
+
+  return JourneyMomentsResponseSchema.parse({
+    moments: rows.map(toJourneyMoment),
   })
 }
 

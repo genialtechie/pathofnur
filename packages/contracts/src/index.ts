@@ -9,6 +9,11 @@ export const InterventionTypeSchema = z.enum([
 export const SourceKindSchema = z.enum(["quran", "hadith", "seerah", "fiqh"])
 
 export const ResolutionStateSchema = z.enum(["grounded", "done"])
+export const JourneyMomentStatusSchema = z.enum([
+  "open",
+  "revisited",
+  "resolved",
+])
 
 export const FollowupStatusSchema = z.enum([
   "pending",
@@ -68,6 +73,17 @@ export const LedgerEntrySchema = z.object({
   followupStatus: FollowupStatusSchema.nullable(),
 })
 
+export const JourneyMomentSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  status: JourneyMomentStatusSchema,
+  createdAtUtc: z.string().datetime(),
+  updatedAtUtc: z.string().datetime(),
+  resolvedAtUtc: z.string().datetime().nullable(),
+  latestInterventionId: z.string().min(1),
+})
+
 export const FollowupRecordSchema = z.object({
   id: z.string().min(1),
   prompt: z.string().min(1),
@@ -87,6 +103,11 @@ export const GetLedgerRequestSchema = z.object({
   limit: z.number().int().min(1).max(50).optional(),
 })
 
+export const GetMomentsRequestSchema = z.object({
+  limit: z.number().int().min(1).max(100).optional(),
+  windowDays: z.number().int().min(1).max(365).optional(),
+})
+
 export const ResolveInterventionRequestSchema = z.object({
   resolution: ResolutionStateSchema,
 })
@@ -94,6 +115,10 @@ export const ResolveInterventionRequestSchema = z.object({
 export const LedgerPageResponseSchema = z.object({
   entries: z.array(LedgerEntrySchema),
   nextCursor: z.string().min(1).nullable(),
+})
+
+export const JourneyMomentsResponseSchema = z.object({
+  moments: z.array(JourneyMomentSchema),
 })
 
 export const FollowupListResponseSchema = z.object({
@@ -164,6 +189,7 @@ export const SeededRetrievalPassageSchema = RetrievalPassageSchema.extend({
 export type InterventionType = z.infer<typeof InterventionTypeSchema>
 export type SourceKind = z.infer<typeof SourceKindSchema>
 export type ResolutionState = z.infer<typeof ResolutionStateSchema>
+export type JourneyMomentStatus = z.infer<typeof JourneyMomentStatusSchema>
 export type Citation = z.infer<typeof CitationSchema>
 export type Dua = z.infer<typeof DuaSchema>
 export type RetrievalSourceType = z.infer<typeof RetrievalSourceTypeSchema>
@@ -177,6 +203,7 @@ export type RetrievePassagesResponse = z.infer<
 export type InterventionPayload = z.infer<typeof InterventionPayloadSchema>
 export type AppUserProfile = z.infer<typeof AppUserProfileSchema>
 export type LedgerEntry = z.infer<typeof LedgerEntrySchema>
+export type JourneyMoment = z.infer<typeof JourneyMomentSchema>
 export type FollowupRecord = z.infer<typeof FollowupRecordSchema>
 export type RetrievalPassage = z.infer<typeof RetrievalPassageSchema>
 export type SeededRetrievalPassage = z.infer<typeof SeededRetrievalPassageSchema>
@@ -187,7 +214,9 @@ export type ResolveInterventionRequest = z.infer<
   typeof ResolveInterventionRequestSchema
 >
 export type GetLedgerRequest = z.infer<typeof GetLedgerRequestSchema>
+export type GetMomentsRequest = z.infer<typeof GetMomentsRequestSchema>
 export type LedgerPageResponse = z.infer<typeof LedgerPageResponseSchema>
+export type JourneyMomentsResponse = z.infer<typeof JourneyMomentsResponseSchema>
 export type FollowupListResponse = z.infer<typeof FollowupListResponseSchema>
 export type MeResponse = z.infer<typeof MeResponseSchema>
 export type FollowupResponseRequest = z.infer<

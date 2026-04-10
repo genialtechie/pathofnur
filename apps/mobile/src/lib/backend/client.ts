@@ -3,6 +3,7 @@ import { z } from "zod"
 import {
   type CreateInterventionRequest,
   type FollowupListResponse,
+  type JourneyMomentsResponse,
   type FollowupResponseRequest,
   type LedgerPageResponse,
   type MeResponse,
@@ -11,6 +12,7 @@ import {
   type ResolveInterventionRequest,
   CreateInterventionRequestSchema,
   FollowupListResponseSchema,
+  JourneyMomentsResponseSchema,
   FollowupResponseRequestSchema,
   InterventionPayloadSchema,
   LedgerPageResponseSchema,
@@ -112,6 +114,22 @@ export async function getLedger(
   return requestJson({
     path: `/v1/ledger${suffix}`,
     schema: LedgerPageResponseSchema,
+    accessToken,
+  })
+}
+
+export async function getMoments(
+  params: { limit?: number; windowDays?: number } = {},
+  accessToken?: string | null
+): Promise<JourneyMomentsResponse> {
+  const search = new URLSearchParams()
+  if (params.limit) search.set("limit", String(params.limit))
+  if (params.windowDays) search.set("windowDays", String(params.windowDays))
+  const suffix = search.toString() ? `?${search.toString()}` : ""
+
+  return requestJson({
+    path: `/v1/moments${suffix}`,
+    schema: JourneyMomentsResponseSchema,
     accessToken,
   })
 }

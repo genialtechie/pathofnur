@@ -6,6 +6,7 @@ import {
   CreateInterventionRequestSchema,
   FollowupResponseRequestSchema,
   GetLedgerRequestSchema,
+  GetMomentsRequestSchema,
   InterventionPayloadSchema,
   RetrievePassagesRequestSchema,
   RegisterPushTokenRequestSchema,
@@ -20,6 +21,7 @@ import { createIntervention } from "../lib/interventions.js"
 import {
   InterventionResolutionNotFoundError,
   listLedgerEntries,
+  listJourneyMoments,
   resolveInterventionRecord,
 } from "../lib/intervention-store.js"
 import {
@@ -104,6 +106,46 @@ export async function registerV1Routes(app: FastifyInstance) {
         error: "ledger_failed",
         message:
           error instanceof Error ? error.message : "Ledger retrieval failed.",
+      })
+    }
+  })
+
+  app.get("/v1/moments", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
+    const rawQuery =
+      typeof request.query === "object" && request.query
+        ? (request.query as Record<string, unknown>)
+        : {}
+    const rawLimit = rawQuery.limit
+    const rawWindowDays = rawQuery.windowDays
+    const parsed = GetMomentsRequestSchema.safeParse({
+      limit: rawLimit === undefined ? undefined : Number(rawLimit),
+      windowDays:
+        rawWindowDays === undefined ? undefined : Number(rawWindowDays),
+    })
+
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: parsed.error.message,
+      })
+    }
+
+    try {
+      const response = await listJourneyMoments({
+        userId: actor.userId,
+        ...parsed.data,
+      })
+      return reply.code(200).send(response)
+    } catch (error) {
+      return reply.code(500).send({
+        error: "moments_failed",
+        message:
+          error instanceof Error ? error.message : "Moment retrieval failed.",
       })
     }
   })

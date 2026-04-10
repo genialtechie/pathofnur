@@ -31,7 +31,7 @@ export function getRequiredApiBaseUrl(): string {
   const { apiBaseUrl } = getBackendPublicConfig()
   if (!apiBaseUrl) {
     throw new Error(
-      "EXPO_PUBLIC_IMAAN_API_BASE_URL is not configured. Point the app at the Azure backend."
+      "EXPO_PUBLIC_IMAAN_API_BASE_URL is not configured."
     )
   }
   return apiBaseUrl

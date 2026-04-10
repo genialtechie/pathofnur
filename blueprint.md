@@ -1,87 +1,154 @@
-# Path of Nur - Project Blueprint
+# imaan.app - Brand Strategy
 
-## 1. Brand Identity & Strategy
-* **Product Name:** Path of Nur
-* **Domain:** `pathofnur.com`
-* **Core Concept:** A "Digital Sanctuary" for Muslims. An audio-first, premium mindfulness experience for Ramadan 2026.
-* **Vibe:** "Hallow for Muslims." Minimalist, high-end, and "delicate."
-* **Target Launch:** Ramadan 2026 (approx. Feb 17, 2026).
-* **Marketing Strategy:**
-    * **"Build in Public":** Leveraging TikTok/Reels to show the dev journey.
-    * **The "Gentle" Hook:** Reframing prayer alerts as "Invitations" rather than alarms.
-    * **Viral Loop:** Shareable "Journey" cards and "Day 30" completion graphics.
+Last updated: April 4, 2026
 
----
+## 1. Product History
 
-## 2. Visual Design System
+This project began as `Path of Nur`, an earlier concept centered on a broader Muslim companion app with stronger Ramadan and utility-app framing.
 
-### Color Palette
-| Color Name | Hex Code | Usage |
-| :--- | :--- | :--- |
-| **Deep Forest Green** | `#355E3B` | **Primary Brand.** Action buttons, active states, "Journey" progress. |
-| **Metallic Gold** | `#C5A021` | **Spiritual Accents.** Qiblah needle, Tasbih ring, "Nur" glow effects. |
-| **Midnight Blue** | `#2C5292` | **Depth & Night.** Backgrounds for Quran player and sleep stories. |
-| **Rich Black** | `#121212` | **Dark Mode Base.** Softer than pure black for eye comfort. |
-| **Paper White** | `#FAFAFA` | **Light Mode Base.** Text in dark mode. |
+The product has since narrowed and improved:
 
-### Typography
-| Role | Font Family | Usage Note |
-| :--- | :--- | :--- |
-| **Headings / UI** | **Zalando Sans** | Main interface text, buttons, and navigation labels. Modern & Clean. |
-| **Scripture / Body** | **Lora** | Quran translations, Hadiths, and long-form reading. "Delicate" & Legible. |
-| **Accents / Cards** | **Playfair Display** | "Verse of the Day" hero cards, special quotes. High-impact & "Royal." |
-| **Arabic Text** | **Amiri** | The sacred text. Classic Naskh style that pairs perfectly with Lora. |
+- active brand: `imaan.app`
+- active product direction: a dua-first intervention companion
+- legacy name: `Path of Nur`
 
-Implementation guardrail (non-negotiable):
-- Default app UI font is Zalando Sans.
-- Lora is only for Quran/Hadith/long devotional text.
-- Playfair Display is only for selective decorative accents.
-- Amiri is only for Arabic script content.
+`Path of Nur` should now be treated as incubation history, not as a live product or sub-brand.
 
-### Art Direction
-* **Style:** Abstract, Aniconic, Textured.
-* **Themes:** Nature (mountains, light, water), silhouettes, soft "Blue Hour" lighting.
-* **Logo Concept:** Geometric Minimalism. A gold circle or path interacting with a crescent/arch, set against Deep Forest Green.
+## 2. Brand Positioning
 
----
+### Core promise
 
-## 3. Technical Architecture (Expo PWA)
+`imaan.app` is a calmer Muslim companion for moments of friction. It helps a user bring a real emotional, spiritual, or practical concern and receive grounded Islamic support with trust, clarity, and gentleness.
 
-* **Framework:** **Expo (React Native for Web)**.
-* **Why Expo?** Native-feel (haptics, gestures), unified codebase, easy path to App Store later.
-* **Key Libraries:**
-    * `expo-av`: For the "Stacking" audio player (Recitation + Ambient).
-    * `expo-haptics`: For the tactile "Thump" of the Tasbih beads.
-    * `expo-notifications`: For "Gentle Reminders" (Web Push API).
-    * `expo-location` & `expo-sensors`: For Qiblah compass and Mosque finding.
-* **PWA Configuration (`app.json`):**
-    * `display: "standalone"` (Removes browser URL bar).
-    * `backgroundColor`: `#121212` (Seamless opening experience).
-    * **Icons:** 1024x1024px source file for auto-generation.
+### Product category
 
----
+The app is not best described as:
 
-## 4. High-Level App Structure
+- a generic Muslim lifestyle app
+- a productivity tracker
+- a passive content library
+- a spiritual chatbot without grounded sources
 
-### A. Global Navigation (Bottom Tab)
-1.  **Home (The Sanctuary):** Dynamic dashboard.
-2.  **Library (Quran/Audio):** The content hub.
-3.  **Tools (Essentials):** Utilities (Tasbih, Qiblah).
-4.  **Journey (Profile):** User progress and settings.
+The app is best described as:
 
-### B. Detailed Screen Functions
-* **Home Screen:**
-    * **Hero Carousel:** Swipeable cards (Daily Challenge, Night Reflection).
-    * **Prayer Timeline:** Minimal horizontal bar (Current prayer in Gold).
-    * **Quick Tasbih:** FAB (Floating Action Button) for instant access.
-* **Library Screen:**
-    * **Audio Mixer:** Toggle "Ambient Sound" (Rain, Medina wind) under Quran audio.
-    * **Collections:** "Sleep," "Anxiety," "Gratitude."
-* **Tools Screen:**
-    * **Deep Focus Tasbih:** Full-screen, dark mode, haptic-only interface.
-    * **Qiblah Compass:** Minimalist Gold/Blue design.
-* **Journey Screen:**
-    * **Ramadan Grid:** 30-day visual tracker (Green fill for completed days).
-    * **Streak Counter:** "Days of Nur."
+- an intervention companion
+- a dua-first support product
+- a memory-backed Muslim companion
 
----
+### Working one-liner
+
+Use this sentence as the default external description unless a channel needs a shorter variant:
+
+`imaan.app is a calmer Muslim companion that offers grounded duas and Islamic support in moments of friction.`
+
+## 3. Brand Personality
+
+The brand should feel:
+
+- calm
+- grounded
+- gentle
+- premium
+- intimate
+- trustworthy
+
+The brand should not feel:
+
+- loud
+- gamified
+- guilt-based
+- overly clinical
+- generic
+- spiritually vague
+
+## 4. Messaging Hierarchy
+
+### Primary message
+
+Bring what is heavy, urgent, confusing, or practical. `imaan.app` responds with grounded Islamic support.
+
+### Supporting messages
+
+- The experience is designed around real moments of need, not passive browsing.
+- Responses should feel knowledgeable and zero-judgment.
+- The product remembers the user over time through ledger and follow-up patterns.
+- Utilities such as tasbih, qiblah, Quran, and prayer times support trust and continuity, but they do not define the product.
+
+### Messaging guardrails
+
+- Do not lead with "all-in-one Muslim app."
+- Do not frame the product as "Hallow for Muslims."
+- Do not over-index on Ramadan as the only valid use case.
+- Do not market the product as uncited AI advice.
+
+## 5. Visual Direction
+
+The current visual direction remains strong and should be preserved:
+
+- `Deep Forest Green` `#355E3B`
+- `Metallic Gold` `#C5A021`
+- `Midnight Blue` `#2C5292`
+- `Rich Black` `#121212`
+- `Paper White` `#FAFAFA`
+
+Typography system:
+
+- `Zalando Sans` for default UI
+- `Lora` for scripture and long devotional reading
+- `Playfair Display` for restrained decorative accents
+- `Amiri` for Arabic script
+
+Art direction:
+
+- abstract
+- aniconic
+- textured
+- restrained
+- blue-hour and low-light atmospheres
+
+## 6. Product Scope Implications
+
+The product direction should bias toward:
+
+- friction capture
+- intervention delivery
+- trustworthy citations
+- account-backed memory
+- gentle follow-up
+
+The product direction should de-emphasize:
+
+- dashboard-first navigation
+- broad feature sprawl
+- donation-first framing
+- streak pressure as the product center
+- content catalog behavior without immediate user context
+
+## 7. Marketing Context
+
+Current marketing reality:
+
+- the waitlist is already being promoted
+- Instagram warming is already in progress
+- the larger campaign starts closer to App Store submission
+
+That means consistency now matters more than a perfect final brand book.
+
+External-facing copy should stay consistent on three points:
+
+- the name is `imaan.app`
+- the product is a calm Muslim companion for moments of friction
+- the outcome is grounded duas and Islamic support, not generic inspiration
+
+## 8. Relationship To The PRD
+
+This document defines brand and positioning.
+
+`imaan_prd.md` remains the product source of truth for:
+
+- intervention behavior
+- information architecture
+- product boundaries
+- feature priorities
+
+If this document and the PRD ever conflict, update this document so the brand story reflects the product the team is actually building.

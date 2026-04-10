@@ -20,6 +20,7 @@ This document is the operating manual for all agents working in this repo.
 Primary product source of truth:
 
 - `imaan_prd.md`
+- `blueprint.md` for active brand positioning and messaging
 
 Collaboration source of truth:
 
@@ -42,6 +43,7 @@ Legacy note:
 
 - Old `Path of Nur` copy, donation-first flows, Ramadan streak assumptions, and PWA-first implementation notes are now legacy context only.
 - Do not extend legacy roadmap behavior without an explicit new task or decision record.
+- Historical references may still exist in code, assets, and collaboration records; treat them as migration residue, not direction.
 
 ## 2) Product Definition
 
