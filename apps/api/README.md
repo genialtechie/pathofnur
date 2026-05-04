@@ -4,15 +4,14 @@ This package is the backend runtime target for `Azure Container Apps`.
 
 Responsibilities:
 
-- intervention orchestration
+- explicit moment chat orchestration
 - Supabase-backed data access
 - OpenRouter model calls
-- follow-up scheduling and worker jobs
-- push token registration
 - local corpus preparation and seeding scripts
 
-The backend now supports live corpus retrieval plus authenticated intervention and ledger persistence.
-Follow-up workflows, device registration, and admin/corpus operations are still unfinished.
+The shipping v1 backend is intentionally narrow: authenticated users create a moment, chat inside
+that thread, reopen it later, and mark it resolved. Retrieval is not a default step; it is only used
+when a user explicitly asks for Islamic source grounding.
 
 ## Expected environment variables
 
@@ -71,7 +70,7 @@ Behavior:
 - the bypass is disabled by default
 - the request still must send `Authorization: Bearer <token>`
 - only the configured token is accepted by the bypass
-- all persisted interventions and ledger reads resolve to the configured fixed actor id
+- all persisted moments, messages, and artifacts resolve to the configured fixed actor id
 - any other bearer token still goes through normal Supabase auth
 
 Mobile local env:
@@ -140,8 +139,8 @@ Prerequisites:
 - all required runtime env vars exported in your shell
 - a globally unique `AZURE_ACR_NAME`
 - Supabase migrations already applied
-- retrieval corpus already seeded into `retrieval_passages`
-- an `OPENROUTER_MODEL` that supports `json_schema` structured outputs for `/v1/interventions`
+- retrieval corpus already seeded into `retrieval_passages` if source-grounded replies are enabled
+- an `OPENROUTER_MODEL` that supports `json_schema` structured outputs for moment chat replies
 
 Deployment command:
 
@@ -168,11 +167,9 @@ After deployment, verify the public health route:
 curl "https://<container-app-fqdn>/health"
 ```
 
-Recommended deployment shape:
+Recommended v1 deployment shape:
 
-- API container app
-- worker container app
-- scheduled jobs for ingestion/follow-ups
+- one API container app
 
 ## Corpus flow
 
@@ -200,84 +197,59 @@ For a controlled first pass, `corpus:prepare` also accepts:
 The provided SQL migration uses `vector(768)`. If you change `EMBEDDING_DIMENSIONS`, update
 `apps/api/sql/retrieval_passages.sql` to match before seeding.
 
-## Retrieval route
+## Moment routes
 
-`POST /v1/retrieve`
+All moment routes require:
 
-Request shape:
+- `Authorization: Bearer <supabase_access_token>`
 
-```json
-{
-  "inputText": "fear before a difficult conversation",
-  "matchCount": 5,
-  "sourceTypes": ["quran", "hadith"]
-}
-```
+`POST /v1/moments`
 
-The route embeds the query, calls `match_retrieval_passages`, and returns citation-ready matches.
-
-## Intervention route
-
-`POST /v1/interventions`
-
-Authorization:
-
-- `Authorization: Bearer <supabase_access_token>` required
+Creates a moment and stores the first user/assistant exchange.
 
 Request shape:
 
 ```json
 {
-  "inputText": "I am terrified of failing my interview tomorrow"
+  "text": "I am terrified of failing my interview tomorrow",
+  "locale": "en",
+  "entrySource": "home"
 }
 ```
 
-Behavior:
+`GET /v1/moments`
 
-- classifies the request into an authoritative intervention type before retrieval using OpenRouter structured outputs
-- derives retrieval settings from that classified type
-- retrieves the top supporting passages from Supabase
-- uses OpenRouter structured outputs to format a response for the locked intervention type
-- persists the classified type, generated payload, and ledger entry together in Supabase scoped to the authenticated user before returning success
-- fails with a sanitized classification error if OpenRouter is not configured, is unavailable, or returns invalid structured output
-- fails with an upstream retrieval error if embeddings, corpus lookup, or Supabase retrieval break
-- fails with a sanitized generation error if OpenRouter is not configured, is unavailable, or returns invalid structured output
-
-Deployment note:
-
-- `/v1/interventions` now hard-requires an OpenRouter model that supports `response_format: { type: "json_schema" }`
-
-`GET /v1/ledger`
-
-Authorization:
-
-- `Authorization: Bearer <supabase_access_token>` required
+Lists saved moments for the authenticated user in reverse `updated_at` order.
 
 Query parameters:
 
-- `cursor` optional
-- `limit` optional, max `50`
+- `limit` optional, max `100`
+- `status` optional, `open` or `resolved`
 
-The ledger route returns persisted entries for the authenticated user in reverse chronological order.
+`GET /v1/moments/:id`
 
-`POST /v1/interventions/:id/resolve`
+Returns the moment, ordered messages, and saved artifacts for the authenticated user.
 
-Authorization:
+`POST /v1/moments/:id/messages`
 
-- `Authorization: Bearer <supabase_access_token>` required
+Appends one user message and one assistant response to an existing moment. If the user asks for a
+Quran, hadith, dua, ruling, citation, or source, the server attempts retrieval and stores returned
+source support as artifacts. Normal conversation does not retrieve by default.
 
 Request shape:
 
 ```json
 {
-  "resolution": "grounded"
+  "text": "Can you ground that in Quran or hadith?",
+  "locale": "en",
+  "entrySource": "moment_detail"
 }
 ```
 
-Behavior:
+`POST /v1/moments/:id/resolve`
 
-- updates the authenticated actor's intervention resolution state
-- keeps the intervention record and its ledger entry in sync
-- returns `404` when the intervention does not belong to the authenticated actor or does not exist
+Marks the authenticated user's moment resolved and stamps `resolved_at`.
+
+Routes return `404` when the moment does not belong to the authenticated actor or does not exist.
 
 See `apps/api/corpus/README.md` and `apps/api/sql/retrieval_passages.sql`.

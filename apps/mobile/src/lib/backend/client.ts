@@ -1,25 +1,22 @@
 import { z } from "zod"
 
 import {
-  type CreateInterventionRequest,
-  type FollowupListResponse,
-  type JourneyMomentsResponse,
-  type FollowupResponseRequest,
-  type LedgerPageResponse,
-  type MeResponse,
+  type AppendMomentMessageRequest,
+  type AppendMomentMessageResponse,
+  type CreateMomentRequest,
+  type CreateMomentResponse,
+  type InterventionPayload,
+  type MomentDetailResponse,
+  type MomentsListResponse,
   type MutationSuccess,
-  type RegisterPushTokenRequest,
-  type ResolveInterventionRequest,
-  CreateInterventionRequestSchema,
-  FollowupListResponseSchema,
-  JourneyMomentsResponseSchema,
-  FollowupResponseRequestSchema,
-  InterventionPayloadSchema,
-  LedgerPageResponseSchema,
-  MeResponseSchema,
+  AppendMomentMessageRequestSchema,
+  AppendMomentMessageResponseSchema,
+  CreateMomentRequestSchema,
+  CreateMomentResponseSchema,
+  GetMomentsRequestSchema,
+  MomentDetailResponseSchema,
+  MomentsListResponseSchema,
   MutationSuccessSchema,
-  RegisterPushTokenRequestSchema,
-  ResolveInterventionRequestSchema,
 } from "@imaan/contracts"
 
 import { getRequiredApiBaseUrl } from "./config"
@@ -73,110 +70,115 @@ async function requestJson<TSchema extends z.ZodTypeAny>({
   return schema.parse(payload)
 }
 
-export async function createIntervention(
-  input: CreateInterventionRequest,
+export async function createMoment(
+  input: CreateMomentRequest,
   accessToken?: string | null
-) {
-  const body = CreateInterventionRequestSchema.parse(input)
+): Promise<CreateMomentResponse> {
+  const body = CreateMomentRequestSchema.parse(input)
   return requestJson({
-    path: "/v1/interventions",
+    path: "/v1/moments",
     method: "POST",
-    schema: InterventionPayloadSchema,
+    schema: CreateMomentResponseSchema,
     body,
-    accessToken,
-  })
-}
-
-export async function resolveIntervention(
-  interventionId: string,
-  input: ResolveInterventionRequest,
-  accessToken?: string | null
-) {
-  const body = ResolveInterventionRequestSchema.parse(input)
-  return requestJson({
-    path: `/v1/interventions/${interventionId}/resolve`,
-    method: "POST",
-    schema: MutationSuccessSchema,
-    body,
-    accessToken,
-  })
-}
-
-export async function getLedger(
-  params: { cursor?: string | null; limit?: number } = {},
-  accessToken?: string | null
-): Promise<LedgerPageResponse> {
-  const search = new URLSearchParams()
-  if (params.cursor) search.set("cursor", params.cursor)
-  if (params.limit) search.set("limit", String(params.limit))
-  const suffix = search.toString() ? `?${search.toString()}` : ""
-
-  return requestJson({
-    path: `/v1/ledger${suffix}`,
-    schema: LedgerPageResponseSchema,
     accessToken,
   })
 }
 
 export async function getMoments(
-  params: { limit?: number; windowDays?: number } = {},
+  params: { limit?: number; status?: "open" | "resolved"; windowDays?: number } = {},
   accessToken?: string | null
-): Promise<JourneyMomentsResponse> {
+): Promise<MomentsListResponse> {
+  const { windowDays: _windowDays, ...requestParams } = params
+  const query = GetMomentsRequestSchema.parse(requestParams)
   const search = new URLSearchParams()
-  if (params.limit) search.set("limit", String(params.limit))
-  if (params.windowDays) search.set("windowDays", String(params.windowDays))
+  if (query.limit) search.set("limit", String(query.limit))
+  if (query.status) search.set("status", query.status)
   const suffix = search.toString() ? `?${search.toString()}` : ""
 
   return requestJson({
     path: `/v1/moments${suffix}`,
-    schema: JourneyMomentsResponseSchema,
+    schema: MomentsListResponseSchema,
     accessToken,
   })
 }
 
-export async function getMe(accessToken?: string | null): Promise<MeResponse> {
-  return requestJson({
-    path: "/v1/me",
-    schema: MeResponseSchema,
-    accessToken,
-  })
-}
-
-export async function getFollowups(
+export async function createIntervention(
+  input: {
+    inputText: string
+    locale?: string
+    entrySource?: string
+  },
   accessToken?: string | null
-): Promise<FollowupListResponse> {
+): Promise<InterventionPayload> {
+  const response = await createMoment(
+    {
+      text: input.inputText,
+      locale: input.locale,
+      entrySource: input.entrySource,
+    },
+    accessToken
+  )
+  const assistantMessage = [...response.messages]
+    .reverse()
+    .find((message) => message.role === "assistant")
+
+  return {
+    id: response.moment.id,
+    type: "contextual_anchor",
+    title: response.moment.title,
+    validationCopy: "A steady response for this moment.",
+    primaryText: assistantMessage?.text ?? response.moment.summary,
+    dua: null,
+    repeatCount: null,
+    citations: response.artifacts
+      .filter((artifact) => artifact.kind === "ayah" || artifact.kind === "hadith")
+      .map((artifact) => ({
+        id: artifact.id,
+        sourceKind: artifact.kind === "ayah" ? "quran" : "hadith",
+        title: artifact.title,
+        reference: artifact.reference ?? "Saved source",
+        excerpt: artifact.content,
+      })),
+    followupSuggested: false,
+    ledgerSummary: response.moment.summary,
+    createdAtUtc: response.moment.createdAtUtc,
+  }
+}
+
+export async function getMoment(
+  momentId: string,
+  accessToken?: string | null
+): Promise<MomentDetailResponse> {
   return requestJson({
-    path: "/v1/followups",
-    schema: FollowupListResponseSchema,
+    path: `/v1/moments/${encodeURIComponent(momentId)}`,
+    schema: MomentDetailResponseSchema,
     accessToken,
   })
 }
 
-export async function respondToFollowup(
-  followupId: string,
-  input: FollowupResponseRequest,
+export async function appendMomentMessage(
+  momentId: string,
+  input: AppendMomentMessageRequest,
   accessToken?: string | null
-): Promise<MutationSuccess> {
-  const body = FollowupResponseRequestSchema.parse(input)
+): Promise<AppendMomentMessageResponse> {
+  const body = AppendMomentMessageRequestSchema.parse(input)
   return requestJson({
-    path: `/v1/followups/${followupId}/respond`,
+    path: `/v1/moments/${encodeURIComponent(momentId)}/messages`,
     method: "POST",
-    schema: MutationSuccessSchema,
+    schema: AppendMomentMessageResponseSchema,
     body,
     accessToken,
   })
 }
 
-export async function registerPushToken(
-  input: RegisterPushTokenRequest,
+export async function resolveMoment(
+  momentId: string,
   accessToken?: string | null
 ): Promise<MutationSuccess> {
-  const body = RegisterPushTokenRequestSchema.parse(input)
   return requestJson({
-    path: "/v1/devices/push-token",
+    path: `/v1/moments/${encodeURIComponent(momentId)}/resolve`,
     method: "POST",
     schema: MutationSuccessSchema,
-    body,
     accessToken,
   })
 }

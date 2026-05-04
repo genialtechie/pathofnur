@@ -1,54 +1,66 @@
 import { z } from "zod"
 
-export const InterventionTypeSchema = z.enum([
-  "contextual_anchor",
-  "quick_validation",
-  "concise_ruling",
-])
-
-export const SourceKindSchema = z.enum(["quran", "hadith", "seerah", "fiqh"])
-
-export const ResolutionStateSchema = z.enum(["grounded", "done"])
+export const MomentStatusSchema = z.enum(["open", "resolved"])
 export const JourneyMomentStatusSchema = z.enum([
   "open",
   "revisited",
   "resolved",
 ])
-
-export const FollowupStatusSchema = z.enum([
-  "pending",
-  "sent",
-  "completed",
-  "dismissed",
-  "expired",
-])
-
-export const NotificationPlatformSchema = z.enum(["ios", "android"])
+export const MomentMessageRoleSchema = z.enum(["user", "assistant"])
+export const MomentArtifactKindSchema = z.enum(["ayah", "hadith", "dua", "note"])
 export const RetrievalSourceTypeSchema = z.enum(["quran", "hadith"])
+
+export const MomentSummarySchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string(),
+  status: MomentStatusSchema,
+  createdAtUtc: z.string().datetime(),
+  updatedAtUtc: z.string().datetime(),
+  resolvedAtUtc: z.string().datetime().nullable(),
+})
+
+export const MomentMessageSchema = z.object({
+  id: z.string().min(1),
+  momentId: z.string().min(1),
+  role: MomentMessageRoleSchema,
+  text: z.string().min(1),
+  createdAtUtc: z.string().datetime(),
+})
+
+export const MomentArtifactSchema = z.object({
+  id: z.string().min(1),
+  momentId: z.string().min(1),
+  kind: MomentArtifactKindSchema,
+  title: z.string().min(1),
+  reference: z.string().min(1).nullable(),
+  content: z.string().min(1),
+  createdAtUtc: z.string().datetime(),
+})
 
 export const CitationSchema = z.object({
   id: z.string().min(1),
-  sourceKind: SourceKindSchema,
+  sourceKind: z.enum(["quran", "hadith", "seerah", "fiqh"]),
   title: z.string().min(1),
   reference: z.string().min(1),
   excerpt: z.string().min(1),
 })
 
-export const DuaSchema = z.object({
-  arabic: z.string().min(1).nullable(),
-  transliteration: z.string().min(1).nullable(),
-  translation: z.string().min(1).nullable(),
-})
-
 export const InterventionPayloadSchema = z.object({
   id: z.string().min(1),
-  type: InterventionTypeSchema,
+  type: z.enum(["contextual_anchor", "quick_validation", "concise_ruling"]),
   title: z.string().min(1),
   validationCopy: z.string().min(1),
   primaryText: z.string().min(1),
-  dua: DuaSchema.nullable(),
+  dua: z
+    .object({
+      arabic: z.string().min(1).nullable(),
+      transliteration: z.string().min(1).nullable(),
+      translation: z.string().min(1).nullable(),
+    })
+    .nullable(),
   repeatCount: z.number().int().min(1).nullable(),
-  citations: z.array(CitationSchema).min(1),
+  citations: z.array(CitationSchema),
   followupSuggested: z.boolean(),
   ledgerSummary: z.string().min(1),
   createdAtUtc: z.string().datetime(),
@@ -63,85 +75,53 @@ export const AppUserProfileSchema = z.object({
   momentsGrounded: z.number().int().min(0),
 })
 
-export const LedgerEntrySchema = z.object({
-  id: z.string().min(1),
-  interventionId: z.string().min(1),
-  occurredAtUtc: z.string().datetime(),
-  summary: z.string().min(1),
-  interventionType: InterventionTypeSchema,
-  resolutionState: ResolutionStateSchema.nullable(),
-  followupStatus: FollowupStatusSchema.nullable(),
-})
-
-export const JourneyMomentSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  status: JourneyMomentStatusSchema,
-  createdAtUtc: z.string().datetime(),
-  updatedAtUtc: z.string().datetime(),
-  resolvedAtUtc: z.string().datetime().nullable(),
-  latestInterventionId: z.string().min(1),
-})
-
-export const FollowupRecordSchema = z.object({
-  id: z.string().min(1),
-  prompt: z.string().min(1),
-  scheduledForUtc: z.string().datetime(),
-  status: FollowupStatusSchema,
-  relatedInterventionId: z.string().min(1),
-})
-
-export const CreateInterventionRequestSchema = z.object({
-  inputText: z.string().min(1),
+export const CreateMomentRequestSchema = z.object({
+  text: z.string().min(1),
+  title: z.string().min(1).optional(),
   locale: z.string().min(1).optional(),
   entrySource: z.string().min(1).optional(),
 })
 
-export const GetLedgerRequestSchema = z.object({
-  cursor: z.string().min(1).optional(),
-  limit: z.number().int().min(1).max(50).optional(),
+export const AppendMomentMessageRequestSchema = z.object({
+  text: z.string().min(1),
+  locale: z.string().min(1).optional(),
+  entrySource: z.string().min(1).optional(),
 })
 
 export const GetMomentsRequestSchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
-  windowDays: z.number().int().min(1).max(365).optional(),
+  status: MomentStatusSchema.optional(),
 })
 
-export const ResolveInterventionRequestSchema = z.object({
-  resolution: ResolutionStateSchema,
+export const CreateMomentResponseSchema = z.object({
+  moment: MomentSummarySchema,
+  messages: z.array(MomentMessageSchema),
+  artifacts: z.array(MomentArtifactSchema),
 })
 
-export const LedgerPageResponseSchema = z.object({
-  entries: z.array(LedgerEntrySchema),
-  nextCursor: z.string().min(1).nullable(),
+export const MomentDetailResponseSchema = z.object({
+  moment: MomentSummarySchema,
+  messages: z.array(MomentMessageSchema),
+  artifacts: z.array(MomentArtifactSchema),
 })
 
-export const JourneyMomentsResponseSchema = z.object({
-  moments: z.array(JourneyMomentSchema),
+export const MomentsListResponseSchema = z.object({
+  moments: z.array(MomentSummarySchema),
 })
 
-export const FollowupListResponseSchema = z.object({
-  followups: z.array(FollowupRecordSchema),
+export const AppendMomentMessageResponseSchema = z.object({
+  moment: MomentSummarySchema,
+  messages: z.array(MomentMessageSchema).length(2),
+  artifacts: z.array(MomentArtifactSchema),
 })
 
-export const MeResponseSchema = z.object({
-  profile: AppUserProfileSchema,
+export const MutationSuccessSchema = z.object({
+  ok: z.literal(true),
 })
 
-export const FollowupResponseRequestSchema = z.object({
-  responseText: z.string().min(1),
-})
-
-export const RegisterPushTokenRequestSchema = z.object({
-  platform: NotificationPlatformSchema,
-  pushToken: z.string().min(1),
-})
-
-export const RetrievePassagesRequestSchema = z.object({
-  inputText: z.string().min(1),
-  matchCount: z.number().int().min(1).max(10).optional(),
-  sourceTypes: z.array(RetrievalSourceTypeSchema).min(1).optional(),
+export const BackendErrorResponseSchema = z.object({
+  error: z.string().min(1),
+  message: z.string().min(1),
 })
 
 export const RetrievedPassageSchema = z.object({
@@ -157,17 +137,14 @@ export const RetrievedPassageSchema = z.object({
   similarity: z.number(),
 })
 
+export const RetrievePassagesRequestSchema = z.object({
+  inputText: z.string().min(1),
+  matchCount: z.number().int().min(1).max(10).optional(),
+  sourceTypes: z.array(RetrievalSourceTypeSchema).min(1).optional(),
+})
+
 export const RetrievePassagesResponseSchema = z.object({
   matches: z.array(RetrievedPassageSchema),
-})
-
-export const MutationSuccessSchema = z.object({
-  ok: z.literal(true),
-})
-
-export const BackendErrorResponseSchema = z.object({
-  error: z.string().min(1),
-  message: z.string().min(1),
 })
 
 export const RetrievalPassageSchema = z.object({
@@ -186,44 +163,39 @@ export const SeededRetrievalPassageSchema = RetrievalPassageSchema.extend({
   embedding: z.array(z.number()),
 })
 
-export type InterventionType = z.infer<typeof InterventionTypeSchema>
-export type SourceKind = z.infer<typeof SourceKindSchema>
-export type ResolutionState = z.infer<typeof ResolutionStateSchema>
+export type MomentStatus = z.infer<typeof MomentStatusSchema>
 export type JourneyMomentStatus = z.infer<typeof JourneyMomentStatusSchema>
+export type MomentMessageRole = z.infer<typeof MomentMessageRoleSchema>
+export type MomentArtifactKind = z.infer<typeof MomentArtifactKindSchema>
+export type MomentSummary = z.infer<typeof MomentSummarySchema>
+export type JourneyMoment = Omit<MomentSummary, "status"> & {
+  status: JourneyMomentStatus
+}
+export type MomentMessage = z.infer<typeof MomentMessageSchema>
+export type MomentArtifact = z.infer<typeof MomentArtifactSchema>
 export type Citation = z.infer<typeof CitationSchema>
-export type Dua = z.infer<typeof DuaSchema>
-export type RetrievalSourceType = z.infer<typeof RetrievalSourceTypeSchema>
-export type RetrievePassagesRequest = z.infer<
-  typeof RetrievePassagesRequestSchema
->
-export type RetrievedPassage = z.infer<typeof RetrievedPassageSchema>
-export type RetrievePassagesResponse = z.infer<
-  typeof RetrievePassagesResponseSchema
->
 export type InterventionPayload = z.infer<typeof InterventionPayloadSchema>
 export type AppUserProfile = z.infer<typeof AppUserProfileSchema>
-export type LedgerEntry = z.infer<typeof LedgerEntrySchema>
-export type JourneyMoment = z.infer<typeof JourneyMomentSchema>
-export type FollowupRecord = z.infer<typeof FollowupRecordSchema>
-export type RetrievalPassage = z.infer<typeof RetrievalPassageSchema>
-export type SeededRetrievalPassage = z.infer<typeof SeededRetrievalPassageSchema>
-export type CreateInterventionRequest = z.infer<
-  typeof CreateInterventionRequestSchema
+export type CreateMomentRequest = z.infer<typeof CreateMomentRequestSchema>
+export type AppendMomentMessageRequest = z.infer<
+  typeof AppendMomentMessageRequestSchema
 >
-export type ResolveInterventionRequest = z.infer<
-  typeof ResolveInterventionRequestSchema
->
-export type GetLedgerRequest = z.infer<typeof GetLedgerRequestSchema>
 export type GetMomentsRequest = z.infer<typeof GetMomentsRequestSchema>
-export type LedgerPageResponse = z.infer<typeof LedgerPageResponseSchema>
-export type JourneyMomentsResponse = z.infer<typeof JourneyMomentsResponseSchema>
-export type FollowupListResponse = z.infer<typeof FollowupListResponseSchema>
-export type MeResponse = z.infer<typeof MeResponseSchema>
-export type FollowupResponseRequest = z.infer<
-  typeof FollowupResponseRequestSchema
->
-export type RegisterPushTokenRequest = z.infer<
-  typeof RegisterPushTokenRequestSchema
+export type CreateMomentResponse = z.infer<typeof CreateMomentResponseSchema>
+export type MomentDetailResponse = z.infer<typeof MomentDetailResponseSchema>
+export type MomentsListResponse = z.infer<typeof MomentsListResponseSchema>
+export type AppendMomentMessageResponse = z.infer<
+  typeof AppendMomentMessageResponseSchema
 >
 export type MutationSuccess = z.infer<typeof MutationSuccessSchema>
 export type BackendErrorResponse = z.infer<typeof BackendErrorResponseSchema>
+export type RetrievalSourceType = z.infer<typeof RetrievalSourceTypeSchema>
+export type RetrievedPassage = z.infer<typeof RetrievedPassageSchema>
+export type RetrievePassagesRequest = z.infer<
+  typeof RetrievePassagesRequestSchema
+>
+export type RetrievePassagesResponse = z.infer<
+  typeof RetrievePassagesResponseSchema
+>
+export type RetrievalPassage = z.infer<typeof RetrievalPassageSchema>
+export type SeededRetrievalPassage = z.infer<typeof SeededRetrievalPassageSchema>

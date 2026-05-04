@@ -1,45 +1,32 @@
 import type { FastifyInstance, FastifyReply } from "fastify"
 
 import {
-  type BackendErrorResponse,
+  AppendMomentMessageRequestSchema,
+  AppendMomentMessageResponseSchema,
   BackendErrorResponseSchema,
-  CreateInterventionRequestSchema,
-  FollowupResponseRequestSchema,
-  GetLedgerRequestSchema,
+  CreateMomentRequestSchema,
+  CreateMomentResponseSchema,
   GetMomentsRequestSchema,
-  InterventionPayloadSchema,
-  RetrievePassagesRequestSchema,
-  RegisterPushTokenRequestSchema,
-  ResolveInterventionRequestSchema,
+  MomentDetailResponseSchema,
+  MomentsListResponseSchema,
 } from "@imaan/contracts"
 
 import {
   BackendAuthenticationError,
   getAuthenticatedActor,
 } from "../lib/auth.js"
-import { createIntervention } from "../lib/interventions.js"
 import {
-  InterventionResolutionNotFoundError,
-  listLedgerEntries,
-  listJourneyMoments,
-  resolveInterventionRecord,
-} from "../lib/intervention-store.js"
+  appendMomentMessageWithReply,
+  createMomentWithReply,
+  MomentChatGenerationError,
+  MomentChatRetrievalError,
+} from "../lib/moment-chat.js"
 import {
-  InterventionGenerationError,
-  InterventionRetrievalError,
-  NoSupportingPassagesError,
-} from "../lib/interventions.js"
-import { InterventionClassificationError } from "../lib/intervention-classifier.js"
-import { retrievePassages } from "../lib/retrieve-passages.js"
-
-function sendNotImplemented(reply: FastifyReply, feature: string) {
-  const payload: BackendErrorResponse = BackendErrorResponseSchema.parse({
-    error: "not_implemented",
-    message: `${feature} is scaffolded but not implemented yet.`,
-  })
-
-  return reply.code(501).send(payload)
-}
+  getMomentDetail,
+  listMoments,
+  MomentNotFoundError,
+  resolveMoment,
+} from "../lib/moment-store.js"
 
 async function authenticateRequest(
   request: Parameters<typeof getAuthenticatedActor>[0],
@@ -64,30 +51,54 @@ async function authenticateRequest(
   }
 }
 
-export async function registerV1Routes(app: FastifyInstance) {
-  app.get("/v1/me", async (_request, reply) => {
-    return sendNotImplemented(reply, "Profile lookup")
-  })
+function getRouteId(params: unknown): string {
+  if (!params || typeof params !== "object") {
+    return ""
+  }
 
-  app.get("/v1/ledger", async (request, reply) => {
+  const value = (params as Record<string, unknown>).id
+  return typeof value === "string" ? value.trim() : ""
+}
+
+function sendMomentChatError(reply: FastifyReply, error: unknown) {
+  if (error instanceof MomentNotFoundError) {
+    return reply.code(404).send({
+      error: "moment_not_found",
+      message: error.message,
+    })
+  }
+
+  if (error instanceof MomentChatRetrievalError) {
+    return reply.code(502).send({
+      error: "source_retrieval_failed",
+      message: error.message,
+    })
+  }
+
+  if (error instanceof MomentChatGenerationError) {
+    return reply.code(502).send({
+      error: "moment_generation_failed",
+      message: error.message,
+    })
+  }
+
+  return reply.code(500).send(
+    BackendErrorResponseSchema.parse({
+      error: "moment_failed",
+      message:
+        error instanceof Error ? error.message : "Moment request failed.",
+    })
+  )
+}
+
+export async function registerV1Routes(app: FastifyInstance) {
+  app.post("/v1/moments", async (request, reply) => {
     const actor = await authenticateRequest(request, reply)
     if (!actor) {
       return reply
     }
 
-    const rawQuery =
-      typeof request.query === "object" && request.query
-        ? (request.query as Record<string, unknown>)
-        : {}
-    const rawLimit = rawQuery.limit
-    const parsed = GetLedgerRequestSchema.safeParse({
-      cursor: rawQuery.cursor,
-      limit:
-        rawLimit === undefined
-          ? undefined
-          : Number(rawLimit),
-    })
-
+    const parsed = CreateMomentRequestSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.code(400).send({
         error: "invalid_payload",
@@ -96,17 +107,10 @@ export async function registerV1Routes(app: FastifyInstance) {
     }
 
     try {
-      const response = await listLedgerEntries({
-        userId: actor.userId,
-        ...parsed.data,
-      })
-      return reply.code(200).send(response)
+      const response = await createMomentWithReply(actor, parsed.data)
+      return reply.code(201).send(CreateMomentResponseSchema.parse(response))
     } catch (error) {
-      return reply.code(500).send({
-        error: "ledger_failed",
-        message:
-          error instanceof Error ? error.message : "Ledger retrieval failed.",
-      })
+      return sendMomentChatError(reply, error)
     }
   })
 
@@ -121,11 +125,9 @@ export async function registerV1Routes(app: FastifyInstance) {
         ? (request.query as Record<string, unknown>)
         : {}
     const rawLimit = rawQuery.limit
-    const rawWindowDays = rawQuery.windowDays
     const parsed = GetMomentsRequestSchema.safeParse({
       limit: rawLimit === undefined ? undefined : Number(rawLimit),
-      windowDays:
-        rawWindowDays === undefined ? undefined : Number(rawWindowDays),
+      status: rawQuery.status,
     })
 
     if (!parsed.success) {
@@ -136,168 +138,56 @@ export async function registerV1Routes(app: FastifyInstance) {
     }
 
     try {
-      const response = await listJourneyMoments({
+      const response = await listMoments({
         userId: actor.userId,
         ...parsed.data,
       })
-      return reply.code(200).send(response)
+      return reply.code(200).send(MomentsListResponseSchema.parse(response))
     } catch (error) {
-      return reply.code(500).send({
-        error: "moments_failed",
-        message:
-          error instanceof Error ? error.message : "Moment retrieval failed.",
-      })
+      return sendMomentChatError(reply, error)
     }
   })
 
-  app.get("/v1/followups", async (_request, reply) => {
-    return sendNotImplemented(reply, "Follow-up retrieval")
-  })
-
-  app.post("/v1/retrieve", async (request, reply) => {
-    const parsed = RetrievePassagesRequestSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.code(400).send({
-        error: "invalid_payload",
-        message: parsed.error.message,
-      })
-    }
-
-    try {
-      const response = await retrievePassages(parsed.data)
-      return reply.code(200).send(response)
-    } catch (error) {
-      return reply.code(500).send({
-        error: "retrieval_failed",
-        message:
-          error instanceof Error ? error.message : "Passage retrieval failed.",
-      })
-    }
-  })
-
-  app.post("/v1/devices/push-token", async (request, reply) => {
-    const parsed = RegisterPushTokenRequestSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.code(400).send({
-        error: "invalid_payload",
-        message: parsed.error.message,
-      })
-    }
-
-    return sendNotImplemented(reply, "Push token registration")
-  })
-
-  app.post("/v1/interventions", async (request, reply) => {
+  app.get("/v1/moments/:id", async (request, reply) => {
     const actor = await authenticateRequest(request, reply)
     if (!actor) {
       return reply
     }
 
-    const parsed = CreateInterventionRequestSchema.safeParse(request.body)
-    if (!parsed.success) {
+    const momentId = getRouteId(request.params)
+    if (!momentId) {
       return reply.code(400).send({
         error: "invalid_payload",
-        message: parsed.error.message,
+        message: "Moment id is required.",
       })
     }
 
     try {
-      const payload = await createIntervention(actor, parsed.data)
-      return reply.code(200).send(InterventionPayloadSchema.parse(payload))
-    } catch (error) {
-      if (error instanceof InterventionClassificationError) {
-        return reply.code(502).send({
-          error: "classification_failed",
-          message: error.message,
-        })
-      }
-
-      if (error instanceof InterventionRetrievalError) {
-        return reply.code(502).send({
-          error: "retrieval_failed",
-          message: error.message,
-        })
-      }
-
-      if (error instanceof NoSupportingPassagesError) {
-        return reply.code(422).send({
-          error: "no_supporting_passages",
-          message: error.message,
-        })
-      }
-
-      if (error instanceof InterventionGenerationError) {
-        return reply.code(502).send({
-          error: "generation_failed",
-          message: error.message,
-        })
-      }
-
-      return reply.code(500).send({
-        error: "intervention_failed",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Intervention creation failed.",
-      })
-    }
-  })
-
-  app.post("/v1/interventions/:id/resolve", async (request, reply) => {
-    const actor = await authenticateRequest(request, reply)
-    if (!actor) {
-      return reply
-    }
-
-    const params =
-      typeof request.params === "object" && request.params
-        ? (request.params as Record<string, unknown>)
-        : {}
-    const interventionId =
-      typeof params.id === "string" ? params.id.trim() : ""
-
-    if (!interventionId) {
-      return reply.code(400).send({
-        error: "invalid_payload",
-        message: "Intervention id is required.",
-      })
-    }
-
-    const parsed = ResolveInterventionRequestSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.code(400).send({
-        error: "invalid_payload",
-        message: parsed.error.message,
-      })
-    }
-
-    try {
-      const response = await resolveInterventionRecord({
+      const response = await getMomentDetail({
         userId: actor.userId,
-        interventionId,
-        resolution: parsed.data.resolution,
+        momentId,
       })
-      return reply.code(200).send(response)
+      return reply.code(200).send(MomentDetailResponseSchema.parse(response))
     } catch (error) {
-      if (error instanceof InterventionResolutionNotFoundError) {
-        return reply.code(404).send({
-          error: "intervention_not_found",
-          message: error.message,
-        })
-      }
-
-      return reply.code(500).send({
-        error: "intervention_resolution_failed",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Intervention resolution failed.",
-      })
+      return sendMomentChatError(reply, error)
     }
   })
 
-  app.post("/v1/followups/:id/respond", async (request, reply) => {
-    const parsed = FollowupResponseRequestSchema.safeParse(request.body)
+  app.post("/v1/moments/:id/messages", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
+    const momentId = getRouteId(request.params)
+    if (!momentId) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: "Moment id is required.",
+      })
+    }
+
+    const parsed = AppendMomentMessageRequestSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.code(400).send({
         error: "invalid_payload",
@@ -305,6 +195,47 @@ export async function registerV1Routes(app: FastifyInstance) {
       })
     }
 
-    return sendNotImplemented(reply, "Follow-up response")
+    try {
+      const detail = await appendMomentMessageWithReply(
+        actor,
+        momentId,
+        parsed.data
+      )
+      const messages = detail.messages.slice(-2)
+      return reply.code(200).send(
+        AppendMomentMessageResponseSchema.parse({
+          moment: detail.moment,
+          messages,
+          artifacts: detail.artifacts,
+        })
+      )
+    } catch (error) {
+      return sendMomentChatError(reply, error)
+    }
+  })
+
+  app.post("/v1/moments/:id/resolve", async (request, reply) => {
+    const actor = await authenticateRequest(request, reply)
+    if (!actor) {
+      return reply
+    }
+
+    const momentId = getRouteId(request.params)
+    if (!momentId) {
+      return reply.code(400).send({
+        error: "invalid_payload",
+        message: "Moment id is required.",
+      })
+    }
+
+    try {
+      const response = await resolveMoment({
+        userId: actor.userId,
+        momentId,
+      })
+      return reply.code(200).send(response)
+    } catch (error) {
+      return sendMomentChatError(reply, error)
+    }
   })
 }
