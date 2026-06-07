@@ -1,8 +1,10 @@
 import "./styles.css";
+import { getAttribution, identifyWaitlistUser, initAnalytics, trackEvent } from "./analytics.js";
 
 const WAITLIST_ENDPOINT = "/api/waitlist";
 const SUCCESS_RESET_MS = 1800;
 const ALERT_CLOSE_MS = 180;
+const attribution = getAttribution();
 
 const app = document.querySelector("#app");
 
@@ -13,7 +15,7 @@ app.innerHTML = `
         <img class="brand-logo" src="/logo.png" alt="imaan.app logo" />
         <div class="brand-copy">
           <span class="brand-name">imaan.app</span>
-          <span class="brand-subtitle">A calmer Muslim companion</span>
+          <span class="brand-subtitle">Prayer streaks with friends</span>
         </div>
       </a>
     </header>
@@ -21,11 +23,11 @@ app.innerHTML = `
     <main id="top">
       <section class="hero-section">
         <div class="hero-copy">
-          <p class="eyebrow">Coming soon</p>
-          <h1>A spiritual companion for the moments that pull at the heart.</h1>
+          <p class="eyebrow">Coming soon to iPhone</p>
+          <h1>Prayer streaks with friends.</h1>
           <p class="hero-text">
-            imaan.app is being crafted as a calmer Muslim companion for daily friction, quiet grounding,
-            and gentle continuity. Join the waitlist to be notified when the App Store release goes live.
+            Confirm each salah, keep your run alive, and climb the leaderboard
+            with friends trying to stay consistent too.
           </p>
 
           <div class="hero-store-lockup" aria-label="Coming soon to the App Store">
@@ -67,7 +69,7 @@ app.innerHTML = `
               </div>
 
               <button class="button button-primary waitlist-button" data-waitlist-submit type="submit">
-                <span class="waitlist-button-face waitlist-button-face-idle">Notify me</span>
+                <span class="waitlist-button-face waitlist-button-face-idle">Join the waitlist</span>
                 <span class="waitlist-button-face waitlist-button-face-loading" aria-hidden="true">
                   <span class="waitlist-spinner"></span>
                   <span>Submitting</span>
@@ -87,7 +89,7 @@ app.innerHTML = `
             </div>
 
             <p class="waitlist-note" id="waitlist-note">
-              We will only email you when the app is ready, early access opens, or the App Store launch is live.
+              Built for friendly accountability, daily consistency, and the push to keep going.
             </p>
             <p class="waitlist-status sr-only" id="waitlist-status" data-waitlist-status aria-live="polite"></p>
           </form>
@@ -95,97 +97,20 @@ app.innerHTML = `
 
         <div class="hero-stage" aria-hidden="true">
           <div class="hero-glow hero-glow-gold"></div>
-          <div class="hero-glow hero-glow-blue"></div>
-          <div class="phone-cluster">
-            <div class="phone-shell phone-shell-side phone-shell-left">
-              <div class="phone-frame">
-                <div class="phone-notch"></div>
-
-                <div class="phone-screen">
-                  <div class="screen-topbar">
-                    <span class="screen-time">9:41</span>
-                    <img class="screen-logo" src="/logo.png" alt="" />
-                  </div>
-
-                  <div class="screen-header">
-                    <span class="screen-label">imaan.app</span>
-                    <div class="screen-title-block">
-                      <div class="screen-title-line screen-title-line-short"></div>
-                      <div class="screen-title-line"></div>
-                    </div>
-                  </div>
-
-                  <div class="screen-preview">
-                    <div class="screen-preview-orb"></div>
-                  </div>
-                </div>
-              </div>
+          <div class="hero-glow hero-glow-green"></div>
+          <div class="app-shot-cluster">
+            <div class="app-shot app-shot-primary">
+              <picture>
+                <source srcset="/app-today.webp" type="image/webp" />
+                <img src="/app-today.png" alt="" loading="eager" />
+              </picture>
             </div>
 
-            <div class="phone-shell phone-shell-center">
-              <div class="phone-frame">
-                <div class="phone-notch"></div>
-
-                <div class="phone-screen">
-                  <div class="screen-topbar">
-                    <span class="screen-time">9:41</span>
-                    <img class="screen-logo" src="/logo.png" alt="" />
-                  </div>
-
-                  <div class="screen-header">
-                    <span class="screen-label">imaan.app</span>
-                    <div class="screen-title-block">
-                      <div class="screen-title-line screen-title-line-short"></div>
-                      <div class="screen-title-line"></div>
-                      <div class="screen-title-line screen-title-line-mid"></div>
-                    </div>
-                  </div>
-
-                  <div class="screen-preview">
-                    <div class="screen-preview-orb"></div>
-                  </div>
-
-                  <div class="screen-stack">
-                    <div class="screen-card screen-card-primary">
-                      <div class="screen-card-line screen-card-line-short"></div>
-                      <div class="screen-card-line"></div>
-                    </div>
-                    <div class="screen-card-row">
-                      <div class="screen-card screen-card-compact"></div>
-                      <div class="screen-card screen-card-compact"></div>
-                    </div>
-                    <div class="screen-cta">
-                      <div class="screen-cta-dot"></div>
-                      <div class="screen-cta-line"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="phone-shell phone-shell-side phone-shell-right">
-              <div class="phone-frame">
-                <div class="phone-notch"></div>
-
-                <div class="phone-screen">
-                  <div class="screen-topbar">
-                    <span class="screen-time">9:41</span>
-                    <img class="screen-logo" src="/logo.png" alt="" />
-                  </div>
-
-                  <div class="screen-header">
-                    <span class="screen-label">imaan.app</span>
-                    <div class="screen-title-block">
-                      <div class="screen-title-line screen-title-line-short"></div>
-                      <div class="screen-title-line"></div>
-                    </div>
-                  </div>
-
-                  <div class="screen-preview">
-                    <div class="screen-preview-orb"></div>
-                  </div>
-                </div>
-              </div>
+            <div class="app-shot app-shot-secondary">
+              <picture>
+                <source srcset="/app-board.webp" type="image/webp" />
+                <img src="/app-board.png" alt="" loading="eager" />
+              </picture>
             </div>
           </div>
         </div>
@@ -200,21 +125,35 @@ app.innerHTML = `
           <details class="faq-item">
             <summary><span>What is imaan.app?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
             <p>
-              imaan.app is a Muslim spiritual companion being built to feel calm, grounded, and genuinely supportive in everyday moments.
+              imaan.app is a prayer streak app for Muslims who want friendly accountability with friends.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary><span>How does it work?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              Confirm each salah, protect your salah run, and see where you rank on your friends leaderboard.
+            </p>
+          </details>
+
+          <details class="faq-item">
+            <summary><span>Can I use it with friends?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
+            <p>
+              Yes. imaan is built around friend leaderboards so you can stay consistent together and push each other to keep the run alive.
             </p>
           </details>
 
           <details class="faq-item">
             <summary><span>When will it launch?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
             <p>
-              The first release is in progress now. Join the waitlist and we will email you as soon as the App Store launch date is locked in.
+              We are preparing the first iPhone beta. Join the waitlist and we will email invites when early access opens.
             </p>
           </details>
 
           <details class="faq-item">
             <summary><span>What happens if I join the waitlist?</span><span class="faq-icon" aria-hidden="true">+</span></summary>
             <p>
-              You will get a small number of launch-related emails only, including release updates, early access news, and the App Store go-live notice.
+              You will get a small number of launch-related emails only, including beta invites, release updates, and the App Store go-live notice.
             </p>
           </details>
 
@@ -262,10 +201,16 @@ const alertBackdrop = document.querySelector("[data-waitlist-alert]");
 const alertBodyNode = document.querySelector("[data-waitlist-alert-body]");
 const alertDismissButton = document.querySelector("[data-waitlist-alert-dismiss]");
 const alertCloseButton = document.querySelector("[data-waitlist-alert-close]");
+const faqItems = [...document.querySelectorAll(".faq-item")];
 
 let successResetTimer = null;
 let alertCloseTimer = null;
 let lastFocusedElement = null;
+
+initAnalytics();
+trackEvent("landing_page_viewed", {
+  page_title: document.title,
+});
 
 function setStatus(message) {
   statusNode.textContent = message;
@@ -395,16 +340,22 @@ form.addEventListener("submit", async (event) => {
   if (!isValidEmail(email)) {
     setFormState("idle");
     showFieldError("Enter a valid email address to join the waitlist.");
+    trackEvent("waitlist_email_invalid", {
+      reason: "invalid_email",
+    });
     emailInput.focus();
     return;
   }
 
   setFormState("submitting");
   setStatus("Submitting your email to the waitlist.");
+  trackEvent("waitlist_submit_clicked", {
+    cta_location: "hero",
+  });
 
   const payload = {
     email,
-    source: "landing_waitlist",
+    source: attribution.source === "direct" ? "landing_waitlist" : `${attribution.source}_waitlist`,
     submittedAtUtc: new Date().toISOString(),
     locale: navigator.language,
     page: window.location.href,
@@ -415,10 +366,22 @@ form.addEventListener("submit", async (event) => {
     emailInput.value = "";
     setFormState("success");
     setStatus("You are on the list. We will email you when imaan.app is ready.");
+    identifyWaitlistUser(email, {
+      waitlist_source: payload.source,
+      waitlist_joined_at_utc: payload.submittedAtUtc,
+    });
+    trackEvent("waitlist_email_submitted", {
+      cta_location: "hero",
+      result: "success",
+    });
     resetSuccessStateSoon();
   } catch (error) {
     console.error(error);
     setFormState("idle");
+    trackEvent("waitlist_email_submit_failed", {
+      cta_location: "hero",
+      message: error instanceof Error ? error.message : "unknown_error",
+    });
     openAlert(error instanceof Error ? error.message : "Please try again shortly.");
   }
 });
@@ -456,6 +419,27 @@ alertDismissButton.addEventListener("click", () => {
 
 alertCloseButton.addEventListener("click", () => {
   closeAlert();
+});
+
+faqItems.forEach((item) => {
+  const summary = item.querySelector("summary");
+
+  summary?.addEventListener("click", (event) => {
+    event.preventDefault();
+  });
+
+  item.addEventListener("click", () => {
+    item.open = !item.open;
+  });
+
+  item.addEventListener("toggle", () => {
+    if (!item.open) {
+      return;
+    }
+
+    const question = item.querySelector("summary span")?.textContent?.trim() || "unknown";
+    trackEvent("faq_opened", { question });
+  });
 });
 
 document.addEventListener("keydown", (event) => {

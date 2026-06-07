@@ -22,7 +22,7 @@
       
       <!-- Abstract floating orbs / gradients to make it look premium and spiritual -->
       <circle cx="900" cy="150" r="180" fill="rgba(214,178,92,0.15)" filter="url(#glow)" />
-      <circle cx="1050" cy="450" r="280" fill="rgba(67,101,168,0.2)" filter="url(#glow)" />
+      <circle cx="1050" cy="450" r="280" fill="rgba(37,117,70,0.2)" filter="url(#glow)" />
       <circle cx="600" cy="300" r="300" fill="rgba(214,178,92,0.05)" filter="url(#glow)" />
 
       <!-- Minimalist arch accent (subtle Islamic geometric nod) -->
@@ -30,7 +30,7 @@
       <path d="M 780 630 L 780 300 A 200 200 0 0 1 1180 300 L 1180 630" stroke="rgba(214,178,92,0.05)" stroke-width="1" fill="none" />
       
       <text x="100" y="100" fill="#D6B25C" font-size="24" font-family="Arial, sans-serif" font-weight="700" letter-spacing="2">imaan.app</text>
-      <text x="100" y="240" fill="#F5F0E6" font-size="76" font-family="Georgia, serif" font-weight="400" letter-spacing="0.5">A spiritual companion</text><text x="100" y="330" fill="#F5F0E6" font-size="76" font-family="Georgia, serif" font-weight="400" letter-spacing="0.5">for the moments that</text><text x="100" y="420" fill="#F5F0E6" font-size="76" font-family="Georgia, serif" font-weight="400" letter-spacing="0.5">pull at the heart.</text>
-      <text x="100" y="520" fill="#BDC5D2" font-size="28" font-family="Arial, sans-serif" font-weight="400">Join the imaan.app waitlist for launch updates,</text><text x="100" y="556" fill="#BDC5D2" font-size="28" font-family="Arial, sans-serif" font-weight="400">App Store release news, and early access.</text>
+      <text x="100" y="250" fill="#F5F0E6" font-size="76" font-family="Georgia, serif" font-weight="400" letter-spacing="0.5">Prayer streaks</text><text x="100" y="342" fill="#F5F0E6" font-size="76" font-family="Georgia, serif" font-weight="400" letter-spacing="0.5">with friends.</text>
+      <text x="100" y="500" fill="#BDC5D2" font-size="28" font-family="Arial, sans-serif" font-weight="400">Confirm salah, keep your run alive, and climb</text><text x="100" y="536" fill="#BDC5D2" font-size="28" font-family="Arial, sans-serif" font-weight="400">the leaderboard with friends.</text>
     </svg>
   

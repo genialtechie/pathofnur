@@ -35,14 +35,13 @@ function textNode(label, x, y, options = {}) {
 
 export function buildOgCard() {
   const title = [
-    "A spiritual companion",
-    "for the moments that",
-    "pull at the heart."
+    "Prayer streaks",
+    "with friends."
   ];
 
   const titleNodes = title
     .map((lineText, index) =>
-      textNode(lineText, 100, 240 + index * 90, {
+      textNode(lineText, 100, 250 + index * 92, {
         fontSize: 76,
         fontFamily: "Georgia, serif",
         fontWeight: 400,
@@ -53,11 +52,11 @@ export function buildOgCard() {
     .join("");
 
   const bodyNodes = [
-    "Join the imaan.app waitlist for launch updates,",
-    "App Store release news, and early access.",
+    "Confirm salah, keep your run alive, and climb",
+    "the leaderboard with friends.",
   ]
     .map((lineText, index) =>
-      textNode(lineText, 100, 520 + index * 36, {
+      textNode(lineText, 100, 500 + index * 36, {
         fontSize: 28,
         fontFamily: "Arial, sans-serif",
         fontWeight: 400,
@@ -92,7 +91,7 @@ export function buildOgCard() {
       
       <!-- Abstract floating orbs / gradients to make it look premium and spiritual -->
       <circle cx="900" cy="150" r="180" fill="rgba(214,178,92,0.15)" filter="url(#glow)" />
-      <circle cx="1050" cy="450" r="280" fill="rgba(67,101,168,0.2)" filter="url(#glow)" />
+      <circle cx="1050" cy="450" r="280" fill="rgba(37,117,70,0.2)" filter="url(#glow)" />
       <circle cx="600" cy="300" r="300" fill="rgba(214,178,92,0.05)" filter="url(#glow)" />
 
       <!-- Minimalist arch accent (subtle Islamic geometric nod) -->

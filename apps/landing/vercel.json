@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/ig",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tiktok",
+      "destination": "/index.html"
+    }
+  ]
+}

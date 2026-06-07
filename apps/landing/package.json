@@ -11,5 +11,8 @@
   "devDependencies": {
     "sharp": "^0.34.5",
     "vite": "^7.1.7"
+  },
+  "dependencies": {
+    "posthog-js": "^1.382.0"
   }
 }
