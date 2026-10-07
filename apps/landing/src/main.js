@@ -97,7 +97,7 @@ app.innerHTML = `
 
         <div class="hero-stage" aria-hidden="true">
           <div class="hero-glow hero-glow-gold"></div>
-          <div class="hero-glow hero-glow-green"></div>
+          <div class="hero-glow hero-glow-blue"></div>
           <div class="app-shot-cluster">
             <div class="app-shot app-shot-primary">
               <picture>
