@@ -546,7 +546,15 @@ input {
 
 .hero-stage {
   position: relative;
-  min-height: 620px;
+  /* The two app-shot images are position:absolute, so they contribute no
+     height of their own here — this min-height is the only thing holding
+     space for them, and the FAQ section below starts right after it. At
+     this width app-shot-secondary sits at top:76px and renders at up to
+     310px wide; at the real screenshots' ~2.17:1 aspect ratio that's ~672px
+     tall, so its bottom edge lands around 748px. 800px keeps a clear gap
+     below it instead of the FAQ heading sitting flush against (or under)
+     the phone mockups. */
+  min-height: 800px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -582,7 +590,8 @@ input {
   position: relative;
   z-index: 1;
   width: min(100%, 610px);
-  min-height: 620px;
+  /* Keep in sync with .hero-stage's min-height above — same reasoning. */
+  min-height: 800px;
 }
 
 .app-shot {
@@ -1252,13 +1261,16 @@ input {
   }
 
   .hero-stage {
-    min-height: 560px;
+    /* Same overflow fix as the base rule, recomputed for this breakpoint's
+       280px-wide app-shot images (~607px tall at the real screenshots'
+       aspect ratio, secondary offset by top:76px -> ~683px bottom). */
+    min-height: 730px;
     max-width: 560px;
     padding-top: 0;
   }
 
   .app-shot-cluster {
-    min-height: 560px;
+    min-height: 730px;
   }
 
   .app-shot-primary,
