@@ -165,6 +165,14 @@ app.innerHTML = `
           </details>
         </div>
       </section>
+
+      <footer class="site-footer">
+        <span>&copy; ${new Date().getFullYear()} imaan.app</span>
+        <nav aria-label="Legal and support links">
+          <a href="/privacy">Privacy</a>
+          <a href="/support">Support</a>
+        </nav>
+      </footer>
     </main>
   </div>
 
