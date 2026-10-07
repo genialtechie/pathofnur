@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
   /* imaan v2 design tokens — ported from pathofnur-utility/src/theme/tokens.ts (MAG-5) */
-  --bg: #0a0d16;
-  --card: #12161f;
-  --surface: rgba(18, 22, 31, 0.78);
-  --surface-strong: rgba(18, 22, 31, 0.94);
-  --surface-border: #1b2130;
-  --surface-border-strong: #262e42;
+  --bg: #0b1120;
+  --card: #10182c;
+  --surface: rgba(16, 24, 44, 0.78);
+  --surface-strong: rgba(16, 24, 44, 0.94);
+  --surface-border: #182240;
+  --surface-border-strong: #182647;
   --text: #f4f0e6;
   --muted: #afb4c4;
   --muted-strong: #cfd3e0;
