@@ -60,20 +60,22 @@
       <main>
         <p class="eyebrow">Privacy Policy</p>
         <h1>Your prayer journey is personal.</h1>
-        <p class="updated">Effective October 7, 2026</p>
+        <p class="updated">Effective October 9, 2026</p>
         <p class="lede">This policy explains what imaan collects, how it is used, who can see it, and the choices you have. Questions can be sent to <a href="mailto:support@imaan.app">support@imaan.app</a>.</p>
 
         <div class="summary">
           <strong>The short version</strong>
-          <p>We do not sell your data or use it for advertising. Your individual prayer log is private. Accepted friends can see only aggregate progress numbers, and you can permanently delete your account and data inside the app.</p>
+          <p>We do not sell your data or use it for advertising. Your prayer log and optional confirmation photos are private. Accepted friends can see only limited progress numbers, and you can permanently delete your account and data inside the app.</p>
         </div>
 
         <section>
           <h2>1. Information we collect</h2>
           <ul>
             <li><strong>Account and profile:</strong> a Supabase user identifier, an optional display name, account creation date, and a random invite code. The current app can create an anonymous account without asking for an email or password.</li>
-            <li><strong>Prayer activity:</strong> the prayer confirmed, local calendar date, and confirmation time. These records power runs, streaks, history, and perfect-day totals.</li>
+            <li><strong>Prayer activity:</strong> the prayer confirmed, local calendar date, and confirmation time. These records power prayer runs, day streaks, and your private Footprints history.</li>
+            <li><strong>Optional confirmation photos:</strong> if you grant camera permission and choose to take a photo, the app stores the JPEG in a private Supabase Storage bucket linked to your confirmation. A photo is never required to confirm a prayer.</li>
             <li><strong>Friends and nudges:</strong> friend requests and their status, plus lightweight encouragement nudges between accepted friends.</li>
+            <li><strong>Safety reports and blocks:</strong> if you report another user, we store the reported account, your selected reason, and the time of the report so we can enforce the block and review abuse.</li>
             <li><strong>Location:</strong> if you grant permission, the app uses your current coordinates for prayer times and Qiblah direction. A recent location and prayer-time response are cached on your device. We do not store a location history in our database.</li>
             <li><strong>Website waitlist:</strong> if you join the waitlist, we collect the email address you submit and basic referral information used to understand where signups came from.</li>
           </ul>
@@ -81,18 +83,18 @@
 
         <section>
           <h2>2. How we use information</h2>
-          <p>We use this information to provide prayer confirmations and statistics, calculate prayer times and Qiblah, connect invited friends, display private friend leaderboards, deliver requested nudges and local reminders, provide support, protect the service, and communicate with people who join the launch waitlist.</p>
+          <p>We use this information to provide prayer confirmations, your private Footprints history, runs and streaks; calculate prayer times and Qiblah; connect invited friends; show limited friend progress; deliver requested nudges and local reminders; enforce reports and blocks; provide support; protect the service; and communicate with people who join the launch waitlist.</p>
         </section>
 
         <section>
           <h2>3. What friends can see</h2>
-          <p>Your raw prayer log is not visible to friends. An accepted friend can see your display name and aggregate progress such as your current run, best run, current day streak, best day streak, and how many prayers you have confirmed today. They cannot see the timestamp or individual historical prayer records behind those totals.</p>
+          <p>Your prayer log, Footprints history, and confirmation photos are not visible to friends. An accepted friend can see your display name, your current day streak, and how many prayers you have confirmed today. They cannot see timestamps, individual historical prayer records, photos, or your location.</p>
         </section>
 
         <section>
           <h2>4. Service providers</h2>
           <ul>
-            <li><strong>Supabase</strong> provides authentication, database hosting, and backend functions.</li>
+            <li><strong>Supabase</strong> provides authentication, database hosting, private photo storage, and backend functions.</li>
             <li><strong>Aladhan</strong> receives coordinates when the app requests prayer times.</li>
             <li><strong>Apple and device location services</strong> provide location, compass, reverse-geocoding, notifications, and native sharing features when you use them.</li>
             <li><strong>Vercel</strong> hosts imaan.app, and <strong>PostHog</strong> may provide aggregate website analytics. The iPhone app currently does not send product analytics events to PostHog.</li>
@@ -107,15 +109,16 @@
 
         <section>
           <h2>6. Retention and account deletion</h2>
-          <p>Your account-backed data remains until you delete your account or it is removed under our retention practices. To delete it in the app, open <strong>Profile → Account → Delete account</strong> and confirm. This permanently deletes the authentication account and the profile, prayer confirmations, friendships, and nudges linked to it. If you cannot access the app, contact <a href="mailto:support@imaan.app">support@imaan.app</a>.</p>
+          <p>Your account-backed data remains until you delete your account or it is removed under our retention practices. To delete it in the app, open <strong>Profile → Account → Delete account</strong> and confirm. This permanently deletes the authentication account and the profile, prayer confirmations, confirmation photos, friendships, nudges, and reports linked to it. If you cannot access the app, contact <a href="mailto:support@imaan.app">support@imaan.app</a>.</p>
         </section>
 
         <section>
           <h2>7. Your choices</h2>
           <ul>
             <li>You can deny location access. Location-dependent prayer times and Qiblah features will be limited.</li>
+            <li>You can deny camera access and always confirm a prayer without a photo. You can also change camera permission later in iOS Settings.</li>
             <li>You can decline notification permission or change it later in iOS Settings.</li>
-            <li>You control whether to set a display name, invite friends, send nudges, or share a progress card.</li>
+            <li>You control whether to set a display name, invite friends, send nudges, take confirmation photos, or share a progress card.</li>
             <li>You may request access, correction, or deletion help by emailing us.</li>
           </ul>
         </section>
